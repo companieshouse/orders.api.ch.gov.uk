@@ -133,7 +133,7 @@ class BasketControllerTest {
         // Then
         verify(checkoutData).setStatus(paymentOutcome);
         if (paymentOutcome.equals(PaymentStatus.PAID)) {
-        	Instant instant = paidAt.atZone(ZoneId.of("UTC")).toInstant();
+            Instant instant = paidAt.atZone(ZoneId.of("UTC")).toInstant();
             LocalDateTime withTimeZoneApplied = LocalDateTime.ofInstant(instant, ZoneId.of("Europe/London"));
             verify(checkoutData).setPaidAt(withTimeZoneApplied);
             verify(checkoutData).setPaymentReference(payment_id);
