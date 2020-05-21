@@ -359,11 +359,11 @@ public class BasketController {
         final CheckoutData data = checkout.getData();
         data.setStatus(update.getStatus());
         if (update.getStatus() == PaymentStatus.PAID) {
-        	// The call to this method passes in a LocalDateTime which originated as a UTC
-        	// value. LocalDateTime cannot contain time zone data, so this value needs to 
-        	// be converted to London time zone to prevent differences appearing due to 
-        	// daylight saving time/British summer time.
-        	Instant instant = update.getPaidAt().atZone(ZoneId.of("UTC")).toInstant();
+            // The call to this method passes in a LocalDateTime which originated as a UTC
+            // value. LocalDateTime cannot contain time zone data, so this value needs to 
+            // be converted to London time zone to prevent differences appearing due to 
+            // daylight saving time/British summer time.
+            Instant instant = update.getPaidAt().atZone(ZoneId.of("UTC")).toInstant();
             data.setPaidAt(LocalDateTime.ofInstant(instant, ZoneId.of("Europe/London")));
             data.setPaymentReference(update.getPaymentReference());
         }
