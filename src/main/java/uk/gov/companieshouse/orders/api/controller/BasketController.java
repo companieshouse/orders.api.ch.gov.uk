@@ -1,22 +1,63 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.HttpStatus.OK;
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.LOG_MESSAGE_DATA_KEY;
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
+
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-import uk.gov.companieshouse.orders.api.dto.*;
+import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
 import uk.gov.companieshouse.orders.api.exception.ConflictException;
 import uk.gov.companieshouse.orders.api.exception.ErrorType;
 import uk.gov.companieshouse.orders.api.mapper.BasketMapper;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToPaymentDetailsMapper;
 import uk.gov.companieshouse.orders.api.mapper.DeliveryDetailsMapper;
 import uk.gov.companieshouse.orders.api.mapper.ItemMapper;
-import uk.gov.companieshouse.orders.api.model.*;
+import uk.gov.companieshouse.orders.api.model.ApiError;
+import uk.gov.companieshouse.orders.api.model.Basket;
+import uk.gov.companieshouse.orders.api.model.BasketData;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.service.ApiClientService;
 import uk.gov.companieshouse.orders.api.service.BasketService;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
@@ -25,16 +66,6 @@ import uk.gov.companieshouse.orders.api.util.EricHeaderHelper;
 import uk.gov.companieshouse.orders.api.validator.CheckoutBasketValidator;
 import uk.gov.companieshouse.orders.api.validator.DeliveryDetailsValidator;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.springframework.http.HttpStatus.*;
-import static uk.gov.companieshouse.orders.api.OrdersApiApplication.*;
 
 @RestController
 public class BasketController {
@@ -328,7 +359,12 @@ public class BasketController {
         final CheckoutData data = checkout.getData();
         data.setStatus(update.getStatus());
         if (update.getStatus() == PaymentStatus.PAID) {
-            data.setPaidAt(update.getPaidAt());
+        	// The call to this method passes in a LocalDateTime which originated as a UTC
+        	// value. LocalDateTime cannot contain time zone data, so this value needs to 
+        	// be converted to London time zone to prevent differences appearing due to 
+        	// daylight saving time/British summer time.
+        	Instant instant = update.getPaidAt().atZone(ZoneId.of("UTC")).toInstant();
+            data.setPaidAt(LocalDateTime.ofInstant(instant, ZoneId.of("Europe/London")));
             data.setPaymentReference(update.getPaymentReference());
         }
         checkoutService.saveCheckout(checkout);

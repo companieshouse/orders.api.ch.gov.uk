@@ -17,7 +17,9 @@ import uk.gov.companieshouse.orders.api.service.OrderService;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -131,7 +133,9 @@ class BasketControllerTest {
         // Then
         verify(checkoutData).setStatus(paymentOutcome);
         if (paymentOutcome.equals(PaymentStatus.PAID)) {
-            verify(checkoutData).setPaidAt(paidAt);
+        	Instant instant = paidAt.atZone(ZoneId.of("UTC")).toInstant();
+            LocalDateTime withTimeZoneApplied = LocalDateTime.ofInstant(instant, ZoneId.of("Europe/London"));
+            verify(checkoutData).setPaidAt(withTimeZoneApplied);
             verify(checkoutData).setPaymentReference(payment_id);
         }
         verify(checkoutService).saveCheckout(checkout);
