@@ -16,6 +16,8 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     private DirectorOrSecretaryDetails secretaryDetails;
 
+    private String companyType;
+
     public CertificateType getCertificateType() {
         return certificateType;
     }
@@ -73,4 +75,11 @@ public class CertificateItemOptions extends DeliveryItemOptions {
         this.secretaryDetails = secretaryDetails;
     }
 
+    public String getCompanyType() {
+        return companyType;
+    }
+
+    public void setCompanyType(String companyType) {
+        this.companyType = companyType;
+    }
 }

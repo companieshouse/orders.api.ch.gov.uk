@@ -34,6 +34,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_
 class ApiToItemMapperTest {
     private static final String ID = "CHS00000000000000001";
     private static final String COMPANY_NUMBER = "00006444";
+    private static final String COMPANY_TYPE = "ltd";
     private static final int QUANTITY = 10;
     private static final String DESCRIPTION = "Certificate";
     private static final String CERTIFICATE_DESCRIPTION_IDENTIFIER = "certificate";
@@ -138,6 +139,7 @@ class ApiToItemMapperTest {
         CERTIFICATE_ITEM_OPTIONS.setRegisteredOfficeAddressDetails(REGISTERED_OFFICE_ADDRESS_DETAILS);
         CERTIFICATE_ITEM_OPTIONS.setSecretaryDetails(DIRECTOR_OR_SECRETARY_DETAILS);
         CERTIFICATE_ITEM_OPTIONS.setSurname(SURNAME);
+        CERTIFICATE_ITEM_OPTIONS.setCompanyType(COMPANY_TYPE);
 
         FILING_HISTORY = new FilingHistoryDocumentApi(DOCUMENT.getFilingHistoryDate(),
                                                       DOCUMENT.getFilingHistoryDescription(),
@@ -322,6 +324,7 @@ class ApiToItemMapperTest {
         assertAddressDetailsSame(source.getRegisteredOfficeAddressDetails(), target.getRegisteredOfficeAddressDetails());
         assertDetailsSame(source.getSecretaryDetails(), target.getSecretaryDetails());
         assertThat(target.getSurname(), is(source.getSurname()));
+        assertThat(target.getCompanyType(), is(source.getCompanyType()));
     }
 
     private void assertItemOptionsSame(final CertifiedCopyItemOptionsApi source,
