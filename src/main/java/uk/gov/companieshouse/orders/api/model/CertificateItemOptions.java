@@ -16,6 +16,18 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     private DirectorOrSecretaryDetails secretaryDetails;
 
+    private DesignatedMemberDetails designatedMemberDetails;
+
+    private MemberDetails memberDetails;
+
+    private GeneralPartnerDetails generalPartnerDetails;
+
+    private LimitedPartnerDetails limitedPartnerDetails;
+
+    private PrincipalPlaceOfBusinessDetails principalPlaceOfBusinessDetails;
+
+    private Boolean includeGeneralNatureOfBusinessInformation;
+
     private String companyType;
 
     public CertificateType getCertificateType() {
@@ -73,6 +85,54 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     public void setSecretaryDetails(DirectorOrSecretaryDetails secretaryDetails) {
         this.secretaryDetails = secretaryDetails;
+    }
+
+    public DesignatedMemberDetails getDesignatedMemberDetails() {
+        return designatedMemberDetails;
+    }
+
+    public void setDesignatedMemberDetails(DesignatedMemberDetails designatedMemberDetails) {
+        this.designatedMemberDetails = designatedMemberDetails;
+    }
+
+    public MemberDetails getMemberDetails() {
+        return memberDetails;
+    }
+
+    public void setMemberDetails(MemberDetails memberDetails) {
+        this.memberDetails = memberDetails;
+    }
+
+    public GeneralPartnerDetails getGeneralPartnerDetails() {
+        return generalPartnerDetails;
+    }
+
+    public void setGeneralPartnerDetails(GeneralPartnerDetails generalPartnerDetails) {
+        this.generalPartnerDetails = generalPartnerDetails;
+    }
+
+    public LimitedPartnerDetails getLimitedPartnerDetails() {
+        return limitedPartnerDetails;
+    }
+
+    public void setLimitedPartnerDetails(LimitedPartnerDetails limitedPartnerDetails) {
+        this.limitedPartnerDetails = limitedPartnerDetails;
+    }
+
+    public PrincipalPlaceOfBusinessDetails getPrincipalPlaceOfBusinessDetails() {
+        return principalPlaceOfBusinessDetails;
+    }
+
+    public void setPrincipalPlaceOfBusinessDetails(PrincipalPlaceOfBusinessDetails principalPlaceOfBusinessDetails) {
+        this.principalPlaceOfBusinessDetails = principalPlaceOfBusinessDetails;
+    }
+
+    public Boolean getIncludeGeneralNatureOfBusinessInformation() {
+        return includeGeneralNatureOfBusinessInformation;
+    }
+
+    public void setIncludeGeneralNatureOfBusinessInformation(Boolean includeGeneralNatureOfBusinessInformation) {
+        this.includeGeneralNatureOfBusinessInformation = includeGeneralNatureOfBusinessInformation;
     }
 
     public String getCompanyType() {

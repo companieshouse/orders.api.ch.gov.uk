@@ -49,6 +49,7 @@ class ApiToItemMapperTest {
     private static final boolean INCLUDE_COMPANY_OBJECTS_INFORMATION = true;
     private static final boolean INCLUDE_EMAIL_COPY = true;
     private static final boolean INCLUDE_GOOD_STANDING_INFORMATION = false;
+    private static final boolean INCLUDE_GENERAL_NATURE_OF_BUSINESS_INFORMATION = true;
 
     private static final boolean INCLUDE_ADDRESS = true;
     private static final boolean INCLUDE_APPOINTMENT_DATE = false;
@@ -70,6 +71,11 @@ class ApiToItemMapperTest {
     private static final CertificateItemOptionsApi CERTIFICATE_ITEM_OPTIONS;
     private static final DirectorOrSecretaryDetailsApi DIRECTOR_OR_SECRETARY_DETAILS;
     private static final RegisteredOfficeAddressDetailsApi REGISTERED_OFFICE_ADDRESS_DETAILS;
+    private static final DesignatedMemberDetailsApi DESIGNATED_MEMBER_DETAILS;
+    private static final MemberDetailsApi MEMBER_DETAILS;
+    private static final GeneralPartnerDetailsApi GENERAL_PARTNER_DETAILS;
+    private static final LimitedPartnerDetailsApi LIMITED_PARTNER_DETAILS;
+    private static final PrincipalPlaceOfBusinessDetailsApi PRINCIPAL_PLACE_OF_BUSINESS_DETAILS;
     private static final ItemCostsApi ITEM_COSTS;
     private static final ItemCostsApi CERTIFIED_COPY_ITEM_COSTS;
     private static final ItemCostsApi MISSING_IMAGE_DELIVERY_ITEM_COSTS;
@@ -125,6 +131,30 @@ class ApiToItemMapperTest {
         REGISTERED_OFFICE_ADDRESS_DETAILS.setIncludeAddressRecordsType(INCLUDE_ADDRESS_RECORDS_TYPE);
         REGISTERED_OFFICE_ADDRESS_DETAILS.setIncludeDates(INCLUDE_DATES);
 
+        DESIGNATED_MEMBER_DETAILS =  new DesignatedMemberDetailsApi();
+        DESIGNATED_MEMBER_DETAILS.setIncludeAddress(INCLUDE_ADDRESS);
+        DESIGNATED_MEMBER_DETAILS.setIncludeAppointmentDate(INCLUDE_APPOINTMENT_DATE);
+        DESIGNATED_MEMBER_DETAILS.setIncludeBasicInformation(INCLUDE_BASIC_INFORMATION);
+        DESIGNATED_MEMBER_DETAILS.setIncludeCountryOfResidence(INCLUDE_COUNTRY_OF_RESIDENCE);
+        DESIGNATED_MEMBER_DETAILS.setIncludeDobType(INCLUDE_DOB_TYPE);
+
+        MEMBER_DETAILS =  new MemberDetailsApi();
+        MEMBER_DETAILS.setIncludeAddress(INCLUDE_ADDRESS);
+        MEMBER_DETAILS.setIncludeAppointmentDate(INCLUDE_APPOINTMENT_DATE);
+        MEMBER_DETAILS.setIncludeBasicInformation(INCLUDE_BASIC_INFORMATION);
+        MEMBER_DETAILS.setIncludeCountryOfResidence(INCLUDE_COUNTRY_OF_RESIDENCE);
+        MEMBER_DETAILS.setIncludeDobType(INCLUDE_DOB_TYPE);
+
+        GENERAL_PARTNER_DETAILS = new GeneralPartnerDetailsApi();
+        GENERAL_PARTNER_DETAILS.setIncludeBasicInformation(INCLUDE_BASIC_INFORMATION);
+
+        LIMITED_PARTNER_DETAILS = new LimitedPartnerDetailsApi();
+        LIMITED_PARTNER_DETAILS.setIncludeBasicInformation(INCLUDE_BASIC_INFORMATION);
+
+        PRINCIPAL_PLACE_OF_BUSINESS_DETAILS = new PrincipalPlaceOfBusinessDetailsApi();
+        PRINCIPAL_PLACE_OF_BUSINESS_DETAILS.setIncludeAddressRecordsType(INCLUDE_ADDRESS_RECORDS_TYPE);
+        PRINCIPAL_PLACE_OF_BUSINESS_DETAILS.setIncludeDates(INCLUDE_DATES);
+
         CERTIFICATE_ITEM_OPTIONS = new CertificateItemOptionsApi();
         CERTIFICATE_ITEM_OPTIONS.setCertificateType(CertificateTypeApi.INCORPORATION);
         CERTIFICATE_ITEM_OPTIONS.setCollectionLocation(CollectionLocationApi.BELFAST);
@@ -139,6 +169,12 @@ class ApiToItemMapperTest {
         CERTIFICATE_ITEM_OPTIONS.setRegisteredOfficeAddressDetails(REGISTERED_OFFICE_ADDRESS_DETAILS);
         CERTIFICATE_ITEM_OPTIONS.setSecretaryDetails(DIRECTOR_OR_SECRETARY_DETAILS);
         CERTIFICATE_ITEM_OPTIONS.setSurname(SURNAME);
+        CERTIFICATE_ITEM_OPTIONS.setDesignatedMemberDetails(DESIGNATED_MEMBER_DETAILS);
+        CERTIFICATE_ITEM_OPTIONS.setMemberDetails(MEMBER_DETAILS);
+        CERTIFICATE_ITEM_OPTIONS.setGeneralPartnerDetails(GENERAL_PARTNER_DETAILS);
+        CERTIFICATE_ITEM_OPTIONS.setLimitedPartnerDetails(LIMITED_PARTNER_DETAILS);
+        CERTIFICATE_ITEM_OPTIONS.setPrincipalPlaceOfBusinessDetails(PRINCIPAL_PLACE_OF_BUSINESS_DETAILS);
+        CERTIFICATE_ITEM_OPTIONS.setIncludeGeneralNatureOfBusinessInformation(INCLUDE_GENERAL_NATURE_OF_BUSINESS_INFORMATION);
         CERTIFICATE_ITEM_OPTIONS.setCompanyType(COMPANY_TYPE);
 
         FILING_HISTORY = new FilingHistoryDocumentApi(DOCUMENT.getFilingHistoryDate(),
@@ -324,6 +360,12 @@ class ApiToItemMapperTest {
         assertAddressDetailsSame(source.getRegisteredOfficeAddressDetails(), target.getRegisteredOfficeAddressDetails());
         assertDetailsSame(source.getSecretaryDetails(), target.getSecretaryDetails());
         assertThat(target.getSurname(), is(source.getSurname()));
+        assertDesignatedMemberDetailsSame(source.getDesignatedMemberDetails(), target.getDesignatedMemberDetails());
+        assertMemberDetailsSame(source.getMemberDetails(), target.getMemberDetails());
+        assertGeneralPartnerDetailsSame(source.getGeneralPartnerDetails(), target.getGeneralPartnerDetails());
+        assertLimitedPartnerDetailsSame(source.getLimitedPartnerDetails(), target.getLimitedPartnerDetails());
+        assertPrincipalPlaceOfBusinessDetailsSame(source.getPrincipalPlaceOfBusinessDetails(), target.getPrincipalPlaceOfBusinessDetails());
+        assertThat(target.getIncludeGeneralNatureOfBusinessInformation(), is(source.getIncludeGeneralNatureOfBusinessInformation()));
         assertThat(target.getCompanyType(), is(source.getCompanyType()));
     }
 
@@ -366,4 +408,39 @@ class ApiToItemMapperTest {
         assertThat(target.getIncludeAddressRecordsType().getJsonName(), is(source.getIncludeAddressRecordsType().getJsonName()));
         assertThat(target.getIncludeDates(), is(source.getIncludeDates()));
     }
+
+    private void assertDesignatedMemberDetailsSame(final DesignatedMemberDetailsApi source,
+                                                   final DesignatedMemberDetails target) {
+        assertThat(target.getIncludeAddress(), is(source.getIncludeAddress()));
+        assertThat(target.getIncludeAppointmentDate(), is(source.getIncludeAppointmentDate()));
+        assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
+        assertThat(target.getIncludeCountryOfResidence(), is(source.getIncludeCountryOfResidence()));
+        assertThat(target.getIncludeDobType().getJsonName(), is(source.getIncludeDobType().getJsonName()));
+    }
+
+    private void assertMemberDetailsSame(final MemberDetailsApi source,
+                                         final MemberDetails target) {
+        assertThat(target.getIncludeAddress(), is(source.getIncludeAddress()));
+        assertThat(target.getIncludeAppointmentDate(), is(source.getIncludeAppointmentDate()));
+        assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
+        assertThat(target.getIncludeCountryOfResidence(), is(source.getIncludeCountryOfResidence()));
+        assertThat(target.getIncludeDobType().getJsonName(), is(source.getIncludeDobType().getJsonName()));
+    }
+
+    private void assertGeneralPartnerDetailsSame(final GeneralPartnerDetailsApi source,
+                                                 final GeneralPartnerDetails target) {
+        assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
+    }
+
+    private void assertLimitedPartnerDetailsSame(final LimitedPartnerDetailsApi source,
+                                                 final LimitedPartnerDetails target) {
+        assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
+    }
+
+    private void assertPrincipalPlaceOfBusinessDetailsSame(final PrincipalPlaceOfBusinessDetailsApi source,
+                                                           final PrincipalPlaceOfBusinessDetails target) {
+        assertThat(target.getIncludeAddressRecordsType().getJsonName(), is(source.getIncludeAddressRecordsType().getJsonName()));
+        assertThat(target.getIncludeDates(), is(source.getIncludeDates()));
+    }
+
 }
