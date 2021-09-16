@@ -442,5 +442,4 @@ class ApiToItemMapperTest {
         assertThat(target.getIncludeAddressRecordsType().getJsonName(), is(source.getIncludeAddressRecordsType().getJsonName()));
         assertThat(target.getIncludeDates(), is(source.getIncludeDates()));
     }
-
 }
