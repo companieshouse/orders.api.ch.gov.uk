@@ -131,14 +131,14 @@ class ApiToItemMapperTest {
         REGISTERED_OFFICE_ADDRESS_DETAILS.setIncludeAddressRecordsType(INCLUDE_ADDRESS_RECORDS_TYPE);
         REGISTERED_OFFICE_ADDRESS_DETAILS.setIncludeDates(INCLUDE_DATES);
 
-        DESIGNATED_MEMBER_DETAILS =  new DesignatedMemberDetailsApi();
+        DESIGNATED_MEMBER_DETAILS = new DesignatedMemberDetailsApi();
         DESIGNATED_MEMBER_DETAILS.setIncludeAddress(INCLUDE_ADDRESS);
         DESIGNATED_MEMBER_DETAILS.setIncludeAppointmentDate(INCLUDE_APPOINTMENT_DATE);
         DESIGNATED_MEMBER_DETAILS.setIncludeBasicInformation(INCLUDE_BASIC_INFORMATION);
         DESIGNATED_MEMBER_DETAILS.setIncludeCountryOfResidence(INCLUDE_COUNTRY_OF_RESIDENCE);
         DESIGNATED_MEMBER_DETAILS.setIncludeDobType(INCLUDE_DOB_TYPE);
 
-        MEMBER_DETAILS =  new MemberDetailsApi();
+        MEMBER_DETAILS = new MemberDetailsApi();
         MEMBER_DETAILS.setIncludeAddress(INCLUDE_ADDRESS);
         MEMBER_DETAILS.setIncludeAppointmentDate(INCLUDE_APPOINTMENT_DATE);
         MEMBER_DETAILS.setIncludeBasicInformation(INCLUDE_BASIC_INFORMATION);
