@@ -13,6 +13,7 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
 import java.time.LocalDateTime;
@@ -27,17 +28,20 @@ public class OrderService {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
 
     private final CheckoutToOrderMapper mapper;
-    private final OrderRepository repository;
+    private final CheckoutRepository checkoutRepository;
+    private final OrderRepository orderRepository;
     private final LinksGeneratorService linksGeneratorService;
     private final OrderReceivedMessageProducer ordersMessageProducer;
 
     @Value("${uk.gov.companieshouse.orders.api.orders}")
     private String orderEndpointU;
 
-    public OrderService(final CheckoutToOrderMapper mapper, final OrderRepository repository,
-                        OrderReceivedMessageProducer producer, final LinksGeneratorService linksGeneratorService) {
+    public OrderService(final CheckoutToOrderMapper mapper, final CheckoutRepository checkoutRepository,
+                        final OrderRepository orderRepository, OrderReceivedMessageProducer producer,
+                        final LinksGeneratorService linksGeneratorService) {
         this.mapper = mapper;
-        this.repository = repository;
+        this.checkoutRepository = checkoutRepository;
+        this.orderRepository = orderRepository;
         this.ordersMessageProducer = producer;
         this.linksGeneratorService = linksGeneratorService;
     }
@@ -57,7 +61,7 @@ public class OrderService {
         mappedOrder.getData().setLinks(linksGeneratorService.generateOrderLinks(mappedOrder.getId()));
 
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, mappedOrder.getId());
-        final Optional<Order> order = repository.findById(mappedOrder.getId());
+        final Optional<Order> order = orderRepository.findById(mappedOrder.getId());
         order.ifPresent(
             o -> {
                    final String message = "Order ID " + o.getId() + " already exists. Will not update.";
@@ -68,7 +72,7 @@ public class OrderService {
 
         Order savedOrder = null;
         try {
-            savedOrder = repository.save(mappedOrder);
+            savedOrder = orderRepository.save(mappedOrder);
         } catch (MongoException ex) {
             String errorMessage = String.format("Failed to save order with id %s", mappedOrder.getId());
             LOGGER.error(errorMessage, ex, logMap);
@@ -82,8 +86,13 @@ public class OrderService {
     }
 
     public Optional<Order> getOrder(String id) {
-        return repository.findById(id);
+        return orderRepository.findById(id);
     }
+
+    public Optional<Checkout> getCheckout(String id) {
+        return checkoutRepository.findById(id);
+    }
+
     /**
      * Sends a message to Kafka topic 'order-received'
      * @param orderId order id
