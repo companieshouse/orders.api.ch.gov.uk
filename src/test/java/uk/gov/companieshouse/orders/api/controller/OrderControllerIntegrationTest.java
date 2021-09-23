@@ -17,8 +17,11 @@ import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
 import static java.util.Collections.singletonList;
@@ -48,6 +51,8 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDE
 class OrderControllerIntegrationTest {
     private static final String ORDER_ID = "0001";
     private static final String ORDER_REFERENCE = "0001";
+    private static final String CHECKOUT_ID = "0002";
+    private static final String CHECKOUT_REFERENCE = "0002";
 
     @Autowired
     private MockMvc mockMvc;
@@ -56,11 +61,15 @@ class OrderControllerIntegrationTest {
     private OrderRepository orderRepository;
 
     @Autowired
+    private CheckoutRepository checkoutRepository;
+
+    @Autowired
     private ObjectMapper mapper;
 
     @AfterEach
     void tearDown() {
         orderRepository.deleteAll();
+        checkoutRepository.deleteAll();
     }
 
     @Test
@@ -175,4 +184,24 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void getCheckoutSuccessfully() throws Exception {
+        final Checkout preexistingCheckout = new Checkout();
+        preexistingCheckout.setId(CHECKOUT_ID);
+        preexistingCheckout.setUserId(CHECKOUT_REFERENCE);
+        final CheckoutData checkoutData = new CheckoutData();
+        checkoutData.setReference(CHECKOUT_REFERENCE);
+        checkoutData.setTotalOrderCost("100");
+        preexistingCheckout.setData(checkoutData);
+        checkoutRepository.save(preexistingCheckout);
+
+        mockMvc.perform(get("/checkouts/"+ CHECKOUT_ID)
+            .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+            .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+            .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+            .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().json(mapper.writeValueAsString(checkoutData)));
+    }
 }
