@@ -23,7 +23,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.*;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
@@ -117,7 +117,7 @@ public class UserAuthorisationInterceptor extends HandlerInterceptorAdapter {
      */
     private boolean getOrderUserIsResourceOwner(final HttpServletRequest request,
                                                 final HttpServletResponse response) {
-        return getRequestUserIsResourceOwner(request, response, ORDER_ID_PATH_VARIABLE, this::retrieveOrder);
+        return getRequestUserIsResourceOwner(request, response, ID_PATH_VARIABLE, this::retrieveOrder);
     }
 
     /**
