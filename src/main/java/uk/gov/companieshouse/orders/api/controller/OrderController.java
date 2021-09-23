@@ -54,7 +54,7 @@ public class OrderController {
         return ResponseEntity.ok().body(orderRetrieved.getData());
     }
 
-   @GetMapping(GET_CHECKOUT_URI)
+    @GetMapping(GET_CHECKOUT_URI)
     public ResponseEntity<CheckoutData> getCheckout(final @PathVariable(ID_PATH_VARIABLE) String id,
                                                     final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
