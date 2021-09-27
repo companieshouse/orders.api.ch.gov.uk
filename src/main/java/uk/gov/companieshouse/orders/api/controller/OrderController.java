@@ -14,10 +14,12 @@ import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 
 import java.util.Map;
 
+import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 
@@ -27,22 +29,25 @@ public class OrderController {
 
     private final OrderService orderService;
 
-    public static final String ID_PATH_VARIABLE = "id";
+    private final CheckoutService checkoutService;
+
+    public static final String ORDER_ID_PATH_VARIABLE = "id";
 
     /** <code>${uk.gov.companieshouse.orders.api.orders}/{id}</code> */
     public static final String GET_ORDER_URI =
-            "${uk.gov.companieshouse.orders.api.orders}/{" + ID_PATH_VARIABLE + "}";
+            "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}";
 
     /** <code>${uk.gov.companieshouse.orders.api.checkouts}/{id}</code> */
     public static final String GET_CHECKOUT_URI =
-        "${uk.gov.companieshouse.orders.api.checkouts}/{" + ID_PATH_VARIABLE + "}";
+        "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, CheckoutService checkoutService) {
         this.orderService = orderService;
+        this.checkoutService = checkoutService;
     }
 
     @GetMapping(GET_ORDER_URI)
-    public ResponseEntity<OrderData> getOrder(final @PathVariable(ID_PATH_VARIABLE) String id,
+    public ResponseEntity<OrderData> getOrder(final @PathVariable(ORDER_ID_PATH_VARIABLE) String id,
                                               final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
@@ -55,11 +60,12 @@ public class OrderController {
     }
 
     @GetMapping(GET_CHECKOUT_URI)
-    public ResponseEntity<CheckoutData> getCheckout(final @PathVariable(ID_PATH_VARIABLE) String id,
+    public ResponseEntity<CheckoutData> getCheckout(final @PathVariable(CHECKOUT_ID_PATH_VARIABLE) String id,
                                                     final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
        LoggingUtils.logIfNotNull(logMap, LoggingUtils.CHECKOUT_ID, id);
-       final Checkout checkoutRetrieved = orderService.getCheckout(id)
+       LOGGER.info("Retrieving checkout", logMap);
+       final Checkout checkoutRetrieved = checkoutService.getCheckoutById(id)
            .orElseThrow(ResourceNotFoundException::new);
        logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
        LOGGER.info("Checkout found and returned", logMap);

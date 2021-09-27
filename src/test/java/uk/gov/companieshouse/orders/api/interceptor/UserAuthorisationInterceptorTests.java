@@ -16,7 +16,7 @@ import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIAB
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
@@ -127,7 +127,7 @@ public class UserAuthorisationInterceptorTests {
         // Given
         givenRequest(GET, "/basket/checkouts/1234/payment");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
-        givenGetPaymentDetailsCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
         thenRequestIsAccepted();
@@ -152,7 +152,7 @@ public class UserAuthorisationInterceptorTests {
         // Given
         givenRequest(GET, "/basket/checkouts/1234/payment");
         givenRequestHasSignedInUser(WRONG_ERIC_IDENTITY_VALUE);
-        givenGetPaymentDetailsCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
         thenRequestIsRejected();
@@ -192,6 +192,31 @@ public class UserAuthorisationInterceptorTests {
         givenRequest(GET, "/orders/1234");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
         givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout internal API request that has the required headers")
+    void preHandleAcceptsAuthorisedInternalApiGetCheckoutRequest() {
+
+        // Given
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasInternalUserRole();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout user request that has the required headers")
+    void preHandleAcceptsAuthorisedUserGetCheckoutRequest() {
+
+        // Given
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
         thenRequestIsAccepted();
@@ -252,7 +277,7 @@ public class UserAuthorisationInterceptorTests {
      * Sets up the request with the checkout ID path variable as Spring does.
      * @param checkoutOwnerId the user ID value on the retrieved checkout
      */
-    private void givenGetPaymentDetailsCheckoutIdPathVariableIsPopulated(final String checkoutOwnerId) {
+    private void givenGetCheckoutIdPathVariableIsPopulated(final String checkoutOwnerId) {
         givenPathVariable(CHECKOUT_ID_PATH_VARIABLE, "1");
         when(checkoutRepository.findById("1")).thenReturn(Optional.of(checkout));
         when(checkout.getUserId()).thenReturn(checkoutOwnerId);
@@ -263,7 +288,7 @@ public class UserAuthorisationInterceptorTests {
      * @param orderOwnerId the user ID value on the retrieved order
      */
     private void givenGetOrderOrderIdPathVariableIsPopulated(final String orderOwnerId) {
-        givenPathVariable(ID_PATH_VARIABLE, "1");
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
         when(orderRepository.findById("1")).thenReturn(Optional.of(order));
         when(order.getUserId()).thenReturn(orderOwnerId);
     }

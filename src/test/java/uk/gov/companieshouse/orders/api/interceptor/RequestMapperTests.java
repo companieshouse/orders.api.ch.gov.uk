@@ -110,6 +110,17 @@ public class RequestMapperTests {
     }
 
     @Test
+    @DisplayName("getRequestMappingInfo gets the get checkout request mapping")
+    void getRequestMappingInfoGetsGetCheckout() {
+
+        // Given
+        givenRequest(GET, "/checkouts/{id}");
+
+        // When and then
+        assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(GET_CHECKOUT));
+    }
+
+    @Test
     @DisplayName("getRequestMappingInfo returns null where no mapping found")
     void getRequestMappingInfoReturnsNullWhereNoMappingFound() {
 

@@ -225,6 +225,30 @@ public class UserAuthenticationInterceptorTests {
     }
 
     @Test
+    @DisplayName("preHandle accepts get checkout request that has signed in user headers")
+    void preHandleAcceptsSignedInUserGetCheckoutRequest() {
+
+        // Given
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout request that has authenticated API headers")
+    void preHandleAcceptsAuthenticatedApiGetCheckoutRequest() {
+
+        // Given
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasAuthenticatedApi();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
     @DisplayName("preHandle rejects request from which identity header value is missing for single permissible auth type request")
     void preHandleRejectsMissingIdentityHeaderForSinglePermissibleAuthTypeRequest() {
 
