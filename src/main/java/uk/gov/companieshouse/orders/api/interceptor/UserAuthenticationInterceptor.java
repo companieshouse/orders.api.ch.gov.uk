@@ -6,6 +6,7 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.ADD_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHECKOUT;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
@@ -48,6 +49,7 @@ public class UserAuthenticationInterceptor extends HandlerInterceptorAdapter {
                     return hasSignedInUser(request, response);
                 case GET_PAYMENT_DETAILS:
                 case GET_ORDER:
+                case GET_CHECKOUT:
                     return hasAuthenticatedClient(request, response);
                 case PATCH_PAYMENT_DETAILS:
                     return hasAuthenticatedApi(request, response);

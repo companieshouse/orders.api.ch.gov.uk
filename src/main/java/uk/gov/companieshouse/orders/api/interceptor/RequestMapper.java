@@ -13,6 +13,7 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.*;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
 
 @Service
@@ -24,12 +25,14 @@ public class RequestMapper implements InitializingBean {
     static final String BASKET = "basket";
     static final String PATCH_PAYMENT_DETAILS = "patchPaymentDetails";
     static final String GET_ORDER = "getOrder";
+    static final String GET_CHECKOUT = "getCheckout";
 
     private final String addItemUri;
     private final String checkoutBasketUri;
     private final String basketUri;
     private final String getPaymentDetailsUri;
     private final String getOrderUri;
+    private final String getCheckoutUri;
     private final String patchPaymentDetailsUri;
 
     /**
@@ -48,6 +51,8 @@ public class RequestMapper implements InitializingBean {
             final String getPaymentDetailsUri,
             @Value(GET_ORDER_URI)
             final String getOrderUri,
+            @Value(GET_CHECKOUT_URI)
+            final String getCheckoutUri,
             @Value(PATCH_PAYMENT_DETAILS_URI)
             final String patchPaymentDetailsUri) {
         this.addItemUri = addItemUri;
@@ -55,6 +60,7 @@ public class RequestMapper implements InitializingBean {
         this.basketUri = basketUri;
         this.getPaymentDetailsUri = getPaymentDetailsUri;
         this.getOrderUri = getOrderUri;
+        this.getCheckoutUri = getCheckoutUri;
         this.patchPaymentDetailsUri = patchPaymentDetailsUri;
     }
 
@@ -110,9 +116,14 @@ public class RequestMapper implements InitializingBean {
                         new PatternsRequestCondition(getOrderUri),
                         new RequestMethodsRequestCondition(RequestMethod.GET),
                         null, null, null, null, null);
+        final RequestMappingInfo getCheckout =
+            new RequestMappingInfo(GET_CHECKOUT,
+                new PatternsRequestCondition(getCheckoutUri),
+                new RequestMethodsRequestCondition(RequestMethod.GET),
+                null, null, null, null, null);
 
         knownRequests = asList(
-                addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket, patchPaymentDetails, getOrder
+                addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket, patchPaymentDetails, getOrder, getCheckout
         );
 
     }

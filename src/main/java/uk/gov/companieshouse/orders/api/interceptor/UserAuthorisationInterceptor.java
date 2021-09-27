@@ -1,5 +1,19 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHECKOUT;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -18,14 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
-
-import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.*;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
 @Service
 public class UserAuthorisationInterceptor extends HandlerInterceptorAdapter {
@@ -58,7 +64,8 @@ public class UserAuthorisationInterceptor extends HandlerInterceptorAdapter {
                 case BASKET:
                     return true; // no authorisation required
                 case GET_PAYMENT_DETAILS:
-                    return getRequestClientIsAuthorised(request, response, this::getPaymentDetailsUserIsResourceOwner);
+                case GET_CHECKOUT:
+                    return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
                 case GET_ORDER:
                     return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
                 case PATCH_PAYMENT_DETAILS:
@@ -103,8 +110,8 @@ public class UserAuthorisationInterceptor extends HandlerInterceptorAdapter {
      * @param response the response, updated by this should the request be found to be unauthorised
      * @return whether the request is authorised (<code>true</code>), or not (<code>false</code>)
      */
-    private boolean getPaymentDetailsUserIsResourceOwner(final HttpServletRequest request,
-                                                         final HttpServletResponse response) {
+    private boolean getCheckoutUserIsResourceOwner(final HttpServletRequest request,
+                                                   final HttpServletResponse response) {
         return getRequestUserIsResourceOwner(request, response, CHECKOUT_ID_PATH_VARIABLE, this::retrieveCheckout);
     }
 
@@ -117,7 +124,7 @@ public class UserAuthorisationInterceptor extends HandlerInterceptorAdapter {
      */
     private boolean getOrderUserIsResourceOwner(final HttpServletRequest request,
                                                 final HttpServletResponse response) {
-        return getRequestUserIsResourceOwner(request, response, ID_PATH_VARIABLE, this::retrieveOrder);
+        return getRequestUserIsResourceOwner(request, response, ORDER_ID_PATH_VARIABLE, this::retrieveOrder);
     }
 
     /**

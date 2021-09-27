@@ -23,6 +23,7 @@ import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
@@ -35,6 +36,7 @@ import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_ACCESS_TOKEN;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
@@ -188,7 +190,7 @@ class OrderControllerIntegrationTest {
     void getCheckoutSuccessfully() throws Exception {
         final Checkout preexistingCheckout = new Checkout();
         preexistingCheckout.setId(CHECKOUT_ID);
-        preexistingCheckout.setUserId(CHECKOUT_REFERENCE);
+        preexistingCheckout.setUserId(ERIC_IDENTITY_VALUE);
         final CheckoutData checkoutData = new CheckoutData();
         checkoutData.setReference(CHECKOUT_REFERENCE);
         checkoutData.setTotalOrderCost("100");
