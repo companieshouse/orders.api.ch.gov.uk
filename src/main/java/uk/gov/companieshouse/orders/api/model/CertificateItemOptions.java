@@ -30,6 +30,8 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     private String companyType;
 
+    private LiquidatorsDetails liquidatorsDetails;
+
     public CertificateType getCertificateType() {
         return certificateType;
     }
@@ -141,5 +143,13 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     public void setCompanyType(String companyType) {
         this.companyType = companyType;
+    }
+
+    public LiquidatorsDetails getLiquidatorsDetails() {
+        return liquidatorsDetails;
+    }
+
+    public void setLiquidatorsDetails(LiquidatorsDetails liquidatorsDetails) {
+        this.liquidatorsDetails = liquidatorsDetails;
     }
 }
