@@ -83,6 +83,7 @@ class ApiToItemMapperTest {
     private static final CertifiedCopyItemOptionsApi CERTIFIED_COPY_ITEM_OPTIONS;
     private static final FilingHistoryDocumentApi FILING_HISTORY;
     private static final MissingImageDeliveryItemOptionsApi MISSING_IMAGE_DELIVERY_ITEM_OPTIONS;
+    private static final LiquidatorsDetailsApi LIQUIDATORS_DETAILS;
 
     @Configuration
     @ComponentScan(basePackageClasses = ApiToItemMapperTest.class)
@@ -155,6 +156,8 @@ class ApiToItemMapperTest {
         PRINCIPAL_PLACE_OF_BUSINESS_DETAILS.setIncludeAddressRecordsType(INCLUDE_ADDRESS_RECORDS_TYPE);
         PRINCIPAL_PLACE_OF_BUSINESS_DETAILS.setIncludeDates(INCLUDE_DATES);
 
+        LIQUIDATORS_DETAILS = new LiquidatorsDetailsApi();
+
         CERTIFICATE_ITEM_OPTIONS = new CertificateItemOptionsApi();
         CERTIFICATE_ITEM_OPTIONS.setCertificateType(CertificateTypeApi.INCORPORATION);
         CERTIFICATE_ITEM_OPTIONS.setCollectionLocation(CollectionLocationApi.BELFAST);
@@ -176,6 +179,7 @@ class ApiToItemMapperTest {
         CERTIFICATE_ITEM_OPTIONS.setPrincipalPlaceOfBusinessDetails(PRINCIPAL_PLACE_OF_BUSINESS_DETAILS);
         CERTIFICATE_ITEM_OPTIONS.setIncludeGeneralNatureOfBusinessInformation(INCLUDE_GENERAL_NATURE_OF_BUSINESS_INFORMATION);
         CERTIFICATE_ITEM_OPTIONS.setCompanyType(COMPANY_TYPE);
+        CERTIFICATE_ITEM_OPTIONS.setLiquidatorsDetails(LIQUIDATORS_DETAILS);
 
         FILING_HISTORY = new FilingHistoryDocumentApi(DOCUMENT.getFilingHistoryDate(),
                                                       DOCUMENT.getFilingHistoryDescription(),
@@ -367,6 +371,7 @@ class ApiToItemMapperTest {
         assertPrincipalPlaceOfBusinessDetailsSame(source.getPrincipalPlaceOfBusinessDetails(), target.getPrincipalPlaceOfBusinessDetails());
         assertThat(target.getIncludeGeneralNatureOfBusinessInformation(), is(source.getIncludeGeneralNatureOfBusinessInformation()));
         assertThat(target.getCompanyType(), is(source.getCompanyType()));
+        assertLiquidatorsDetailsSame(source.getLiquidatorsDetails(), target.getLiquidatorsDetails());
     }
 
     private void assertItemOptionsSame(final CertifiedCopyItemOptionsApi source,
@@ -441,5 +446,10 @@ class ApiToItemMapperTest {
                                                            final PrincipalPlaceOfBusinessDetails target) {
         assertThat(target.getIncludeAddressRecordsType().getJsonName(), is(source.getIncludeAddressRecordsType().getJsonName()));
         assertThat(target.getIncludeDates(), is(source.getIncludeDates()));
+    }
+
+    private void assertLiquidatorsDetailsSame(final LiquidatorsDetailsApi source,
+            final LiquidatorsDetails target) {
+        assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
     }
 }
