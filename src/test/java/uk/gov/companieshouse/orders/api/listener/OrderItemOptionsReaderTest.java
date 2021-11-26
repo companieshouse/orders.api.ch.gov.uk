@@ -1,6 +1,20 @@
 package uk.gov.companieshouse.orders.api.listener;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_DELIVERY_KIND;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.util.List;
 import org.bson.Document;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,21 +27,6 @@ import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
 import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.MissingImageDeliveryItemOptions;
-
-import java.io.IOException;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_DELIVERY_KIND;
 
 /**
  * Unit tests the {@link OrderItemOptionsReader} component.
@@ -193,13 +192,13 @@ class OrderItemOptionsReaderTest {
         when(itemDocument.get("item_options", Document.class)).thenReturn(optionsDocument);
         when(optionsDocument.toJson()).thenReturn("{}");
         when(certificateItem.getKind()).thenReturn(CERTIFICATE_KIND);
-        when(mapper.readValue("{}", CertificateItemOptions.class)).thenThrow(new IOException("Test message"));
+        when(mapper.readValue("{}", CertificateItemOptions.class)).thenThrow(new IllegalStateException("Test message"));
 
         // When and then
         final IllegalStateException exception =
                 assertThrows(IllegalStateException.class,
                         () -> readerUnderTest.readOrderItemsOptions(items, orderDocument, UNUSED_ORDER_TYPE_NAME));
-        assertThat(exception.getMessage(), is("Error parsing item options JSON: Test message"));
+        assertThat(exception.getMessage(), is("Test message"));
 
         // Then
         verify(items).get(0);
