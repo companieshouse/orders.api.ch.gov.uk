@@ -1,6 +1,15 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.MULTI_STATUS;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,16 +28,6 @@ import uk.gov.companieshouse.orders.api.exception.KafkaMessagingException;
 import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.model.ApiError;
 import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
-
-import java.util.Collections;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
-import static org.springframework.http.HttpStatus.MULTI_STATUS;
 
 @ExtendWith(MockitoExtension.class)
 public class GlobalExceptionHandlerTest {

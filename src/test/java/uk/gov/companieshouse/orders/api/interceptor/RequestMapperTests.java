@@ -1,5 +1,22 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpMethod.POST;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHECKOUT;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+
+import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -8,15 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
-
-import javax.servlet.http.HttpServletRequest;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.nullValue;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpMethod.*;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.*;
+import org.springframework.web.util.UrlPathHelper;
 
 /**
  * Unit/integration tests the {@link RequestMapper} class.
@@ -141,6 +150,7 @@ public class RequestMapperTests {
         when(request.getRequestURI()).thenReturn(uri);
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
+        when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
     }
 
 }

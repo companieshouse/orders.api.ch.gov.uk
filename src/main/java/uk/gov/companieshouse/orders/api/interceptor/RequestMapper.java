@@ -1,20 +1,21 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
+import static java.util.Arrays.asList;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.ADD_ITEM_URI;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.BASKET_URI;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_BASKET_URI;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.GET_PAYMENT_DETAILS_URI;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
+
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.RequestMethodsRequestCondition;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-
-import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-
-import static java.util.Arrays.asList;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.*;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
 
 @Service
 public class RequestMapper implements InitializingBean {
@@ -23,6 +24,7 @@ public class RequestMapper implements InitializingBean {
     static final String CHECKOUT_BASKET = "checkoutBasket";
     static final String GET_PAYMENT_DETAILS = "getPaymentDetails";
     static final String BASKET = "basket";
+    static final String PATCH_BASKET = "basket";
     static final String PATCH_PAYMENT_DETAILS = "patchPaymentDetails";
     static final String GET_ORDER = "getOrder";
     static final String GET_CHECKOUT = "getCheckout";
@@ -81,46 +83,54 @@ public class RequestMapper implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        final RequestMappingInfo addItem =
-                new RequestMappingInfo(ADD_ITEM,
-                        new PatternsRequestCondition(addItemUri),
-                        new RequestMethodsRequestCondition(RequestMethod.POST),
-                        null, null, null, null, null);
-        final RequestMappingInfo checkoutBasket =
-                new RequestMappingInfo(CHECKOUT_BASKET,
-                        new PatternsRequestCondition(checkoutBasketUri),
-                        new RequestMethodsRequestCondition(RequestMethod.POST),
-                        null, null, null, null, null);
-        final RequestMappingInfo getPaymentDetails =
-                new RequestMappingInfo(GET_PAYMENT_DETAILS,
-                        new PatternsRequestCondition(getPaymentDetailsUri),
-                        new RequestMethodsRequestCondition(RequestMethod.GET),
-                        null, null, null, null, null);
-        final RequestMappingInfo getBasket =
-            new RequestMappingInfo(BASKET,
-                new PatternsRequestCondition(basketUri),
-                new RequestMethodsRequestCondition(RequestMethod.GET),
-                null, null, null, null, null);
-        final RequestMappingInfo patchBasket =
-                new RequestMappingInfo(BASKET,
-                        new PatternsRequestCondition(basketUri),
-                        new RequestMethodsRequestCondition(RequestMethod.PATCH),
-                        null, null, null, null, null);
-        final RequestMappingInfo patchPaymentDetails =
-                new RequestMappingInfo(PATCH_PAYMENT_DETAILS,
-                        new PatternsRequestCondition(patchPaymentDetailsUri),
-                        new RequestMethodsRequestCondition(RequestMethod.PATCH),
-                        null, null, null, null, null);
-        final RequestMappingInfo getOrder =
-                new RequestMappingInfo(GET_ORDER,
-                        new PatternsRequestCondition(getOrderUri),
-                        new RequestMethodsRequestCondition(RequestMethod.GET),
-                        null, null, null, null, null);
-        final RequestMappingInfo getCheckout =
-            new RequestMappingInfo(GET_CHECKOUT,
-                new PatternsRequestCondition(getCheckoutUri),
-                new RequestMethodsRequestCondition(RequestMethod.GET),
-                null, null, null, null, null);
+
+        final RequestMappingInfo addItem = RequestMappingInfo
+                .paths(addItemUri)
+                .methods(RequestMethod.POST)
+                .mappingName(ADD_ITEM)
+                .build();
+
+        final RequestMappingInfo checkoutBasket = RequestMappingInfo
+                .paths(checkoutBasketUri)
+                .methods(RequestMethod.POST)
+                .mappingName(CHECKOUT_BASKET)
+                .build();
+
+        final RequestMappingInfo getPaymentDetails = RequestMappingInfo
+                .paths(getPaymentDetailsUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_PAYMENT_DETAILS)
+                .build();
+
+        final RequestMappingInfo getBasket = RequestMappingInfo
+                .paths(basketUri)
+                .methods(RequestMethod.GET)
+                .mappingName(BASKET)
+                .build();
+
+        final RequestMappingInfo patchBasket = RequestMappingInfo
+                .paths(basketUri)
+                .methods(RequestMethod.PATCH)
+                .mappingName(PATCH_BASKET)
+                .build();
+
+        final RequestMappingInfo patchPaymentDetails = RequestMappingInfo
+                .paths(patchPaymentDetailsUri)
+                .methods(RequestMethod.PATCH)
+                .mappingName(PATCH_PAYMENT_DETAILS)
+                .build();
+
+        final RequestMappingInfo getOrder = RequestMappingInfo
+                .paths(getOrderUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_ORDER)
+                .build();
+
+        final RequestMappingInfo getCheckout = RequestMappingInfo
+                .paths(getCheckoutUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_CHECKOUT)
+                .build();
 
         knownRequests = asList(
                 addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket, patchPaymentDetails, getOrder, getCheckout

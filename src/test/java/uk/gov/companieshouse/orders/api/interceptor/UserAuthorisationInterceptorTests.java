@@ -24,6 +24,10 @@ import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDEN
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
+import java.util.Map;
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -33,15 +37,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.web.util.UrlPathHelper;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Unit/integration tests the {@link UserAuthorisationInterceptor} class.
@@ -271,6 +271,7 @@ public class UserAuthorisationInterceptorTests {
         when(request.getRequestURI()).thenReturn(uri);
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
+        when(request.getAttribute(UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
     }
 
     /**
