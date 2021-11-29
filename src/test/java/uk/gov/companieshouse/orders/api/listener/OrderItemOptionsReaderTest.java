@@ -12,6 +12,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_DELIVERY_KIND;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
@@ -179,7 +180,7 @@ class OrderItemOptionsReaderTest {
     }
 
     @Test
-    @DisplayName("readOrderItemsOptions() propagates mapper IOException as an IllegalStateException")
+    @DisplayName("readOrderItemsOptions() propagates mapper JsonProcessingException as an IllegalStateException")
     void readOrderItemsOptionsPropagatesMapperIOExceptionAsIllegalStateException() throws IOException {
 
         // Given
@@ -192,13 +193,13 @@ class OrderItemOptionsReaderTest {
         when(itemDocument.get("item_options", Document.class)).thenReturn(optionsDocument);
         when(optionsDocument.toJson()).thenReturn("{}");
         when(certificateItem.getKind()).thenReturn(CERTIFICATE_KIND);
-        when(mapper.readValue("{}", CertificateItemOptions.class)).thenThrow(new IllegalStateException("Test message"));
+        when(mapper.readValue("{}", CertificateItemOptions.class)).thenThrow(new JsonProcessingException("Test message") {});
 
         // When and then
         final IllegalStateException exception =
                 assertThrows(IllegalStateException.class,
                         () -> readerUnderTest.readOrderItemsOptions(items, orderDocument, UNUSED_ORDER_TYPE_NAME));
-        assertThat(exception.getMessage(), is("Test message"));
+        assertThat(exception.getMessage(), is("Error parsing item options JSON: Test message"));
 
         // Then
         verify(items).get(0);
