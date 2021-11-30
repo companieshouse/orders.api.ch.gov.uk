@@ -1,5 +1,24 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpMethod.POST;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_INVALID_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -9,17 +28,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.*;
-import static org.springframework.http.HttpMethod.*;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.*;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_INVALID_TYPE_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+import org.springframework.web.util.UrlPathHelper;
 
 /**
  * Unit/integration tests the {@link UserAuthenticationInterceptor} class.
@@ -319,6 +328,7 @@ public class UserAuthenticationInterceptorTests {
         when(request.getRequestURI()).thenReturn(uri);
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
+        when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
     }
 
     /**
