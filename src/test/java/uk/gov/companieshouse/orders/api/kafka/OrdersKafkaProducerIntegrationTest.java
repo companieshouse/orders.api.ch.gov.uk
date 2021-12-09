@@ -54,7 +54,7 @@ public class OrdersKafkaProducerIntegrationTest {
     private OrdersMessageFactory ordersAvroSerializer;
     private String ORDER_ID = "123456";
     private String ORDERS_URI = "/orders/" + ORDER_ID;
-    private OrderReceived orderReceived = new OrderReceived(ORDERS_URI);
+    private OrderReceived orderReceived = new OrderReceived(ORDERS_URI, 0);
 
     private Message createTestMessage() throws SerializationException {
         return ordersAvroSerializer.createMessage(orderReceived);
