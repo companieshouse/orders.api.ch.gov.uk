@@ -32,6 +32,8 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     private LiquidatorsDetails liquidatorsDetails;
 
+    private String companyStatus;
+
     public CertificateType getCertificateType() {
         return certificateType;
     }
@@ -151,5 +153,13 @@ public class CertificateItemOptions extends DeliveryItemOptions {
 
     public void setLiquidatorsDetails(LiquidatorsDetails liquidatorsDetails) {
         this.liquidatorsDetails = liquidatorsDetails;
+    }
+
+    public String getCompanyStatus() {
+        return companyStatus;
+    }
+
+    public void setCompanyStatus(String companyStatus) {
+        this.companyStatus = companyStatus;
     }
 }
