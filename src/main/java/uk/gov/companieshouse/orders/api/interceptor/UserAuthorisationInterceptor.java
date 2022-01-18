@@ -15,7 +15,7 @@ import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
 import uk.gov.companieshouse.logging.Logger;
@@ -34,7 +34,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 
 @Service
-public class UserAuthorisationInterceptor extends HandlerInterceptorAdapter {
+public class UserAuthorisationInterceptor implements HandlerInterceptor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
 

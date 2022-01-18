@@ -23,7 +23,6 @@ import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
@@ -36,7 +35,6 @@ import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_ACCESS_TOKEN;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
@@ -55,6 +53,7 @@ class OrderControllerIntegrationTest {
     private static final String ORDER_REFERENCE = "0001";
     private static final String CHECKOUT_ID = "0002";
     private static final String CHECKOUT_REFERENCE = "0002";
+    private static final String COMPANY_STATUS_ACTIVE = "active";
 
     @Autowired
     private MockMvc mockMvc;
@@ -106,6 +105,7 @@ class OrderControllerIntegrationTest {
         certificate.setKind(CERTIFICATE_KIND);
         final CertificateItemOptions options = new CertificateItemOptions();
         options.setCertificateType(INCORPORATION_WITH_ALL_NAME_CHANGES);
+        options.setCompanyStatus(COMPANY_STATUS_ACTIVE);
         certificate.setItemOptions(options);
         orderData.setItems(singletonList(certificate));
         preexistingOrder.setData(orderData);
@@ -119,7 +119,9 @@ class OrderControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].item_options.certificate_type",
-                        is(INCORPORATION_WITH_ALL_NAME_CHANGES.getJsonName())));
+                        is(INCORPORATION_WITH_ALL_NAME_CHANGES.getJsonName())))
+                .andExpect(jsonPath("$.items[0].item_options.company_status",
+                        is(COMPANY_STATUS_ACTIVE)));
     }
 
     @Test
