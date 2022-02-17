@@ -84,6 +84,8 @@ class ApiToItemMapperTest {
     private static final FilingHistoryDocumentApi FILING_HISTORY;
     private static final MissingImageDeliveryItemOptionsApi MISSING_IMAGE_DELIVERY_ITEM_OPTIONS;
     private static final LiquidatorsDetailsApi LIQUIDATORS_DETAILS;
+    private static final AdministratorsDetailsApi ADMINISTRATORS_DETAILS;
+
 
     @Configuration
     @ComponentScan(basePackageClasses = ApiToItemMapperTest.class)
@@ -158,6 +160,8 @@ class ApiToItemMapperTest {
 
         LIQUIDATORS_DETAILS = new LiquidatorsDetailsApi();
 
+        ADMINISTRATORS_DETAILS = new AdministratorsDetailsApi();
+
         CERTIFICATE_ITEM_OPTIONS = new CertificateItemOptionsApi();
         CERTIFICATE_ITEM_OPTIONS.setCertificateType(CertificateTypeApi.INCORPORATION);
         CERTIFICATE_ITEM_OPTIONS.setCollectionLocation(CollectionLocationApi.BELFAST);
@@ -180,6 +184,7 @@ class ApiToItemMapperTest {
         CERTIFICATE_ITEM_OPTIONS.setIncludeGeneralNatureOfBusinessInformation(INCLUDE_GENERAL_NATURE_OF_BUSINESS_INFORMATION);
         CERTIFICATE_ITEM_OPTIONS.setCompanyType(COMPANY_TYPE);
         CERTIFICATE_ITEM_OPTIONS.setLiquidatorsDetails(LIQUIDATORS_DETAILS);
+        CERTIFICATE_ITEM_OPTIONS.setAdministratorsDetails(ADMINISTRATORS_DETAILS);
 
         FILING_HISTORY = new FilingHistoryDocumentApi(DOCUMENT.getFilingHistoryDate(),
                                                       DOCUMENT.getFilingHistoryDescription(),
@@ -372,6 +377,7 @@ class ApiToItemMapperTest {
         assertThat(target.getIncludeGeneralNatureOfBusinessInformation(), is(source.getIncludeGeneralNatureOfBusinessInformation()));
         assertThat(target.getCompanyType(), is(source.getCompanyType()));
         assertLiquidatorsDetailsSame(source.getLiquidatorsDetails(), target.getLiquidatorsDetails());
+        assertAdministratorsDetailsSame(source.getAdministratorsDetails(), target.getAdministratorsDetails());
     }
 
     private void assertItemOptionsSame(final CertifiedCopyItemOptionsApi source,
@@ -450,6 +456,11 @@ class ApiToItemMapperTest {
 
     private void assertLiquidatorsDetailsSame(final LiquidatorsDetailsApi source,
             final LiquidatorsDetails target) {
+        assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
+    }
+
+    private void assertAdministratorsDetailsSame(final AdministratorsDetailsApi source,
+            final AdministratorsDetails target) {
         assertThat(target.getIncludeBasicInformation(), is(source.getIncludeBasicInformation()));
     }
 }
