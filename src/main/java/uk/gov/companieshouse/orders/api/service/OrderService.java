@@ -2,6 +2,10 @@ package uk.gov.companieshouse.orders.api.service;
 
 import com.mongodb.MongoException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -91,6 +95,12 @@ public class OrderService {
 
     public Optional<Checkout> getCheckout(String id) {
         return checkoutRepository.findById(id);
+    }
+
+    public void findOrder(String email, String companyNumber) {
+        Pageable pageable = PageRequest.of(1, 10, Sort.by("orderedAt").descending().and(Sort.by("companyNumber")));
+        Page<Order> page = orderRepository.findByCriteria(email, companyNumber, pageable);
+
     }
 
     /**
