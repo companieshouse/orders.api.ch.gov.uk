@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.orders.api.model;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class OrderSummary {
     private final String id;
@@ -79,5 +80,26 @@ public class OrderSummary {
 
     public ResourceLink getResourceLink() {
         return resourceLink;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        OrderSummary that = (OrderSummary) o;
+        return Objects.equals(id, that.id)
+                && Objects.equals(email, that.email)
+                && Objects.equals(productLine, that.productLine)
+                && Objects.equals(orderDate, that.orderDate)
+                && Objects.equals(resourceLink, that.resourceLink);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, email, productLine, orderDate, resourceLink);
     }
 }

@@ -1,11 +1,10 @@
 package uk.gov.companieshouse.orders.api.service;
 
 import com.mongodb.MongoException;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -15,10 +14,18 @@ import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderCriteria;
+import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
+import uk.gov.companieshouse.orders.api.model.OrderSummary;
+import uk.gov.companieshouse.orders.api.model.ResourceLink;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -26,6 +33,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+import static java.util.Objects.isNull;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
@@ -100,13 +108,43 @@ public class OrderService {
     }
 
     /**
-     * Returns a result consisting of order summaries corresponding to the supplied search criteria.
+     * Returns an result consisting of order summaries corresponding to the supplied search
+     * criteria.
      *
      * @param orderSearchCriteria to find existing orders
      * @return OrderSearchResults matching the supplied criteria
      */
     public OrderSearchResults searchOrders(OrderSearchCriteria orderSearchCriteria) {
-        return null;
+        OrderCriteria orderCriteria = orderSearchCriteria.getOrderCriteria();
+        List<Order> orders = orderRepository.searchOrders(
+                StringUtils.defaultIfBlank(orderCriteria.getOrderId(), "^.*$"),
+                StringUtils.isBlank(orderCriteria.getEmail()) ? "^.*$" : "^.*" + orderCriteria.getEmail() + ".*$",
+                StringUtils.defaultIfBlank(orderCriteria.getCompanyNumber(), "^.*$"));
+
+        return new OrderSearchResults(orders.size(),
+                orders.stream().map(
+                        order -> OrderSummary.newBuilder()
+                            .withId(order.getId())
+                            .withEmail(
+                                    Optional.ofNullable(order.getData())
+                                            .map(OrderData::getOrderedBy)
+                                            .map(ActionedBy::getEmail)
+                                            .orElse(null))
+                            .withProductLine(
+                                    Optional.ofNullable(order.getData())
+                                            .map(OrderData::getItems)
+                                            .flatMap(items -> items.stream().findFirst())
+                                            .map(Item::getKind)
+                                            .orElse(null))
+                            .withOrderDate(order.getCreatedAt())
+                            .withResourceLink(
+                                    Optional.ofNullable(order.getData())
+                                            .map(OrderData::getLinks)
+                                            .map(OrderLinks::getSelf)
+                                            .map(self -> new ResourceLink(new HRef(self), new HRef(self)))
+                                            .orElse(null))
+                            .build()
+                ).collect(Collectors.toList()));
     }
 
     /**

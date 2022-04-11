@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -20,12 +21,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderCriteria;
+import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
+import uk.gov.companieshouse.orders.api.model.ResourceLink;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -59,6 +66,16 @@ class OrderServiceTest {
     private List<Order> searchOrdersResult;
     @Mock
     private Order orderResult;
+    @Mock
+    private OrderData orderData;
+    @Mock
+    private ActionedBy orderedBy;
+    @Mock
+    private OrderLinks links;
+    @Mock
+    private List<Item> items;
+    @Mock
+    private Item item;
 
     @Test
     void createOrderCreatesOrder() {
@@ -103,17 +120,34 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("search orders returns an expected list of orders")
+    @DisplayName("search orders returns an expected order with all details populated")
     void searchOrders() {
         //given
-        when(orderResult.getId()).thenReturn("ORD-123-456");
-        when(searchOrdersResult.get(0)).thenReturn(orderResult);
-        when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
-                searchOrdersResult);
         when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
-        OrderSummary orderSummary = OrderSummary.newBuilder().withId("ORD-123-456").build();
-        OrderSearchResults expected = new OrderSearchResults(1,
-                Collections.singletonList(orderSummary));
+        when(orderCriteria.getOrderId()).thenReturn("");
+        when(orderCriteria.getEmail()).thenReturn("");
+        when(orderCriteria.getCompanyNumber()).thenReturn("");
+        when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
+                Collections.singletonList(orderResult));
+        when(orderResult.getId()).thenReturn("ORD-123-456");
+        when(orderResult.getData()).thenReturn(orderData);
+        when(orderData.getOrderedBy()).thenReturn(orderedBy);
+        when(orderedBy.getEmail()).thenReturn("demo@ch.gov.uk");
+        when(orderData.getItems()).thenReturn(Collections.singletonList(item));
+        when(item.getKind()).thenReturn("item#certificate");
+        when(orderResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 04, 11).atStartOfDay());
+        when(orderData.getLinks()).thenReturn(links);
+        when(links.getSelf()).thenReturn("http");
+
+        OrderSummary orderSummary = OrderSummary.newBuilder()
+                                                .withId("ORD-123-456")
+                                                .withEmail("demo@ch.gov.uk")
+                                                .withProductLine("item#certificate")
+                                                .withOrderDate(LocalDate.of(2022, 04, 11).atStartOfDay())
+                                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                                .build();
+
+        OrderSearchResults expected = new OrderSearchResults(1, Collections.singletonList(orderSummary));
 
         //when
         OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
@@ -122,4 +156,25 @@ class OrderServiceTest {
         assertThat(actual, is(expected));
     }
 
+    @Test
+    @DisplayName("search orders returns an order with null details")
+    void searchOrdersNull() {
+        //given
+        when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
+        when(orderCriteria.getOrderId()).thenReturn("");
+        when(orderCriteria.getEmail()).thenReturn("");
+        when(orderCriteria.getCompanyNumber()).thenReturn("");
+        when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
+                Collections.singletonList(orderResult));
+
+        OrderSummary orderSummary = OrderSummary.newBuilder().build();
+
+        OrderSearchResults expected = new OrderSearchResults(1, Collections.singletonList(orderSummary));
+
+        //when
+        OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
+
+        //then
+        assertThat(actual, is(expected));
+    }
 }

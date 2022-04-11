@@ -42,4 +42,16 @@ public class OrderCriteria {
             return new OrderCriteria(this);
         }
     }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getCompanyNumber() {
+        return companyNumber;
+    }
 }
