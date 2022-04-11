@@ -17,6 +17,8 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
+import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -97,10 +99,14 @@ public class OrderService {
         return checkoutRepository.findById(id);
     }
 
-    public void findOrder(String email, String companyNumber) {
-        Pageable pageable = PageRequest.of(1, 10, Sort.by("orderedAt").descending().and(Sort.by("companyNumber")));
-        Page<Order> page = orderRepository.findByCriteria(email, companyNumber, pageable);
-
+    /**
+     * Returns a result consisting of order summaries corresponding to the supplied search criteria.
+     *
+     * @param orderSearchCriteria to find existing orders
+     * @return OrderSearchResults matching the supplied criteria
+     */
+    public OrderSearchResults searchOrders(OrderSearchCriteria orderSearchCriteria) {
+        return null;
     }
 
     /**
