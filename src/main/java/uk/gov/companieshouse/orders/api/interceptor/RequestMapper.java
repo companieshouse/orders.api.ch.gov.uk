@@ -126,16 +126,16 @@ public class RequestMapper implements InitializingBean {
                 .mappingName(PATCH_PAYMENT_DETAILS)
                 .build();
 
+        final RequestMappingInfo searchOrders = RequestMappingInfo
+                .paths(searchUri)
+                .methods(RequestMethod.GET)
+                .mappingName(SEARCH)
+                .build();
+
         final RequestMappingInfo getOrder = RequestMappingInfo
                 .paths(getOrderUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_ORDER)
-                .build();
-
-        final RequestMappingInfo search = RequestMappingInfo
-                .paths(searchUri)
-                .methods(RequestMethod.GET)
-                .mappingName(SEARCH)
                 .build();
 
         final RequestMappingInfo getCheckout = RequestMappingInfo
@@ -144,9 +144,11 @@ public class RequestMapper implements InitializingBean {
                 .mappingName(GET_CHECKOUT)
                 .build();
 
+        // Note: searchOrders [/orders/search] must rank higher than getOrder [/orders/{id}] so that
+        // it is mapped correctly.
         knownRequests = asList(
                 addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket,
-                patchPaymentDetails, getOrder, search, getCheckout
+                patchPaymentDetails, searchOrders, getOrder, getCheckout
         );
 
     }

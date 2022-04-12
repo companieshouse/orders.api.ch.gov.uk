@@ -63,6 +63,7 @@ class OrderControllerIntegrationTest {
     private static final String CHECKOUT_ID = "0002";
     private static final String CHECKOUT_REFERENCE = "0002";
     private static final String COMPANY_STATUS_ACTIVE = "active";
+    public static final String ORDERS_SEARCH_PATH = "/orders/search";
 
     @Autowired
     private MockMvc mockMvc;
@@ -232,7 +233,7 @@ class OrderControllerIntegrationTest {
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
 
-        mockMvc.perform(get("/search/orders")
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("id", ORDER_ID)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -249,7 +250,7 @@ class OrderControllerIntegrationTest {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
 
-        mockMvc.perform(get("/search/orders")
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("id", "00")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -274,7 +275,7 @@ class OrderControllerIntegrationTest {
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
 
-        mockMvc.perform(get("/search/orders")
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("email", "demo@ch")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -291,7 +292,7 @@ class OrderControllerIntegrationTest {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
 
-        mockMvc.perform(get("/search/orders")
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("email", "wrong@ch.gov.uk")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -318,7 +319,7 @@ class OrderControllerIntegrationTest {
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
 
-        mockMvc.perform(get("/search/orders")
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("companyNumber", "12345678")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -335,7 +336,7 @@ class OrderControllerIntegrationTest {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
 
-        mockMvc.perform(get("/search/orders")
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("companyNumber", "345678912")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)

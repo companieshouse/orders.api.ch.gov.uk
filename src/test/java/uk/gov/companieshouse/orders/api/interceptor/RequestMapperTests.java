@@ -124,7 +124,7 @@ public class RequestMapperTests {
     void getRequestMappingInfoGetsSearch() {
 
         // Given
-        givenRequest(GET, "/search/orders");
+        givenRequest(GET, "/orders/search");
 
         // When and then
         assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(SEARCH));

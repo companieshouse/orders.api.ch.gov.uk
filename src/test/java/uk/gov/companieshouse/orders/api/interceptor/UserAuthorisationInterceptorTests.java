@@ -202,7 +202,7 @@ public class UserAuthorisationInterceptorTests {
     void preHandleAcceptsAuthorisedInternalApiSearchRequest() {
 
         // Given
-        givenRequest(GET, "/search/orders");
+        givenRequest(GET, "/orders/search");
         givenRequestHasInternalUserRole();
 
         // When and then
@@ -214,7 +214,7 @@ public class UserAuthorisationInterceptorTests {
     void preHandleAcceptsAuthorisedUserSearchRequest() {
 
         // Given
-        givenRequest(GET, "/search/orders");
+        givenRequest(GET, "/orders/search");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
         givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 

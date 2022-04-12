@@ -142,7 +142,7 @@ public class UserAuthenticationInterceptorTests {
     void preHandleRejectsUnauthenticatedSearchRequest() {
 
         // Given
-        givenRequest(GET, "/search/orders");
+        givenRequest(GET, "/orders/search");
 
         // When and then
         thenRequestIsRejected();
