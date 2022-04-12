@@ -11,6 +11,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHE
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
@@ -67,6 +68,7 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
                 case GET_CHECKOUT:
                     return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
                 case GET_ORDER:
+                case SEARCH:
                     return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
                 case PATCH_PAYMENT_DETAILS:
                     return clientIsAuthorisedInternalApi(request, response);

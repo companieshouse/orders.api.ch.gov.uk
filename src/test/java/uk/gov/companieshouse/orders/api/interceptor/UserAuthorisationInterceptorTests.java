@@ -198,6 +198,31 @@ public class UserAuthorisationInterceptorTests {
     }
 
     @Test
+    @DisplayName("preHandle accepts search internal API request that has the required headers")
+    void preHandleAcceptsAuthorisedInternalApiSearchRequest() {
+
+        // Given
+        givenRequest(GET, "/search/orders");
+        givenRequestHasInternalUserRole();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts search user request that has the required headers")
+    void preHandleAcceptsAuthorisedUserSearchRequest() {
+
+        // Given
+        givenRequest(GET, "/search/orders");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
     @DisplayName("preHandle accepts get checkout internal API request that has the required headers")
     void preHandleAcceptsAuthorisedInternalApiGetCheckoutRequest() {
 

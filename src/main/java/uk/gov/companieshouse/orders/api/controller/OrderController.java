@@ -1,19 +1,23 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import javax.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+import uk.gov.companieshouse.orders.api.dto.OrderSearchRequestDTO;
 import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 
@@ -40,6 +44,8 @@ public class OrderController {
     /** <code>${uk.gov.companieshouse.orders.api.checkouts}/{id}</code> */
     public static final String GET_CHECKOUT_URI =
         "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
+
+    public static final String SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
 
     public OrderController(OrderService orderService, CheckoutService checkoutService) {
         this.orderService = orderService;
@@ -70,5 +76,13 @@ public class OrderController {
        logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
        LOGGER.info("Checkout found and returned", logMap);
        return ResponseEntity.ok().body(checkoutRetrieved.getData());
+   }
+
+    @GetMapping(SEARCH_URI)
+    public ResponseEntity<OrderSearchResults> searchOrders(//final @RequestParam(value = "id")
+            // String id,
+            final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+
+        return null;
    }
 }

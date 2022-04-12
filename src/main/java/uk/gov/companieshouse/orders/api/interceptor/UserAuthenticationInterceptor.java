@@ -10,6 +10,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHE
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
@@ -49,6 +50,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
                     return hasSignedInUser(request, response);
                 case GET_PAYMENT_DETAILS:
                 case GET_ORDER:
+                case SEARCH:
                 case GET_CHECKOUT:
                     return hasAuthenticatedClient(request, response);
                 case PATCH_PAYMENT_DETAILS:

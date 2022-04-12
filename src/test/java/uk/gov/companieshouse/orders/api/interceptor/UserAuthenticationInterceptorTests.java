@@ -138,6 +138,17 @@ public class UserAuthenticationInterceptorTests {
     }
 
     @Test
+    @DisplayName("preHandle rejects search request that lacks required headers")
+    void preHandleRejectsUnauthenticatedSearchRequest() {
+
+        // Given
+        givenRequest(GET, "/search/orders");
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
     @DisplayName("preHandle accepts add item request that has the required headers")
     void preHandleAcceptsAuthenticatedAddItemRequest() {
 

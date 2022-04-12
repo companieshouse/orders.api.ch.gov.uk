@@ -8,6 +8,7 @@ import static uk.gov.companieshouse.orders.api.controller.BasketController.GET_P
 import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.SEARCH_URI;
 
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
@@ -27,6 +28,7 @@ public class RequestMapper implements InitializingBean {
     static final String PATCH_BASKET = "basket";
     static final String PATCH_PAYMENT_DETAILS = "patchPaymentDetails";
     static final String GET_ORDER = "getOrder";
+    static final String SEARCH = "searchOrders";
     static final String GET_CHECKOUT = "getCheckout";
 
     private final String addItemUri;
@@ -34,6 +36,7 @@ public class RequestMapper implements InitializingBean {
     private final String basketUri;
     private final String getPaymentDetailsUri;
     private final String getOrderUri;
+    private final String searchUri;
     private final String getCheckoutUri;
     private final String patchPaymentDetailsUri;
 
@@ -53,6 +56,8 @@ public class RequestMapper implements InitializingBean {
             final String getPaymentDetailsUri,
             @Value(GET_ORDER_URI)
             final String getOrderUri,
+            @Value(SEARCH_URI)
+            final String searchUri,
             @Value(GET_CHECKOUT_URI)
             final String getCheckoutUri,
             @Value(PATCH_PAYMENT_DETAILS_URI)
@@ -62,6 +67,7 @@ public class RequestMapper implements InitializingBean {
         this.basketUri = basketUri;
         this.getPaymentDetailsUri = getPaymentDetailsUri;
         this.getOrderUri = getOrderUri;
+        this.searchUri = searchUri;
         this.getCheckoutUri = getCheckoutUri;
         this.patchPaymentDetailsUri = patchPaymentDetailsUri;
     }
@@ -126,6 +132,12 @@ public class RequestMapper implements InitializingBean {
                 .mappingName(GET_ORDER)
                 .build();
 
+        final RequestMappingInfo search = RequestMappingInfo
+                .paths(searchUri)
+                .methods(RequestMethod.GET)
+                .mappingName(SEARCH)
+                .build();
+
         final RequestMappingInfo getCheckout = RequestMappingInfo
                 .paths(getCheckoutUri)
                 .methods(RequestMethod.GET)
@@ -133,7 +145,8 @@ public class RequestMapper implements InitializingBean {
                 .build();
 
         knownRequests = asList(
-                addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket, patchPaymentDetails, getOrder, getCheckout
+                addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket,
+                patchPaymentDetails, getOrder, search, getCheckout
         );
 
     }

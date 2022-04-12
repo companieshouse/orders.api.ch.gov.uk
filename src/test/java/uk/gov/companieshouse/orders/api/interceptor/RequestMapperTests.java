@@ -15,6 +15,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHE
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.SEARCH;
 
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -116,6 +117,17 @@ public class RequestMapperTests {
 
         // When and then
         assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(GET_ORDER));
+    }
+
+    @Test
+    @DisplayName("getRequestMappingInfo gets the search request mapping")
+    void getRequestMappingInfoGetsSearch() {
+
+        // Given
+        givenRequest(GET, "/search/orders");
+
+        // When and then
+        assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(SEARCH));
     }
 
     @Test
