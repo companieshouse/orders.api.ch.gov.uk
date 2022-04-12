@@ -139,21 +139,23 @@ class OrderServiceTest {
         when(searchFieldMapper.exactMatchOrAny("12345678")).thenReturn("mapped company number");
         when(searchFieldMapper.partialMatchOrAny("demo@ch.gov.uk")).thenReturn("mapped email");
 
-        OrderSummary orderSummary = OrderSummary.newBuilder()
-                                                .withId("ORD-123-456")
-                                                .withEmail("demo@ch.gov.uk")
-                                                .withProductLine("item#certificate")
-                                                .withOrderDate(LocalDate.of(2022, 04, 11).atStartOfDay())
-                                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
-                                                .build();
-
-        OrderSearchResults expected = new OrderSearchResults(1, Collections.singletonList(orderSummary));
+        OrderSearchResults expected = new OrderSearchResults(1,
+                Collections.singletonList(
+                        OrderSummary.newBuilder()
+                                .withId("ORD-123-456")
+                                .withEmail("demo@ch.gov.uk")
+                                .withProductLine("item#certificate")
+                                .withOrderDate(LocalDate.of(2022, 04, 11).atStartOfDay())
+                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .build()));
 
         //when
         OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
 
         //then
-        verify(orderRepository).searchOrders("mapped order id", "mapped email", "mapped company number");
+        verify(orderRepository).searchOrders("mapped order id",
+                "mapped email",
+                "mapped company number");
         assertThat(actual, is(expected));
     }
 
@@ -172,7 +174,8 @@ class OrderServiceTest {
 
         OrderSummary orderSummary = OrderSummary.newBuilder().build();
 
-        OrderSearchResults expected = new OrderSearchResults(1, Collections.singletonList(orderSummary));
+        OrderSearchResults expected = new OrderSearchResults(1,
+                Collections.singletonList(orderSummary));
 
         //when
         OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
