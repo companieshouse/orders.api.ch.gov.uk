@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class OrderRepositoryIntegrationTest {
         orderRepository.save(order);
 
         // when
-        List<Order> orders = orderRepository.searchOrders("^ORD-123-456$", "^.*$", "^.*$");
+        List<Order> orders = orderRepository.searchOrders("^ORD-123-456$", ".*", ".*");
 
         // then
         assertEquals(1, orders.size());
@@ -47,14 +48,16 @@ public class OrderRepositoryIntegrationTest {
     void testSearchOrdersNotFound() {
         // given
         Order order = new Order();
-        order.setId("ORD-123-455");
+        order.setId("ORD-123-456");
         order.setData(new OrderData());
         order.getData().setOrderedBy(new ActionedBy());
         order.getData().getOrderedBy().setEmail("demo@ch.gov.uk");
+        order.getData().setItems(Collections.singletonList(new Item()));
+        order.getData().getItems().get(0).setCompanyNumber("12345678");
         orderRepository.save(order);
 
         // when
-        List<Order> orders = orderRepository.searchOrders("^ORD-123-456$", "^.*$", "^.*$");
+        List<Order> orders = orderRepository.searchOrders("^ORD-123-455$", ".*", ".*");
 
         // then
         assertEquals(0, orders.size());
@@ -74,7 +77,7 @@ public class OrderRepositoryIntegrationTest {
         orderRepository.save(order);
 
         // when
-        List<Order> orders = orderRepository.searchOrders("^.*$", "^demo@ch.gov.uk$", "^.*$");
+        List<Order> orders = orderRepository.searchOrders(".*", "^.*ch\\.gov\\.uk\\.*$", ".*");
 
         // then
         assertEquals(1, orders.size());

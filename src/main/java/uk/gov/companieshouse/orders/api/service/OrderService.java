@@ -3,7 +3,6 @@ package uk.gov.companieshouse.orders.api.service;
 import com.mongodb.MongoException;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
@@ -33,7 +32,6 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
-import static java.util.Objects.isNull;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
@@ -46,18 +44,21 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final LinksGeneratorService linksGeneratorService;
     private final OrderReceivedMessageProducer ordersMessageProducer;
+    private final SearchFieldMapper searchFieldMapper;
 
     @Value("${uk.gov.companieshouse.orders.api.orders}")
     private String orderEndpointU;
 
     public OrderService(final CheckoutToOrderMapper mapper, final CheckoutRepository checkoutRepository,
                         final OrderRepository orderRepository, OrderReceivedMessageProducer producer,
-                        final LinksGeneratorService linksGeneratorService) {
+                        final LinksGeneratorService linksGeneratorService,
+                        final SearchFieldMapper searchFieldMapper) {
         this.mapper = mapper;
         this.checkoutRepository = checkoutRepository;
         this.orderRepository = orderRepository;
         this.ordersMessageProducer = producer;
         this.linksGeneratorService = linksGeneratorService;
+        this.searchFieldMapper = searchFieldMapper;
     }
 
     /**
@@ -84,7 +85,7 @@ public class OrderService {
             }
         );
 
-        Order savedOrder = null;
+        Order savedOrder;
         try {
             savedOrder = orderRepository.save(mappedOrder);
         } catch (MongoException ex) {
@@ -117,9 +118,9 @@ public class OrderService {
     public OrderSearchResults searchOrders(OrderSearchCriteria orderSearchCriteria) {
         OrderCriteria orderCriteria = orderSearchCriteria.getOrderCriteria();
         List<Order> orders = orderRepository.searchOrders(
-                StringUtils.defaultIfBlank(orderCriteria.getOrderId(), "^.*$"),
-                StringUtils.isBlank(orderCriteria.getEmail()) ? "^.*$" : "^.*" + orderCriteria.getEmail() + ".*$",
-                StringUtils.defaultIfBlank(orderCriteria.getCompanyNumber(), "^.*$"));
+                searchFieldMapper.exactMatchOrAny(orderCriteria.getOrderId()),
+                searchFieldMapper.partialMatchOrAny(orderCriteria.getEmail()),
+                searchFieldMapper.exactMatchOrAny(orderCriteria.getCompanyNumber()));
 
         return new OrderSearchResults(orders.size(),
                 orders.stream().map(
