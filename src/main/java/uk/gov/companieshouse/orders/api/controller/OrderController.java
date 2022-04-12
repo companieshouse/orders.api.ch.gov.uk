@@ -1,6 +1,10 @@
 package uk.gov.companieshouse.orders.api.controller;
 
-import javax.validation.Valid;
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,22 +14,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-import uk.gov.companieshouse.orders.api.dto.OrderSearchRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.SearchOrdersRequestDTO;
 import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
-
-import java.util.Map;
-
-import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 
 @RestController
 public class OrderController {
@@ -79,10 +79,15 @@ public class OrderController {
    }
 
     @GetMapping(SEARCH_URI)
-    public ResponseEntity<OrderSearchResults> searchOrders(//final @RequestParam(value = "id")
-            // String id,
-            final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
-
-        return null;
-   }
+    public ResponseEntity<OrderSearchResults> searchOrders(@RequestParam(value = "id") final String id,
+                                                           @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
+        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
+        LOGGER.info("Search orders", logMap);
+        OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteria(OrderCriteria.newBuilder().withOrderId(id).build());
+        OrderSearchResults orderSearchResults = orderService.searchOrders(orderSearchCriteria);
+        logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
+        LOGGER.info(String.format("Total orders found %d", orderSearchResults.getTotalOrders()));
+        return ResponseEntity.ok().body(orderSearchResults);
+    }
 }

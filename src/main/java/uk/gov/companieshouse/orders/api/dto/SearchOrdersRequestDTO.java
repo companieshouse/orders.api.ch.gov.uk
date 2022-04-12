@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.orders.api.dto;
 
-public class OrderSearchRequestDTO {
+public class SearchOrdersRequestDTO {
 
     private String id;
 

@@ -68,10 +68,12 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
                 case GET_CHECKOUT:
                     return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
                 case GET_ORDER:
-                case SEARCH:
                     return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
                 case PATCH_PAYMENT_DETAILS:
                     return clientIsAuthorisedInternalApi(request, response);
+                case SEARCH:
+                    // TODO: check search orders permission
+                    return true;
                 default:
                     // This should not happen.
                     throw new IllegalArgumentException("Mapped request with no authoriser: " + match.getName());

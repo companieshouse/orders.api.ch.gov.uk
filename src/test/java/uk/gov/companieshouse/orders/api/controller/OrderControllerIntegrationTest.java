@@ -22,16 +22,19 @@ import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.HRef;
 import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.OrderLinks;
+import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
+import uk.gov.companieshouse.orders.api.model.OrderSummary;
+import uk.gov.companieshouse.orders.api.model.ResourceLink;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -215,32 +218,45 @@ class OrderControllerIntegrationTest {
             .andExpect(content().json(mapper.writeValueAsString(checkoutData)));
     }
 
+    @DisplayName("Should find a single order when searching by order id")
     @Test
     void searchOrders() throws Exception {
-        final Order preexistingOrder = new Order();
-        preexistingOrder.setId(ORDER_ID);
-        preexistingOrder.setUserId(ERIC_IDENTITY_VALUE);
-        preexistingOrder.setCreatedAt(LocalDate.of(2022, 04, 12).atStartOfDay());
+        final Order order = new Order();
+        order.setId(ORDER_ID);
+        order.setUserId(ERIC_IDENTITY_VALUE);
+        order.setCreatedAt(LocalDate.of(2022, 04, 12).atStartOfDay());
         final OrderData orderData = new OrderData();
         orderData.setReference(ORDER_REFERENCE);
         orderData.setTotalOrderCost("100");
         orderData.setOrderedBy(new ActionedBy());
         orderData.getOrderedBy().setEmail("demo@ch.gov.uk");
         orderData.setItems(Collections.singletonList(new Item()));
+        orderData.getItems().get(0).setId("item-id-123");
         orderData.getItems().get(0).setKind("item#certificate");
+        orderData.getItems().get(0).setCompanyNumber("12345678");
         orderData.setLinks(new OrderLinks());
         orderData.getLinks().setSelf("http");
-        preexistingOrder.setData(orderData);
-        orderRepository.save(preexistingOrder);
+        order.setData(orderData);
+        orderRepository.save(order);
+
+        OrderSearchResults expected = new OrderSearchResults(1,
+                Collections.singletonList(
+                        OrderSummary.newBuilder()
+                                .withId(ORDER_ID)
+                                .withEmail("demo@ch.gov.uk")
+                                .withProductLine("item#certificate")
+                                .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
+                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .build()));
 
         mockMvc.perform(get("/search/orders")
-                //.param("id", ORDER_ID)
+                .param("id", ORDER_ID)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(orderData)));
+                .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
 }
