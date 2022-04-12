@@ -220,25 +220,8 @@ class OrderControllerIntegrationTest {
 
     @DisplayName("Should find a single order when searching by order id")
     @Test
-    void searchOrders() throws Exception {
-        final Order order = new Order();
-        order.setId(ORDER_ID);
-        order.setUserId(ERIC_IDENTITY_VALUE);
-        order.setCreatedAt(LocalDate.of(2022, 04, 12).atStartOfDay());
-        final OrderData orderData = new OrderData();
-        orderData.setReference(ORDER_REFERENCE);
-        orderData.setTotalOrderCost("100");
-        orderData.setOrderedBy(new ActionedBy());
-        orderData.getOrderedBy().setEmail("demo@ch.gov.uk");
-        orderData.setItems(Collections.singletonList(new Item()));
-        orderData.getItems().get(0).setId("item-id-123");
-        orderData.getItems().get(0).setKind("item#certificate");
-        orderData.getItems().get(0).setCompanyNumber("12345678");
-        orderData.setLinks(new OrderLinks());
-        orderData.getLinks().setSelf("http");
-        order.setData(orderData);
-        orderRepository.save(order);
-
+    void searchOrdersById() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
@@ -259,4 +242,131 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
+
+    @DisplayName("Should not find a order when incomplete order id is provided")
+    @Test
+    void searchByOrderIdReturnsNoMatches() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
+
+        mockMvc.perform(get("/search/orders")
+                .param("id", "00")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expected)));
+    }
+
+    @DisplayName("Should find a single order when searching with a partial email address")
+    @Test
+    void searchOrdersByEmail() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        OrderSearchResults expected = new OrderSearchResults(1,
+                Collections.singletonList(
+                        OrderSummary.newBuilder()
+                                .withId(ORDER_ID)
+                                .withEmail("demo@ch.gov.uk")
+                                .withProductLine("item#certificate")
+                                .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
+                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .build()));
+
+        mockMvc.perform(get("/search/orders")
+                .param("email", "demo@ch")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expected)));
+    }
+
+    @DisplayName("Should not find a order when a incorrect email address is provided")
+    @Test
+    void searchOrdersByEmailReturnsNoMatches() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
+
+        mockMvc.perform(get("/search/orders")
+                .param("email", "wrong@ch.gov.uk")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expected)));
+    }
+
+    @DisplayName("Should find a single order when a valid company number is provided")
+    @Test
+    void searchOrdersByCompanyNumber() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
+
+        OrderSearchResults expected = new OrderSearchResults(1,
+                Collections.singletonList(
+                        OrderSummary.newBuilder()
+                                .withId(ORDER_ID)
+                                .withEmail("demo@ch.gov.uk")
+                                .withProductLine("item#certificate")
+                                .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
+                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .build()));
+
+        mockMvc.perform(get("/search/orders")
+                .param("companyNumber", "12345678")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expected)));
+    }
+
+    @DisplayName("Should not find a order when a incomplete company number is provided")
+    @Test
+    void searchOrdersByCompanyNumberReturnsNoMatches() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
+
+        mockMvc.perform(get("/search/orders")
+                .param("companyNumber", "345678912")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expected)));
+    }
+
+    private Order getOrder(String orderId, String email, String companyNumber) {
+        final Order order = new Order();
+        order.setId(orderId);
+        order.setUserId(ERIC_IDENTITY_VALUE);
+        order.setCreatedAt(LocalDate.of(2022, 04, 12).atStartOfDay());
+
+        final OrderData orderData = new OrderData();
+        orderData.setReference(ORDER_REFERENCE);
+        orderData.setTotalOrderCost("100");
+        orderData.setOrderedBy(new ActionedBy());
+        orderData.getOrderedBy().setEmail(email);
+        orderData.setItems(Collections.singletonList(new Item()));
+        orderData.getItems().get(0).setId("item-id-123");
+        orderData.getItems().get(0).setKind("item#certificate");
+        orderData.getItems().get(0).setCompanyNumber(companyNumber);
+        orderData.setLinks(new OrderLinks());
+        orderData.getLinks().setSelf("http");
+
+        order.setData(orderData);
+
+        return order;
+    }
+
 }

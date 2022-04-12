@@ -79,12 +79,20 @@ public class OrderController {
    }
 
     @GetMapping(SEARCH_URI)
-    public ResponseEntity<OrderSearchResults> searchOrders(@RequestParam(value = "id") final String id,
-                                                           @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
+    public ResponseEntity<OrderSearchResults> searchOrders(
+            @RequestParam(value = "id", required = false) final String id,
+            @RequestParam(value = "email", required = false) final String email,
+            @RequestParam(value = "companyNumber", required = false) final String companyNumber,
+            @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
         LOGGER.info("Search orders", logMap);
-        OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteria(OrderCriteria.newBuilder().withOrderId(id).build());
+        OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteria(
+                OrderCriteria.newBuilder()
+                        .withOrderId(id)
+                        .withEmail(email)
+                        .withCompanyNumber(companyNumber)
+                        .build());
         OrderSearchResults orderSearchResults = orderService.searchOrders(orderSearchCriteria);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info(String.format("Total orders found %d", orderSearchResults.getTotalOrders()));
