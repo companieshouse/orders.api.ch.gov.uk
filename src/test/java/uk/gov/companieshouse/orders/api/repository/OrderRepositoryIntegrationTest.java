@@ -77,7 +77,7 @@ public class OrderRepositoryIntegrationTest {
         orderRepository.save(order);
 
         // when
-        List<Order> orders = orderRepository.searchOrders(".*", "^.*ch\\.gov\\.uk\\.*$", ".*");
+        List<Order> orders = orderRepository.searchOrders(".*", "ch\\.gov\\.uk", ".*");
 
         // then
         assertEquals(1, orders.size());

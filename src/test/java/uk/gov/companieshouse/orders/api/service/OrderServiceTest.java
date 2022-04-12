@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,8 +62,6 @@ class OrderServiceTest {
     @Mock
     private OrderSearchCriteria orderSearchCriteria;
     @Mock
-    private List<Order> searchOrdersResult;
-    @Mock
     private Order orderResult;
     @Mock
     private OrderData orderData;
@@ -73,9 +70,9 @@ class OrderServiceTest {
     @Mock
     private OrderLinks links;
     @Mock
-    private List<Item> items;
-    @Mock
     private Item item;
+    @Mock
+    private SearchFieldMapper searchFieldMapper;
 
     @Test
     void createOrderCreatesOrder() {
@@ -124,9 +121,9 @@ class OrderServiceTest {
     void searchOrders() {
         //given
         when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
-        when(orderCriteria.getOrderId()).thenReturn("");
-        when(orderCriteria.getEmail()).thenReturn("");
-        when(orderCriteria.getCompanyNumber()).thenReturn("");
+        when(orderCriteria.getOrderId()).thenReturn("ORD-123-456");
+        when(orderCriteria.getEmail()).thenReturn("demo@ch.gov.uk");
+        when(orderCriteria.getCompanyNumber()).thenReturn("12345678");
         when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
                 Collections.singletonList(orderResult));
         when(orderResult.getId()).thenReturn("ORD-123-456");
@@ -138,6 +135,9 @@ class OrderServiceTest {
         when(orderResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 04, 11).atStartOfDay());
         when(orderData.getLinks()).thenReturn(links);
         when(links.getSelf()).thenReturn("http");
+        when(searchFieldMapper.exactMatchOrAny("ORD-123-456")).thenReturn("mapped order id");
+        when(searchFieldMapper.exactMatchOrAny("12345678")).thenReturn("mapped company number");
+        when(searchFieldMapper.partialMatchOrAny("demo@ch.gov.uk")).thenReturn("mapped email");
 
         OrderSummary orderSummary = OrderSummary.newBuilder()
                                                 .withId("ORD-123-456")
@@ -153,6 +153,7 @@ class OrderServiceTest {
         OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
 
         //then
+        verify(orderRepository).searchOrders("mapped order id", "mapped email", "mapped company number");
         assertThat(actual, is(expected));
     }
 
@@ -166,6 +167,8 @@ class OrderServiceTest {
         when(orderCriteria.getCompanyNumber()).thenReturn("");
         when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
                 Collections.singletonList(orderResult));
+        when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
+        when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
 
         OrderSummary orderSummary = OrderSummary.newBuilder().build();
 

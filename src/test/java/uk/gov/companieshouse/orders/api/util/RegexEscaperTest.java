@@ -13,7 +13,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
@@ -59,10 +58,10 @@ class RegexEscaperTest {
         assertThrows(NullPointerException.class, () -> regexEscaper.escape(null));
     }
 
-    @DisplayName("Should correctly escape")
+    @DisplayName("Should correctly escape special characters")
     @ParameterizedTest
     @MethodSource("translations")
-    void testEscapeSingleCharacter(String source, String expected) {
+    void testEscapeCharacters(String source, String expected) {
         assertThat(regexEscaper.escape(source), is(expected));
     }
 }

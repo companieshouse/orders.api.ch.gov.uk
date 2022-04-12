@@ -1,7 +1,12 @@
 package uk.gov.companieshouse.orders.api.service;
 
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+
 import com.mongodb.MongoException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,12 +32,6 @@ import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.ResourceLink;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
 public class OrderService {
@@ -125,26 +124,27 @@ public class OrderService {
         return new OrderSearchResults(orders.size(),
                 orders.stream().map(
                         order -> OrderSummary.newBuilder()
-                            .withId(order.getId())
-                            .withEmail(
-                                    Optional.ofNullable(order.getData())
-                                            .map(OrderData::getOrderedBy)
-                                            .map(ActionedBy::getEmail)
-                                            .orElse(null))
-                            .withProductLine(
-                                    Optional.ofNullable(order.getData())
-                                            .map(OrderData::getItems)
-                                            .flatMap(items -> items.stream().findFirst())
-                                            .map(Item::getKind)
-                                            .orElse(null))
-                            .withOrderDate(order.getCreatedAt())
-                            .withResourceLink(
-                                    Optional.ofNullable(order.getData())
-                                            .map(OrderData::getLinks)
-                                            .map(OrderLinks::getSelf)
-                                            .map(self -> new ResourceLink(new HRef(self), new HRef(self)))
-                                            .orElse(null))
-                            .build()
+                                .withId(order.getId())
+                                .withEmail(
+                                        Optional.ofNullable(order.getData())
+                                                .map(OrderData::getOrderedBy)
+                                                .map(ActionedBy::getEmail)
+                                                .orElse(null))
+                                .withProductLine(
+                                        Optional.ofNullable(order.getData())
+                                                .map(OrderData::getItems)
+                                                .flatMap(items -> items.stream().findFirst())
+                                                .map(Item::getKind)
+                                                .orElse(null))
+                                .withOrderDate(order.getCreatedAt())
+                                .withResourceLink(
+                                        Optional.ofNullable(order.getData())
+                                                .map(OrderData::getLinks)
+                                                .map(OrderLinks::getSelf)
+                                                .map(self -> new ResourceLink(new HRef(self),
+                                                        new HRef(self)))
+                                                .orElse(null))
+                                .build()
                 ).collect(Collectors.toList()));
     }
 
