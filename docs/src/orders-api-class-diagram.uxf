@@ -509,7 +509,7 @@ bg=gray
 uk.gov.companieshouse.orders.api.repository::
 /CheckoutRepository/
 --
-+findById(id:String)</panel_attributes>
++findById(id:String):Checkout</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
