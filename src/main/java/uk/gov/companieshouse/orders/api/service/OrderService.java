@@ -20,6 +20,7 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.HRef;
 import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
@@ -130,6 +131,11 @@ public class OrderService {
                                                 .map(OrderData::getOrderedBy)
                                                 .map(ActionedBy::getEmail)
                                                 .orElse(null))
+                                .withCompanyNumber(Optional.ofNullable(order.getData())
+                                        .map(OrderData::getItems)
+                                        .flatMap(items -> items.stream().findFirst())
+                                        .map(Item::getCompanyNumber)
+                                        .orElse(null))
                                 .withProductLine(
                                         Optional.ofNullable(order.getData())
                                                 .map(OrderData::getItems)
@@ -137,6 +143,10 @@ public class OrderService {
                                                 .map(Item::getKind)
                                                 .orElse(null))
                                 .withOrderDate(order.getCreatedAt())
+                                .withPaymentStatus(getCheckout(order.getId())
+                                        .map(Checkout::getData)
+                                        .map(CheckoutData::getStatus)
+                                        .orElse(null))
                                 .withResourceLink(
                                         Optional.ofNullable(order.getData())
                                                 .map(OrderData::getLinks)

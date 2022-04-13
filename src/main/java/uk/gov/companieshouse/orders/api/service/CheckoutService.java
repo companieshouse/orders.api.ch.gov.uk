@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.orders.api.service;
 
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.orders.api.model.*;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
@@ -9,7 +8,6 @@ import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Optional;
 
 @Service

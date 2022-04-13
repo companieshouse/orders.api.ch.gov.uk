@@ -6,15 +6,19 @@ import java.util.Objects;
 public class OrderSummary {
     private final String id;
     private final String email;
+    private final String companyNumber;
     private final String productLine;
     private final LocalDateTime orderDate;
+    private final PaymentStatus paymentStatus;
     private final ResourceLink resourceLink;
 
     private OrderSummary(Builder builder) {
         id = builder.id;
         email = builder.email;
+        companyNumber = builder.companyNumber;
         productLine = builder.productLine;
         orderDate = builder.orderDate;
+        paymentStatus = builder.paymentStatus;
         resourceLink = builder.resourceLink;
     }
 
@@ -25,8 +29,10 @@ public class OrderSummary {
     public static final class Builder {
         private String id;
         private String email;
+        private String companyNumber;
         private String productLine;
         private LocalDateTime orderDate;
+        private PaymentStatus paymentStatus;
         private ResourceLink resourceLink;
 
         private Builder() {
@@ -42,6 +48,11 @@ public class OrderSummary {
             return this;
         }
 
+        public Builder withCompanyNumber(String companyNumber) {
+            this.companyNumber = companyNumber;
+            return this;
+        }
+
         public Builder withProductLine(String productLine) {
             this.productLine = productLine;
             return this;
@@ -49,6 +60,11 @@ public class OrderSummary {
 
         public Builder withOrderDate(LocalDateTime orderDate) {
             this.orderDate = orderDate;
+            return this;
+        }
+
+        public Builder withPaymentStatus(PaymentStatus paymentStatus) {
+            this.paymentStatus = paymentStatus;
             return this;
         }
 
@@ -70,6 +86,10 @@ public class OrderSummary {
         return email;
     }
 
+    public String getCompanyNumber() {
+        return companyNumber;
+    }
+
     public String getProductLine() {
         return productLine;
     }
@@ -78,28 +98,36 @@ public class OrderSummary {
         return orderDate;
     }
 
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
     public ResourceLink getResourceLink() {
         return resourceLink;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         OrderSummary that = (OrderSummary) o;
-        return Objects.equals(id, that.id)
-                && Objects.equals(email, that.email)
-                && Objects.equals(productLine, that.productLine)
-                && Objects.equals(orderDate, that.orderDate)
-                && Objects.equals(resourceLink, that.resourceLink);
+        return Objects.equals(id, that.id) && Objects.equals(email,
+                that.email) && Objects.equals(companyNumber,
+                that.companyNumber) && Objects.equals(productLine,
+                that.productLine) && Objects.equals(orderDate,
+                that.orderDate) && paymentStatus == that.paymentStatus && Objects.equals(
+                resourceLink,
+                that.resourceLink);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, email, productLine, orderDate, resourceLink);
+        return Objects.hash(id,
+                email,
+                companyNumber,
+                productLine,
+                orderDate,
+                paymentStatus,
+                resourceLink);
     }
 }

@@ -29,6 +29,7 @@ import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.model.ResourceLink;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
@@ -223,12 +224,15 @@ class OrderControllerIntegrationTest {
     @Test
     void searchOrdersById() throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.PAID));
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
                                 .withId(ORDER_ID)
                                 .withEmail("demo@ch.gov.uk")
+                                .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
+                                .withPaymentStatus(PaymentStatus.PAID)
                                 .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
@@ -265,12 +269,15 @@ class OrderControllerIntegrationTest {
     @Test
     void searchOrdersByEmail() throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.PAID));
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
                                 .withId(ORDER_ID)
                                 .withEmail("demo@ch.gov.uk")
+                                .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
+                                .withPaymentStatus(PaymentStatus.PAID)
                                 .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
@@ -307,14 +314,18 @@ class OrderControllerIntegrationTest {
     @Test
     void searchOrdersByCompanyNumber() throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.PAID));
         orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
+        checkoutRepository.save(getCheckout("0002", PaymentStatus.PAID));
 
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
                                 .withId(ORDER_ID)
                                 .withEmail("demo@ch.gov.uk")
+                                .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
+                                .withPaymentStatus(PaymentStatus.PAID)
                                 .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
@@ -370,4 +381,11 @@ class OrderControllerIntegrationTest {
         return order;
     }
 
+    private Checkout getCheckout(String orderId, PaymentStatus paymentStatus) {
+        Checkout checkout = new Checkout();
+        checkout.setData(new CheckoutData());
+        checkout.setId(orderId);
+        checkout.getData().setStatus(paymentStatus);
+        return checkout;
+    }
 }
