@@ -23,6 +23,7 @@ import uk.gov.companieshouse.api.model.order.item.CertifiedCopyItemOptionsApi;
 import uk.gov.companieshouse.orders.api.client.Api;
 import uk.gov.companieshouse.orders.api.mapper.ApiToItemMapper;
 import uk.gov.companieshouse.orders.api.model.*;
+import uk.gov.companieshouse.orders.api.util.RegexEscaper;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -64,7 +65,7 @@ public class ApiClientServiceIntegrationTest {
     }
 
     @Configuration
-    @ComponentScan(basePackageClasses = {ApiClientServiceIntegrationTest.class, ApiToItemMapper.class, Api.class})
+    @ComponentScan(basePackageClasses = {ApiClientServiceIntegrationTest.class, ApiToItemMapper.class, Api.class, RegexEscaper.class})
     static class Config { }
 
     @Autowired
