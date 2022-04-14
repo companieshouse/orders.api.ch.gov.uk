@@ -7,11 +7,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import uk.gov.companieshouse.api.util.security.Permission;
@@ -58,6 +60,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDE
 @AutoConfigureMockMvc
 @SpringBootTest
 @EmbeddedKafka
+@ActiveProfiles("orders-search-enabled")
 class OrderControllerIntegrationTest {
     private static final String ORDER_ID = "0001";
     private static final String ORDER_REFERENCE = "0001";
@@ -77,6 +80,12 @@ class OrderControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfile;
+
+    @Value("${orders.search.endpoint.enabled}")
+    private String profile;
 
     @AfterEach
     void tearDown() {
