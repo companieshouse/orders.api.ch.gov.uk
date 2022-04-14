@@ -14,10 +14,13 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNullApi;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -41,26 +44,30 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
     public boolean preHandle(final HttpServletRequest request,
                              final HttpServletResponse response,
                              final Object handler) {
-        final RequestMappingInfo match = requestMapper.getRequestMapping(request);
-        if (match != null) {
-            switch (match.getName()) {
-                case ADD_ITEM:
-                case CHECKOUT_BASKET:
-                case BASKET:
-                    return hasSignedInUser(request, response);
-                case GET_PAYMENT_DETAILS:
-                case GET_ORDER:
-                case SEARCH:
-                case GET_CHECKOUT:
-                    return hasAuthenticatedClient(request, response);
-                case PATCH_PAYMENT_DETAILS:
-                    return hasAuthenticatedApi(request, response);
-                default:
-                    // This should not happen.
-                    throw new IllegalArgumentException("Mapped request with no authenticator: " + match.getName());
-            }
+
+        return Optional.ofNullable(requestMapper.getRequestMapping(request))
+                .map(RequestMappingInfo::getName)
+                .map(name -> checkAuthenticated(request, response, name))
+                .orElse(true);
+    }
+
+    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {
+        switch (name) {
+            case ADD_ITEM:
+            case CHECKOUT_BASKET:
+            case BASKET:
+                return hasSignedInUser(request, response);
+            case GET_PAYMENT_DETAILS:
+            case GET_ORDER:
+            case SEARCH:
+            case GET_CHECKOUT:
+                return hasAuthenticatedClient(request, response);
+            case PATCH_PAYMENT_DETAILS:
+                return hasAuthenticatedApi(request, response);
+            default:
+                // This should not happen.
+                throw new IllegalArgumentException("Mapped request with no authenticator: " + name);
         }
-        return true;
     }
 
     /**
