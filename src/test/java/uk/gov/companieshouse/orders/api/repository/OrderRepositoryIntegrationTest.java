@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Collections;
 import java.util.List;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,7 @@ import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 
 @DataMongoTest
-public class OrderRepositoryIntegrationTest {
+class OrderRepositoryIntegrationTest {
 
     @Autowired
     private OrderRepository orderRepository;
