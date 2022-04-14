@@ -19,7 +19,7 @@ public class RegexEscaper implements CharEscaper {
   /**
    * Pattern that defines Regex [special] metacharacters.
    */
-  private static Pattern REGEX_METACHARACTERS =
+  private static final Pattern REGEX_METACHARACTERS =
           Pattern.compile("[\\<\\(\\[\\{\\\\^\\-\\=\\$\\!\\|\\]\\}\\)\\?\\*\\+\\.]");
 
   /**
@@ -27,11 +27,11 @@ public class RegexEscaper implements CharEscaper {
    *
    * @param   source  string to be escaped
    *
-   * @return  supplied string with escaped metacharacters.
+   * @return  supplied string with escaped metacharacters, or null if null was supplied
    */
   public CharSequence escape(CharSequence source) {
-    return Optional.of(source)
+    return Optional.ofNullable(source)
             .map(s -> REGEX_METACHARACTERS.matcher(s).replaceAll("\\\\$0"))
-            .get();
+            .orElse(null);
   }
 }

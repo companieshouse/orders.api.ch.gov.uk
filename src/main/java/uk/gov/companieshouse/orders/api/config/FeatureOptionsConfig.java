@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FeatureOptionsConfig {
 
-    @Value("${feature.options.ordersSearchEndpointEnabled}")
+    @Value("${feature.options.ordersSearchEndpointEnabled:false}")
     private boolean ordersSearchEnabled;
 
     @Bean

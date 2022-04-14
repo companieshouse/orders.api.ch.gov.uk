@@ -2,6 +2,7 @@ package uk.gov.companieshouse.orders.api.util;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -52,10 +53,10 @@ class RegexEscaperTest {
                 arguments("demo@ch.gov.uk", "demo@ch\\.gov\\.uk"));
     }
 
-    @DisplayName("Should throw null pointer exception if the supplied string is null")
+    @DisplayName("Should return null if the supplied string is null")
     @Test
     void testEscapeNull() {
-        assertThrows(NullPointerException.class, () -> regexEscaper.escape(null));
+        assertThat(regexEscaper.escape(null), nullValue());
     }
 
     @DisplayName("Should correctly escape special characters")

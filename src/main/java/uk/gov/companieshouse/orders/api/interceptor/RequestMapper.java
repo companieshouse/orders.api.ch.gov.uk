@@ -1,6 +1,5 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
-import static java.util.Arrays.asList;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.ADD_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.BASKET_URI;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_BASKET_URI;
@@ -18,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
-import uk.gov.companieshouse.orders.api.config.FeatureOptions;
 
 @Service
 public class RequestMapper implements InitializingBean {
@@ -33,7 +31,6 @@ public class RequestMapper implements InitializingBean {
     static final String SEARCH = "searchOrders";
     static final String GET_CHECKOUT = "getCheckout";
 
-    private final FeatureOptions featureOptions;
     private final String addItemUri;
     private final String checkoutBasketUri;
     private final String basketUri;
@@ -48,8 +45,7 @@ public class RequestMapper implements InitializingBean {
      */
     private final List<RequestMappingInfo> knownRequests = new ArrayList<>();
 
-    public RequestMapper(FeatureOptions featureOptions,
-            @Value(ADD_ITEM_URI)
+    public RequestMapper(@Value(ADD_ITEM_URI)
             final String addItemUri,
             @Value(CHECKOUT_BASKET_URI)
             final String checkoutBasketUri,
@@ -65,7 +61,6 @@ public class RequestMapper implements InitializingBean {
             final String getCheckoutUri,
             @Value(PATCH_PAYMENT_DETAILS_URI)
             final String patchPaymentDetailsUri) {
-        this.featureOptions = featureOptions;
         this.addItemUri = addItemUri;
         this.checkoutBasketUri = checkoutBasketUri;
         this.basketUri = basketUri;
@@ -132,13 +127,11 @@ public class RequestMapper implements InitializingBean {
 
         // Note: SEARCH [/orders/search] must rank higher than GET_ORDER [/orders/{id}] so that
         // it is mapped correctly.
-        if (featureOptions.isOrdersSearchEndpointEnabled()) {
-            knownRequests.add(RequestMappingInfo
-                    .paths(searchUri)
-                    .methods(RequestMethod.GET)
-                    .mappingName(SEARCH)
-                    .build());
-        }
+        knownRequests.add(RequestMappingInfo
+                .paths(searchUri)
+                .methods(RequestMethod.GET)
+                .mappingName(SEARCH)
+                .build());
 
         knownRequests.add(RequestMappingInfo
                 .paths(getOrderUri)

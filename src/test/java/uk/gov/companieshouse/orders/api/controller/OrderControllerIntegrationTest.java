@@ -81,12 +81,6 @@ class OrderControllerIntegrationTest {
     @Autowired
     private ObjectMapper mapper;
 
-    @Value("${spring.profiles.active:}")
-    private String activeProfile;
-
-    @Value("${orders.search.endpoint.enabled}")
-    private String profile;
-
     @AfterEach
     void tearDown() {
         orderRepository.deleteAll();

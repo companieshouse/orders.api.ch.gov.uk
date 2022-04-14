@@ -34,7 +34,7 @@ import org.springframework.web.util.UrlPathHelper;
 @DirtiesContext
 @SpringBootTest
 @EmbeddedKafka
-public class RequestMapperTests {
+class RequestMapperTests {
 
     @Autowired
     private RequestMapper requestMapperUnderTest;
@@ -164,5 +164,4 @@ public class RequestMapperTests {
         when(request.getServletPath()).thenReturn("");
         when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
     }
-
 }
