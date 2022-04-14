@@ -13,7 +13,6 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +24,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import uk.gov.companieshouse.api.util.security.Permission;
-import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
-import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
 @DirtiesContext
 @AutoConfigureMockMvc
@@ -39,10 +36,7 @@ public class OrdersSearchDisabledIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper mapper;
-
-    @DisplayName("Should not find a order when incomplete order id is provided")
+    @DisplayName("Should return 400 bad request when accessing orders search endpoint and feature flag is disabled")
     @Test
     void searchByOrderIdReturnsNoMatches() throws Exception {
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
@@ -52,7 +46,6 @@ public class OrdersSearchDisabledIntegrationTest {
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                         .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().json("{}"));
+                .andExpect(status().isBadRequest());
     }
 }

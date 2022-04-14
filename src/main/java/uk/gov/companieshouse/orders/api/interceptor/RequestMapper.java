@@ -10,6 +10,7 @@ import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CH
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.SEARCH_URI;
 
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.InitializingBean;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
+import uk.gov.companieshouse.orders.api.config.FeatureOptions;
 
 @Service
 public class RequestMapper implements InitializingBean {
@@ -31,6 +33,7 @@ public class RequestMapper implements InitializingBean {
     static final String SEARCH = "searchOrders";
     static final String GET_CHECKOUT = "getCheckout";
 
+    private final FeatureOptions featureOptions;
     private final String addItemUri;
     private final String checkoutBasketUri;
     private final String basketUri;
@@ -43,9 +46,9 @@ public class RequestMapper implements InitializingBean {
     /**
      * Represents the requests identified by this.
      */
-    private List<RequestMappingInfo> knownRequests;
+    private final List<RequestMappingInfo> knownRequests = new ArrayList<>();
 
-    public RequestMapper(
+    public RequestMapper(FeatureOptions featureOptions,
             @Value(ADD_ITEM_URI)
             final String addItemUri,
             @Value(CHECKOUT_BASKET_URI)
@@ -62,6 +65,7 @@ public class RequestMapper implements InitializingBean {
             final String getCheckoutUri,
             @Value(PATCH_PAYMENT_DETAILS_URI)
             final String patchPaymentDetailsUri) {
+        this.featureOptions = featureOptions;
         this.addItemUri = addItemUri;
         this.checkoutBasketUri = checkoutBasketUri;
         this.basketUri = basketUri;
@@ -90,66 +94,62 @@ public class RequestMapper implements InitializingBean {
     @Override
     public void afterPropertiesSet() {
 
-        final RequestMappingInfo addItem = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(addItemUri)
                 .methods(RequestMethod.POST)
                 .mappingName(ADD_ITEM)
-                .build();
+                .build());
 
-        final RequestMappingInfo checkoutBasket = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(checkoutBasketUri)
                 .methods(RequestMethod.POST)
                 .mappingName(CHECKOUT_BASKET)
-                .build();
+                .build());
 
-        final RequestMappingInfo getPaymentDetails = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(getPaymentDetailsUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_PAYMENT_DETAILS)
-                .build();
+                .build());
 
-        final RequestMappingInfo getBasket = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(basketUri)
                 .methods(RequestMethod.GET)
                 .mappingName(BASKET)
-                .build();
+                .build());
 
-        final RequestMappingInfo patchBasket = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(basketUri)
                 .methods(RequestMethod.PATCH)
                 .mappingName(PATCH_BASKET)
-                .build();
+                .build());
 
-        final RequestMappingInfo patchPaymentDetails = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(patchPaymentDetailsUri)
                 .methods(RequestMethod.PATCH)
                 .mappingName(PATCH_PAYMENT_DETAILS)
-                .build();
+                .build());
 
-        final RequestMappingInfo searchOrders = RequestMappingInfo
-                .paths(searchUri)
-                .methods(RequestMethod.GET)
-                .mappingName(SEARCH)
-                .build();
+        // Note: SEARCH [/orders/search] must rank higher than GET_ORDER [/orders/{id}] so that
+        // it is mapped correctly.
+        if (featureOptions.isOrdersSearchEndpointEnabled()) {
+            knownRequests.add(RequestMappingInfo
+                    .paths(searchUri)
+                    .methods(RequestMethod.GET)
+                    .mappingName(SEARCH)
+                    .build());
+        }
 
-        final RequestMappingInfo getOrder = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(getOrderUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_ORDER)
-                .build();
+                .build());
 
-        final RequestMappingInfo getCheckout = RequestMappingInfo
+        knownRequests.add(RequestMappingInfo
                 .paths(getCheckoutUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_CHECKOUT)
-                .build();
-
-        // Note: searchOrders [/orders/search] must rank higher than getOrder [/orders/{id}] so that
-        // it is mapped correctly.
-        knownRequests = asList(
-                addItem, checkoutBasket, getPaymentDetails, getBasket, patchBasket,
-                patchPaymentDetails, searchOrders, getOrder, getCheckout
-        );
-
+                .build());
     }
 }
