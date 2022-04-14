@@ -28,17 +28,16 @@ import uk.gov.companieshouse.api.util.security.Permission;
 @SpringBootTest
 @EmbeddedKafka
 @ActiveProfiles("orders-search-disabled")
-public class OrdersSearchDisabledIntegrationTest {
+class OrdersSearchDisabledIntegrationTest {
     public static final String ORDERS_SEARCH_PATH = "/orders/search";
 
     @Autowired
     private MockMvc mockMvc;
 
-    @DisplayName("Should return 400 bad request when accessing orders search endpoint and feature flag is disabled")
+    @DisplayName("Should return 404 NOT FOUND when orders/search endpoint called and the feature is disabled")
     @Test
-    void searchByOrderIdReturnsNoMatches() throws Exception {
+    void notFoundWhenFeatureFlagDisabled() throws Exception {
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                        .param("id", "00")
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)

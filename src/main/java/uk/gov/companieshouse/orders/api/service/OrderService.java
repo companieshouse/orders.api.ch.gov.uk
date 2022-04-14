@@ -47,7 +47,7 @@ public class OrderService {
     private final SearchFieldMapper searchFieldMapper;
 
     @Value("${uk.gov.companieshouse.orders.api.orders}")
-    private String orderEndpointU;
+    private String orderEndpoint;
 
     public OrderService(final CheckoutToOrderMapper mapper, final CheckoutRepository checkoutRepository,
                         final OrderRepository orderRepository, OrderReceivedMessageProducer producer,
@@ -163,7 +163,7 @@ public class OrderService {
      * @param orderId order id
      */
     private void sendOrderReceivedMessage(String orderId) {
-        String orderURI = orderEndpointU + "/" + orderId;
+        String orderURI = orderEndpoint + "/" + orderId;
         OrderReceived orderReceived = new OrderReceived();
         orderReceived.setOrderUri(orderURI);
         ordersMessageProducer.sendMessage(orderId, orderReceived);

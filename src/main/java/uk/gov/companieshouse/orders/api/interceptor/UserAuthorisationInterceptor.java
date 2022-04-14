@@ -78,11 +78,6 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
                 case PATCH_PAYMENT_DETAILS:
                     return clientIsAuthorisedInternalApi(request, response);
                 case SEARCH:
-//                    if (!featureOptions.isOrdersSearchEndpointEnabled()) {
-//                        // Return not found to replicate behaviour of /orders/{id} endpoint
-//                        response.setStatus(HttpStatus.NOT_FOUND.value());
-//                        return false;
-//                    }
                     // TODO: check search orders permission
                     return true;
                 default:

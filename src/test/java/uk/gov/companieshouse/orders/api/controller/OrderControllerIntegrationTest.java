@@ -7,7 +7,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -227,7 +226,7 @@ class OrderControllerIntegrationTest {
     @Test
     void searchOrdersById() throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.PAID));
+        checkoutRepository.save(getCheckout(ORDER_ID));
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
@@ -236,7 +235,7 @@ class OrderControllerIntegrationTest {
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
+                                .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -272,7 +271,7 @@ class OrderControllerIntegrationTest {
     @Test
     void searchOrdersByEmail() throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.PAID));
+        checkoutRepository.save(getCheckout(ORDER_ID));
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
@@ -281,7 +280,7 @@ class OrderControllerIntegrationTest {
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
+                                .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -317,9 +316,9 @@ class OrderControllerIntegrationTest {
     @Test
     void searchOrdersByCompanyNumber() throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.PAID));
+        checkoutRepository.save(getCheckout(ORDER_ID));
         orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
-        checkoutRepository.save(getCheckout("0002", PaymentStatus.PAID));
+        checkoutRepository.save(getCheckout("0002"));
 
         OrderSearchResults expected = new OrderSearchResults(1,
                 Collections.singletonList(
@@ -329,7 +328,7 @@ class OrderControllerIntegrationTest {
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withOrderDate(LocalDate.of(2022, 04, 12).atStartOfDay())
+                                .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -365,7 +364,7 @@ class OrderControllerIntegrationTest {
         final Order order = new Order();
         order.setId(orderId);
         order.setUserId(ERIC_IDENTITY_VALUE);
-        order.setCreatedAt(LocalDate.of(2022, 04, 12).atStartOfDay());
+        order.setCreatedAt(LocalDate.of(2022, 4, 12).atStartOfDay());
 
         final OrderData orderData = new OrderData();
         orderData.setReference(ORDER_REFERENCE);
@@ -384,11 +383,11 @@ class OrderControllerIntegrationTest {
         return order;
     }
 
-    private Checkout getCheckout(String orderId, PaymentStatus paymentStatus) {
+    private Checkout getCheckout(String orderId) {
         Checkout checkout = new Checkout();
         checkout.setData(new CheckoutData());
         checkout.setId(orderId);
-        checkout.getData().setStatus(paymentStatus);
+        checkout.getData().setStatus(PaymentStatus.PAID);
         return checkout;
     }
 }
