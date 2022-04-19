@@ -10,10 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
-import uk.gov.companieshouse.orders.api.dto.SearchOrdersRequestDTO;
 import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
@@ -79,16 +79,18 @@ public class OrderController {
 
     @GetMapping(SEARCH_URI)
     public ResponseEntity<OrderSearchResults> searchOrders(
-            final SearchOrdersRequestDTO request,
+            @RequestParam(value = "id", required = false) final String id,
+            @RequestParam(value = "email", required = false) final String email,
+            @RequestParam(value = "company_number", required = false) final String companyNumber,
             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
-        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, request.getId());
+        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
         LOGGER.info("Search orders", logMap);
         OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteria(
                 OrderCriteria.newBuilder()
-                        .withOrderId(request.getId())
-                        .withEmail(request.getEmail())
-                        .withCompanyNumber(request.getCompanyNumber())
+                        .withOrderId(id)
+                        .withEmail(email)
+                        .withCompanyNumber(companyNumber)
                         .build());
         OrderSearchResults orderSearchResults = orderService.searchOrders(orderSearchCriteria);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
