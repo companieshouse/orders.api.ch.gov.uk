@@ -30,7 +30,7 @@ import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
-import uk.gov.companieshouse.orders.api.model.ResourceLink;
+import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -147,11 +147,11 @@ public class OrderService {
                                         .map(Checkout::getData)
                                         .map(CheckoutData::getStatus)
                                         .orElse(null))
-                                .withResourceLink(
+                                .withLinks(
                                         Optional.ofNullable(order.getData())
                                                 .map(OrderData::getLinks)
                                                 .map(OrderLinks::getSelf)
-                                                .map(self -> new ResourceLink(new HRef(self),
+                                                .map(self -> new Links(new HRef(self),
                                                         new HRef(self)))
                                                 .orElse(null))
                                 .build()

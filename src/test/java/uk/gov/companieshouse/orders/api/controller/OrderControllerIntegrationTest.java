@@ -35,7 +35,7 @@ import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
-import uk.gov.companieshouse.orders.api.model.ResourceLink;
+import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -240,7 +240,7 @@ class OrderControllerIntegrationTest {
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
                                 .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
-                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
@@ -268,7 +268,7 @@ class OrderControllerIntegrationTest {
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
                                 .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
-                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
@@ -299,11 +299,11 @@ class OrderControllerIntegrationTest {
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
                                 .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
-                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("companyNumber", "12345678")
+                .param("company_number", "12345678")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -364,6 +364,6 @@ class OrderControllerIntegrationTest {
     private static Stream<Arguments> noMatchesFixture() {
         return Stream.of(Arguments.arguments("Should not find a order when incomplete order id is provided", "id", "00"),
                 Arguments.arguments("Should not find a order when a incorrect email address is provided", "email", "wrong@ch.gov.uk"),
-                Arguments.arguments("Should not find a order when a incomplete company number is provided", "companyNumber", "345678912"));
+                Arguments.arguments("Should not find a order when a incomplete company number is provided", "company_number", "345678912"));
     }
 }

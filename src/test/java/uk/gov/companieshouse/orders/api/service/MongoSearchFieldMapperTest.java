@@ -21,10 +21,15 @@ class MongoSearchFieldMapperTest {
     @InjectMocks
     private MongoSearchFieldMapper mongoSearchFieldMapper;
 
-    @DisplayName("Should correctly map exact match to any if source is blank")
+    @DisplayName("Should correctly map exact match to any if source is null")
     @Test
-    void testExactMatchSourceIsBlank() {
+    void testExactMatchSourceIsNull() {
         assertThat(mongoSearchFieldMapper.exactMatchOrAny(null), is(".*"));
+    }
+
+    @DisplayName("Should correctly map exact match to any if source is empty string")
+    @Test
+    void testExactMatchSourceIsEmptyString() {
         assertThat(mongoSearchFieldMapper.exactMatchOrAny(""), is(".*"));
     }
 
@@ -36,10 +41,15 @@ class MongoSearchFieldMapperTest {
         assertThat(mongoSearchFieldMapper.exactMatchOrAny(source), is("^escaped source$"));
     }
 
-    @DisplayName("Should correctly map partial match to any if source is blank")
+    @DisplayName("Should correctly map partial match to any if source is null")
     @Test
-    void testPartialMatchSourceIsBlank() {
+    void testPartialMatchSourceIsNull() {
         assertThat(mongoSearchFieldMapper.partialMatchOrAny(null), is(".*"));
+    }
+
+    @DisplayName("Should correctly map partial match to any if source is empty string")
+    @Test
+    void testPartialMatchSourceIsEmptyString() {
         assertThat(mongoSearchFieldMapper.partialMatchOrAny(""), is(".*"));
     }
 

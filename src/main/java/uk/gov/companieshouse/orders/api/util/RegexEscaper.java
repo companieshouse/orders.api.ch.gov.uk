@@ -27,11 +27,11 @@ public class RegexEscaper implements CharEscaper {
    *
    * @param   source  string to be escaped
    *
-   * @return  supplied string with escaped metacharacters, or null if null was supplied
+   * @return  supplied string with escaped metacharacters, or empty string if null was supplied
    */
   public CharSequence escape(CharSequence source) {
     return Optional.ofNullable(source)
             .map(s -> REGEX_METACHARACTERS.matcher(s).replaceAll("\\\\$0"))
-            .orElse(null);
+            .orElse("");
   }
 }

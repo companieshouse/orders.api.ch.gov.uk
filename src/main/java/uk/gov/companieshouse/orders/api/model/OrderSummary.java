@@ -10,7 +10,7 @@ public class OrderSummary {
     private final String productLine;
     private final LocalDateTime orderDate;
     private final PaymentStatus paymentStatus;
-    private final ResourceLink resourceLink;
+    private final Links links;
 
     private OrderSummary(Builder builder) {
         id = builder.id;
@@ -19,7 +19,7 @@ public class OrderSummary {
         productLine = builder.productLine;
         orderDate = builder.orderDate;
         paymentStatus = builder.paymentStatus;
-        resourceLink = builder.resourceLink;
+        links = builder.links;
     }
 
     public static Builder newBuilder() {
@@ -33,7 +33,7 @@ public class OrderSummary {
         private String productLine;
         private LocalDateTime orderDate;
         private PaymentStatus paymentStatus;
-        private ResourceLink resourceLink;
+        private Links links;
 
         private Builder() {
         }
@@ -68,8 +68,8 @@ public class OrderSummary {
             return this;
         }
 
-        public Builder withResourceLink(ResourceLink resourceLink) {
-            this.resourceLink = resourceLink;
+        public Builder withLinks(Links links) {
+            this.links = links;
             return this;
         }
 
@@ -102,8 +102,8 @@ public class OrderSummary {
         return paymentStatus;
     }
 
-    public ResourceLink getResourceLink() {
-        return resourceLink;
+    public Links getLinks() {
+        return links;
     }
 
     @Override
@@ -116,8 +116,8 @@ public class OrderSummary {
                 that.companyNumber) && Objects.equals(productLine,
                 that.productLine) && Objects.equals(orderDate,
                 that.orderDate) && paymentStatus == that.paymentStatus && Objects.equals(
-                resourceLink,
-                that.resourceLink);
+                links,
+                that.links);
     }
 
     @Override
@@ -128,6 +128,6 @@ public class OrderSummary {
                 productLine,
                 orderDate,
                 paymentStatus,
-                resourceLink);
+                links);
     }
 }

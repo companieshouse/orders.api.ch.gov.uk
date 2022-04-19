@@ -31,7 +31,7 @@ import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
-import uk.gov.companieshouse.orders.api.model.ResourceLink;
+import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -146,7 +146,7 @@ class OrderServiceTest {
                                 .withEmail("demo@ch.gov.uk")
                                 .withProductLine("item#certificate")
                                 .withOrderDate(LocalDate.of(2022, 04, 11).atStartOfDay())
-                                .withResourceLink(new ResourceLink(new HRef("http"), new HRef("http")))
+                                .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
         //when
@@ -160,8 +160,8 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("search orders returns an order with null details")
-    void searchOrdersNull() {
+    @DisplayName("search orders returns an order with blank details")
+    void searchOrdersWithBlankDetails() {
         //given
         when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
         when(orderCriteria.getOrderId()).thenReturn("");

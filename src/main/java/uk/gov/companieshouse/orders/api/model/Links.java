@@ -2,11 +2,11 @@ package uk.gov.companieshouse.orders.api.model;
 
 import java.util.Objects;
 
-public class ResourceLink {
+public class Links {
     private final HRef self;
     private final HRef order;
 
-    public ResourceLink(HRef self, HRef order) {
+    public Links(HRef self, HRef order) {
         this.self = self;
         this.order = order;
     }
@@ -27,7 +27,7 @@ public class ResourceLink {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ResourceLink that = (ResourceLink) o;
+        Links that = (Links) o;
         return Objects.equals(self, that.self) && Objects.equals(order, that.order);
     }
 
