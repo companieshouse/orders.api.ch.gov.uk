@@ -2,6 +2,7 @@ package uk.gov.companieshouse.orders.api.interceptor;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -17,10 +18,14 @@ import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDEN
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_INVALID_TYPE_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +41,7 @@ import org.springframework.web.util.UrlPathHelper;
 @DirtiesContext
 @SpringBootTest
 @EmbeddedKafka
-public class UserAuthenticationInterceptorTests {
+class UserAuthenticationInterceptorTests {
 
     @Autowired
     private UserAuthenticationInterceptor interceptorUnderTest;
@@ -84,28 +89,6 @@ public class UserAuthenticationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle rejects get payment details request that lacks required headers")
-    void preHandleRejectsUnauthenticatedGetPaymentDetailsRequest() {
-
-        // Given
-        givenRequest(GET, "/basket/checkouts/1234/payment");
-
-        // When and then
-        thenRequestIsRejected();
-    }
-
-    @Test
-    @DisplayName("preHandle rejects get basket request that lacks required headers")
-    void preHandleRejectsUnauthenticatedGetBasketRequest() {
-
-        // Given
-        givenRequest(GET, "/basket");
-
-        // When and then
-        thenRequestIsRejected();
-    }
-
-    @Test
     @DisplayName("preHandle rejects patch basket request that lacks required headers")
     void preHandleRejectsUnauthenticatedPatchBasketRequest() {
 
@@ -126,23 +109,13 @@ public class UserAuthenticationInterceptorTests {
         // When and then
         thenRequestIsRejected();
     }
-    @Test
-    @DisplayName("preHandle rejects get order request that lacks required headers")
-    void preHandleRejectsUnauthenticatedGetOrderRequest() {
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("unauthenticatedRequestFixtures")
+    void preHandleRejectsUnauthenticatedRequest(final String displayName, String uri) {
 
         // Given
-        givenRequest(GET, "/orders/1234");
-
-        // When and then
-        thenRequestIsRejected();
-    }
-
-    @Test
-    @DisplayName("preHandle rejects search request that lacks required headers")
-    void preHandleRejectsUnauthenticatedSearchRequest() {
-
-        // Given
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, uri);
 
         // When and then
         thenRequestIsRejected();
@@ -405,4 +378,10 @@ public class UserAuthenticationInterceptorTests {
         verify(response).setStatus(HttpStatus.UNAUTHORIZED.value());
     }
 
+    private static Stream<Arguments> unauthenticatedRequestFixtures() {
+        return Stream.of(arguments("preHandle rejects get payment details request that lacks required headers", "/basket/checkouts/1234/payment"),
+                arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
+                arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
+                arguments("preHandle rejects search request that lacks required headers", "/orders/search"));
+    }
 }

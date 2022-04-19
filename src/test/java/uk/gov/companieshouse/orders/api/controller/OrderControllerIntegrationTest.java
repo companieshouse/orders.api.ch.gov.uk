@@ -3,9 +3,13 @@ package uk.gov.companieshouse.orders.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -250,23 +254,6 @@ class OrderControllerIntegrationTest {
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
 
-    @DisplayName("Should not find a order when incomplete order id is provided")
-    @Test
-    void searchByOrderIdReturnsNoMatches() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
-
-        mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("id", "00")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(expected)));
-    }
-
     @DisplayName("Should find a single order when searching with a partial email address")
     @Test
     void searchOrdersByEmail() throws Exception {
@@ -286,23 +273,6 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("email", "demo@ch")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(expected)));
-    }
-
-    @DisplayName("Should not find a order when a incorrect email address is provided")
-    @Test
-    void searchOrdersByEmailReturnsNoMatches() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
-
-        mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("email", "wrong@ch.gov.uk")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -343,19 +313,19 @@ class OrderControllerIntegrationTest {
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
 
-    @DisplayName("Should not find a order when a incomplete company number is provided")
-    @Test
-    void searchOrdersByCompanyNumberReturnsNoMatches() throws Exception {
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("noMatchesFixture")
+    void searchReturnsNoMatches(final String displayName, final String searchField, final String searchValue) throws Exception {
         orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("companyNumber", "345678912")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param(searchField, searchValue)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
@@ -389,5 +359,11 @@ class OrderControllerIntegrationTest {
         checkout.setId(orderId);
         checkout.getData().setStatus(PaymentStatus.PAID);
         return checkout;
+    }
+
+    private static Stream<Arguments> noMatchesFixture() {
+        return Stream.of(Arguments.arguments("Should not find a order when incomplete order id is provided", "id", "00"),
+                Arguments.arguments("Should not find a order when a incorrect email address is provided", "email", "wrong@ch.gov.uk"),
+                Arguments.arguments("Should not find a order when a incomplete company number is provided", "companyNumber", "345678912"));
     }
 }
