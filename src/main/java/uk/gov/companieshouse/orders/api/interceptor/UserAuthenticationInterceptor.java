@@ -3,18 +3,21 @@ package uk.gov.companieshouse.orders.api.interceptor;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.ADD_ITEM;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.CHECKOUT_BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHECKOUT;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
@@ -40,25 +43,30 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
     public boolean preHandle(final HttpServletRequest request,
                              final HttpServletResponse response,
                              final Object handler) {
-        final RequestMappingInfo match = requestMapper.getRequestMapping(request);
-        if (match != null) {
-            switch (match.getName()) {
-                case ADD_ITEM:
-                case CHECKOUT_BASKET:
-                case BASKET:
-                    return hasSignedInUser(request, response);
-                case GET_PAYMENT_DETAILS:
-                case GET_ORDER:
-                case GET_CHECKOUT:
-                    return hasAuthenticatedClient(request, response);
-                case PATCH_PAYMENT_DETAILS:
-                    return hasAuthenticatedApi(request, response);
-                default:
-                    // This should not happen.
-                    throw new IllegalArgumentException("Mapped request with no authenticator: " + match.getName());
-            }
+
+        return Optional.ofNullable(requestMapper.getRequestMapping(request))
+                .map(RequestMappingInfo::getName)
+                .map(name -> checkAuthenticated(request, response, name))
+                .orElse(true);
+    }
+
+    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {
+        switch (name) {
+            case ADD_ITEM:
+            case CHECKOUT_BASKET:
+            case BASKET:
+                return hasSignedInUser(request, response);
+            case GET_PAYMENT_DETAILS:
+            case GET_ORDER:
+            case SEARCH:
+            case GET_CHECKOUT:
+                return hasAuthenticatedClient(request, response);
+            case PATCH_PAYMENT_DETAILS:
+                return hasAuthenticatedApi(request, response);
+            default:
+                // This should not happen.
+                throw new IllegalArgumentException("Mapped request with no authenticator: " + name);
         }
-        return true;
     }
 
     /**

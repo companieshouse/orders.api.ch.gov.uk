@@ -5,6 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -26,10 +27,14 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDE
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -48,7 +53,7 @@ import uk.gov.companieshouse.orders.api.repository.OrderRepository;
  */
 @SpringBootTest
 @EmbeddedKafka
-public class UserAuthorisationInterceptorTests {
+class UserAuthorisationInterceptorTests {
 
     @Autowired
     private UserAuthorisationInterceptor interceptorUnderTest;
@@ -109,18 +114,6 @@ public class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get payment details internal API request that has the required headers")
-    void preHandleAcceptsAuthorisedInternalApiGetPaymentDetailsRequest() {
-
-        // Given
-        givenRequest(GET, "/basket/checkouts/1234/payment");
-        givenRequestHasInternalUserRole();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
     @DisplayName("preHandle accepts get payment details user request that has the required headers")
     void preHandleAcceptsAuthorisedUserGetPaymentDetailsRequest() {
 
@@ -173,18 +166,6 @@ public class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get order internal API request that has the required headers")
-    void preHandleAcceptsAuthorisedInternalApiGetOrderRequest() {
-
-        // Given
-        givenRequest(GET, "/orders/1234");
-        givenRequestHasInternalUserRole();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
     @DisplayName("preHandle accepts get order user request that has the required headers")
     void preHandleAcceptsAuthorisedUserGetOrderRequest() {
 
@@ -198,11 +179,24 @@ public class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get checkout internal API request that has the required headers")
-    void preHandleAcceptsAuthorisedInternalApiGetCheckoutRequest() {
+    @DisplayName("preHandle accepts search user request that has the required headers")
+    void preHandleAcceptsAuthorisedUserSearchRequest() {
 
         // Given
-        givenRequest(GET, "/checkouts/1234");
+        givenRequest(GET, "/orders/search");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("apiGetRequestFixtures")
+    void preHandleAcceptsAuthorisedInternalApiGetRequest(final String displayName, final String uri) {
+
+        // Given
+        givenRequest(GET, uri);
         givenRequestHasInternalUserRole();
 
         // When and then
@@ -343,5 +337,12 @@ public class UserAuthorisationInterceptorTests {
     private void thenRequestIsRejected() {
         assertThat(interceptorUnderTest.preHandle(request, response, handler), is(false));
         verify(response).setStatus(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    private static Stream<Arguments> apiGetRequestFixtures() {
+        return Stream.of(arguments("preHandle accepts get payment details internal API request that has the required headers", "/basket/checkouts/1234/payment"),
+                arguments("preHandle accepts get order internal API request that has the required headers", "/orders/1234"),
+                arguments("preHandle accepts search internal API request that has the required headers", "/orders/search"),
+                arguments("preHandle accepts get checkout internal API request that has the required headers", "/checkouts/1234"));
     }
 }

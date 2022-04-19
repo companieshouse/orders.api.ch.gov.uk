@@ -8,13 +8,14 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.ADD_ITEM;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.CHECKOUT_BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHECKOUT;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
 
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +34,7 @@ import org.springframework.web.util.UrlPathHelper;
 @DirtiesContext
 @SpringBootTest
 @EmbeddedKafka
-public class RequestMapperTests {
+class RequestMapperTests {
 
     @Autowired
     private RequestMapper requestMapperUnderTest;
@@ -119,6 +120,17 @@ public class RequestMapperTests {
     }
 
     @Test
+    @DisplayName("getRequestMappingInfo gets the search request mapping")
+    void getRequestMappingInfoGetsSearch() {
+
+        // Given
+        givenRequest(GET, "/orders/search");
+
+        // When and then
+        assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(SEARCH));
+    }
+
+    @Test
     @DisplayName("getRequestMappingInfo gets the get checkout request mapping")
     void getRequestMappingInfoGetsGetCheckout() {
 
@@ -152,5 +164,4 @@ public class RequestMapperTests {
         when(request.getServletPath()).thenReturn("");
         when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
     }
-
 }

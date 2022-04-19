@@ -1,6 +1,13 @@
 package uk.gov.companieshouse.orders.api.service;
 
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+
 import com.mongodb.MongoException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
@@ -11,16 +18,21 @@ import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderCriteria;
+import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.OrderLinks;
+import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
+import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
+import uk.gov.companieshouse.orders.api.model.OrderSummary;
+import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
 public class OrderService {
@@ -32,18 +44,21 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final LinksGeneratorService linksGeneratorService;
     private final OrderReceivedMessageProducer ordersMessageProducer;
+    private final SearchFieldMapper searchFieldMapper;
 
     @Value("${uk.gov.companieshouse.orders.api.orders}")
-    private String orderEndpointU;
+    private String orderEndpoint;
 
     public OrderService(final CheckoutToOrderMapper mapper, final CheckoutRepository checkoutRepository,
                         final OrderRepository orderRepository, OrderReceivedMessageProducer producer,
-                        final LinksGeneratorService linksGeneratorService) {
+                        final LinksGeneratorService linksGeneratorService,
+                        final SearchFieldMapper searchFieldMapper) {
         this.mapper = mapper;
         this.checkoutRepository = checkoutRepository;
         this.orderRepository = orderRepository;
         this.ordersMessageProducer = producer;
         this.linksGeneratorService = linksGeneratorService;
+        this.searchFieldMapper = searchFieldMapper;
     }
 
     /**
@@ -70,7 +85,7 @@ public class OrderService {
             }
         );
 
-        Order savedOrder = null;
+        Order savedOrder;
         try {
             savedOrder = orderRepository.save(mappedOrder);
         } catch (MongoException ex) {
@@ -94,11 +109,61 @@ public class OrderService {
     }
 
     /**
+     * Returns an result consisting of order summaries corresponding to the supplied search
+     * criteria.
+     *
+     * @param orderSearchCriteria to find existing orders
+     * @return OrderSearchResults matching the supplied criteria
+     */
+    public OrderSearchResults searchOrders(OrderSearchCriteria orderSearchCriteria) {
+        OrderCriteria orderCriteria = orderSearchCriteria.getOrderCriteria();
+        List<Order> orders = orderRepository.searchOrders(
+                searchFieldMapper.exactMatchOrAny(orderCriteria.getOrderId()),
+                searchFieldMapper.partialMatchOrAny(orderCriteria.getEmail()),
+                searchFieldMapper.exactMatchOrAny(orderCriteria.getCompanyNumber()));
+
+        return new OrderSearchResults(orders.size(),
+                orders.stream().map(
+                        order -> OrderSummary.newBuilder()
+                                .withId(order.getId())
+                                .withEmail(
+                                        Optional.ofNullable(order.getData())
+                                                .map(OrderData::getOrderedBy)
+                                                .map(ActionedBy::getEmail)
+                                                .orElse(null))
+                                .withCompanyNumber(Optional.ofNullable(order.getData())
+                                        .map(OrderData::getItems)
+                                        .flatMap(items -> items.stream().findFirst())
+                                        .map(Item::getCompanyNumber)
+                                        .orElse(null))
+                                .withProductLine(
+                                        Optional.ofNullable(order.getData())
+                                                .map(OrderData::getItems)
+                                                .flatMap(items -> items.stream().findFirst())
+                                                .map(Item::getKind)
+                                                .orElse(null))
+                                .withOrderDate(order.getCreatedAt())
+                                .withPaymentStatus(getCheckout(order.getId())
+                                        .map(Checkout::getData)
+                                        .map(CheckoutData::getStatus)
+                                        .orElse(null))
+                                .withLinks(
+                                        Optional.ofNullable(order.getData())
+                                                .map(OrderData::getLinks)
+                                                .map(OrderLinks::getSelf)
+                                                .map(self -> new Links(new HRef(self),
+                                                        new HRef(self)))
+                                                .orElse(null))
+                                .build()
+                ).collect(Collectors.toList()));
+    }
+
+    /**
      * Sends a message to Kafka topic 'order-received'
      * @param orderId order id
      */
     private void sendOrderReceivedMessage(String orderId) {
-        String orderURI = orderEndpointU + "/" + orderId;
+        String orderURI = orderEndpoint + "/" + orderId;
         OrderReceived orderReceived = new OrderReceived();
         orderReceived.setOrderUri(orderURI);
         ordersMessageProducer.sendMessage(orderId, orderReceived);

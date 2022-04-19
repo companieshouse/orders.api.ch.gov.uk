@@ -4,16 +4,18 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.ADD_ITEM;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.CHECKOUT_BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_CHECKOUT;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_ORDER;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.GET_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestMapper.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -56,26 +58,33 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
     public boolean preHandle(final HttpServletRequest request,
                              final HttpServletResponse response,
                              final Object handler) {
-        final RequestMappingInfo match = requestMapper.getRequestMapping(request);
-        if (match != null) {
-            switch (match.getName()) {
-                case ADD_ITEM:
-                case CHECKOUT_BASKET:
-                case BASKET:
-                    return true; // no authorisation required
-                case GET_PAYMENT_DETAILS:
-                case GET_CHECKOUT:
-                    return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
-                case GET_ORDER:
-                    return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
-                case PATCH_PAYMENT_DETAILS:
-                    return clientIsAuthorisedInternalApi(request, response);
-                default:
-                    // This should not happen.
-                    throw new IllegalArgumentException("Mapped request with no authoriser: " + match.getName());
-            }
+
+        return Optional.ofNullable(requestMapper.getRequestMapping(request))
+                .map(RequestMappingInfo::getName)
+                .map(name -> checkAuthorised(request, response, name))
+                .orElse(true);
+    }
+
+    private boolean checkAuthorised(HttpServletRequest request, HttpServletResponse response, String name) {
+        switch (name) {
+            case ADD_ITEM:
+            case CHECKOUT_BASKET:
+            case BASKET:
+                return true; // no authorisation required
+            case GET_PAYMENT_DETAILS:
+            case GET_CHECKOUT:
+                return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
+            case GET_ORDER:
+                return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
+            case PATCH_PAYMENT_DETAILS:
+                return clientIsAuthorisedInternalApi(request, response);
+            case SEARCH:
+                // TODO: check search orders permission
+                return true;
+            default:
+                // This should not happen.
+                throw new IllegalArgumentException("Mapped request with no authoriser: " + name);
         }
-        return true;
     }
 
     /**
