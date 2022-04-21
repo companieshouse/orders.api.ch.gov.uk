@@ -7,7 +7,7 @@ import static uk.gov.companieshouse.orders.api.controller.BasketController.GET_P
 import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.SEARCH_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDERS_SEARCH_URI;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +40,7 @@ class RequestUris {
     private String getPaymentDetailsUri;
     @Value(GET_ORDER_URI)
     private String getOrderUri;
-    @Value(SEARCH_URI)
+    @Value(ORDERS_SEARCH_URI)
     private String searchUri;
     @Value(GET_CHECKOUT_URI)
     private String getCheckoutUri;

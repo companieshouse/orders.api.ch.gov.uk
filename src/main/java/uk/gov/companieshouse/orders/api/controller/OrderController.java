@@ -45,7 +45,7 @@ public class OrderController {
     public static final String GET_CHECKOUT_URI =
         "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
 
-    public static final String SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
+    public static final String ORDERS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
 
     public OrderController(OrderService orderService, CheckoutService checkoutService) {
         this.orderService = orderService;
@@ -78,7 +78,7 @@ public class OrderController {
        return ResponseEntity.ok().body(checkoutRetrieved.getData());
    }
 
-    @GetMapping(SEARCH_URI)
+    @GetMapping(ORDERS_SEARCH_URI)
     public ResponseEntity<OrderSearchResults> searchOrders(
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,

@@ -15,6 +15,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistration
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import uk.gov.companieshouse.api.interceptor.CRUDAuthenticationInterceptor;
+import uk.gov.companieshouse.orders.api.interceptor.OrdersSearchEndpointFeatureToggle;
 import uk.gov.companieshouse.orders.api.interceptor.LoggingInterceptor;
 import uk.gov.companieshouse.orders.api.interceptor.UserAuthenticationInterceptor;
 import uk.gov.companieshouse.orders.api.interceptor.UserAuthorisationInterceptor;
@@ -30,13 +31,16 @@ class ApplicationConfigTest {
     private UserAuthenticationInterceptor authenticationInterceptor;
     @Mock
     private UserAuthorisationInterceptor authorisationInterceptor;
+    @Mock
+    private OrdersSearchEndpointFeatureToggle featureToggleInterceptor;
     private final String healthcheckUri = "healthcheck";
     private final String paymentDetailsUri = "payment-details";
+    private final String ordersSearchUri = "orders-search-uri";
 
     @BeforeEach
     void setup() {
         config = Mockito.spy(new ApplicationConfig(loggingInterceptor, authenticationInterceptor,
-                authorisationInterceptor, healthcheckUri, paymentDetailsUri));
+                authorisationInterceptor, featureToggleInterceptor, healthcheckUri, paymentDetailsUri, ordersSearchUri));
     }
 
     @Test
@@ -53,6 +57,9 @@ class ApplicationConfigTest {
 
         InterceptorRegistration loggingInterceptorRegistration = Mockito.mock(InterceptorRegistration.class);
         doReturn(loggingInterceptorRegistration).when(registry).addInterceptor(loggingInterceptor);
+
+        InterceptorRegistration featureToggleInterceptorRegistration = Mockito.mock(InterceptorRegistration.class);
+        doReturn(featureToggleInterceptorRegistration).when(registry).addInterceptor(featureToggleInterceptor);
 
         InterceptorRegistration authenticationInterceptorRegistration = Mockito.mock(InterceptorRegistration.class);
         doReturn(authenticationInterceptorRegistration).when(registry).addInterceptor(authenticationInterceptor);
@@ -72,11 +79,13 @@ class ApplicationConfigTest {
 
         verify(authenticationInterceptorRegistration).excludePathPatterns(healthcheckUri);
         verify(authorisationInterceptorRegistration).excludePathPatterns(healthcheckUri);
+        verify(featureToggleInterceptorRegistration).addPathPatterns(ordersSearchUri);
         verify(crudPermissionInterceptorRegistration).excludePathPatterns(paymentDetailsUri, healthcheckUri);
         verify(crudPermissionInterceptorPaymentDetailsRegistration).addPathPatterns(paymentDetailsUri);
 
         InOrder inOrder = Mockito.inOrder(registry);
         inOrder.verify(registry).addInterceptor(loggingInterceptor);
+        inOrder.verify(registry).addInterceptor(featureToggleInterceptor);
         inOrder.verify(registry).addInterceptor(authenticationInterceptor);
         inOrder.verify(registry).addInterceptor(authorisationInterceptor);
         inOrder.verify(registry).addInterceptor(crudPermissionInterceptor);
