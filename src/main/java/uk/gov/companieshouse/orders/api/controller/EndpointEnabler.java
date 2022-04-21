@@ -18,6 +18,7 @@ import uk.gov.companieshouse.orders.api.config.FeatureOptionsConfig;
  */
 @Component
 @Aspect
+// TODO: rework as Filter implementation
 public class EndpointEnabler {
     private final FeatureOptions featureOptions;
 

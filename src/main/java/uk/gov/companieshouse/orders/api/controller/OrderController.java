@@ -83,7 +83,7 @@ public class OrderController {
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,
             @RequestParam(value = "company_number", required = false) final String companyNumber,
-            @RequestParam(value = "page_size") final int pageSize,
+            @RequestParam(value = "page_size", required = false, defaultValue = "1") final int pageSize,
             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);

@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.stream.Stream;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,7 +21,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import uk.gov.companieshouse.api.util.security.Permission;
-import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
@@ -29,10 +28,8 @@ import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.HRef;
-import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
-import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
@@ -41,6 +38,7 @@ import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
 import static java.util.Collections.singletonList;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -48,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
+import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
@@ -72,6 +71,8 @@ class OrderControllerIntegrationTest {
     private static final String CHECKOUT_REFERENCE = "0002";
     private static final String COMPANY_STATUS_ACTIVE = "active";
     public static final String ORDERS_SEARCH_PATH = "/orders/search";
+    private static final String PAGE_SIZE_PARAM = "page_size";
+    private static final String PAGE_SIZE_VALUE = "1";
 
     @Autowired
     private MockMvc mockMvc;
@@ -246,6 +247,7 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("id", ORDER_ID)
+                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -274,6 +276,7 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("email", "demo@ch")
+                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -304,6 +307,7 @@ class OrderControllerIntegrationTest {
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .param("company_number", "12345678")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -321,6 +325,7 @@ class OrderControllerIntegrationTest {
         OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                         .param(searchField, searchValue)
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
@@ -340,7 +345,7 @@ class OrderControllerIntegrationTest {
         checkoutRepository.save(getCheckout("0002"));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                        .param("page_size", "1")
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -348,31 +353,16 @@ class OrderControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total_orders", is(2)))
-                .andExpect(jsonPath("$.order_summaries.*", Matchers.hasSize(1)));
+                .andExpect(jsonPath("$.order_summaries.*", hasSize(1)));
     }
 
-    private Order getOrder(String orderId, String email, String companyNumber) {
-        final Order order = new Order();
-        order.setId(orderId);
-        order.setUserId(ERIC_IDENTITY_VALUE);
-        order.setCreatedAt(LocalDate.of(2022, 4, 12).atStartOfDay());
+    @DisplayName("Should return HTTP 400 Bad Request if query parameter page_size is absent")
+    @Test
+    @Disabled("TODO")
+    void returnBadRequestIfPageSizeAbsent() {
 
-        final OrderData orderData = new OrderData();
-        orderData.setReference(ORDER_REFERENCE);
-        orderData.setTotalOrderCost("100");
-        orderData.setOrderedBy(new ActionedBy());
-        orderData.getOrderedBy().setEmail(email);
-        orderData.setItems(Collections.singletonList(new Item()));
-        orderData.getItems().get(0).setId("item-id-123");
-        orderData.getItems().get(0).setKind("item#certificate");
-        orderData.getItems().get(0).setCompanyNumber(companyNumber);
-        orderData.setLinks(new OrderLinks());
-        orderData.getLinks().setSelf("http");
-
-        order.setData(orderData);
-
-        return order;
     }
+
 
     private Checkout getCheckout(String orderId) {
         Checkout checkout = new Checkout();
