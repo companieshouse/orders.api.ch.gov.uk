@@ -23,6 +23,7 @@ import uk.gov.companieshouse.orders.api.model.OrderCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
+import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 
@@ -82,6 +83,7 @@ public class OrderController {
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,
             @RequestParam(value = "company_number", required = false) final String companyNumber,
+            @RequestParam(value = "page_size") final int pageSize,
             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
@@ -91,7 +93,9 @@ public class OrderController {
                         .withOrderId(id)
                         .withEmail(email)
                         .withCompanyNumber(companyNumber)
-                        .build());
+                        .build(),
+                new PageCriteria(pageSize)
+        );
         OrderSearchResults orderSearchResults = orderService.searchOrders(orderSearchCriteria);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info(String.format("Total orders found %d", orderSearchResults.getTotalOrders()));

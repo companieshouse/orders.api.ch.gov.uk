@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.stream.Stream;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -328,6 +329,26 @@ class OrderControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
+    }
+
+    @DisplayName("Should return a page containing a single order when page_size is one")
+    @Test
+    void limitSearchResultsToPageSize() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(ORDER_ID));
+        orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
+        checkoutRepository.save(getCheckout("0002"));
+
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param("page_size", "1")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total_orders", is(2)))
+                .andExpect(jsonPath("$.order_summaries.*", Matchers.hasSize(1)));
     }
 
     private Order getOrder(String orderId, String email, String companyNumber) {

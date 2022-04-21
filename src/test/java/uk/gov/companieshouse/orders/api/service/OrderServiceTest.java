@@ -10,7 +10,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,7 @@ import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.Links;
+import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -73,6 +76,8 @@ class OrderServiceTest {
     private Item item;
     @Mock
     private SearchFieldMapper searchFieldMapper;
+    @Mock
+    private PageCriteria pageCriteria;
 
     @Test
     void createOrderCreatesOrder() {
@@ -182,5 +187,28 @@ class OrderServiceTest {
 
         //then
         assertThat(actual, is(expected));
+    }
+
+    @Test
+    @DisplayName("search orders returns a single order when page size is one")
+    void searchOrdersLimitsSearchResults() {
+        //given
+        when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
+        when(orderSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
+        when(orderCriteria.getOrderId()).thenReturn("");
+        when(orderCriteria.getEmail()).thenReturn("");
+        when(orderCriteria.getCompanyNumber()).thenReturn("");
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
+                Arrays.asList(orderResult, orderResult));
+        when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
+        when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
+
+        //when
+        OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
+
+        //then
+        assertThat(actual.getTotalOrders(), is(2));
+        assertThat(actual.getOrderSummaries().size(), is(1));
     }
 }
