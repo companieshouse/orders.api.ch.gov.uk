@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.orders.api.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import javax.validation.ConstraintViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -73,6 +75,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(KafkaMessagingException.class)
     public ResponseEntity<Object> handleKafkaMessagingException(final KafkaMessagingException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+    }
+
+    /**
+     * Gives bad request body detail on the missing query parameter
+     *
+     * @param ex exception
+     * @return bad request body error message
+     */
+    @Override
+    protected ResponseEntity<Object> handleMissingServletRequestParameter(
+            MissingServletRequestParameterException ex,
+            HttpHeaders headers,
+            HttpStatus status,
+            WebRequest request) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Object> handleConstraintViolationException(final ConstraintViolationException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
     /**

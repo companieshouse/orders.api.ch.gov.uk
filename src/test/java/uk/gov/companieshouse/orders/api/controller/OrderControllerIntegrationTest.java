@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -358,9 +357,29 @@ class OrderControllerIntegrationTest {
 
     @DisplayName("Should return HTTP 400 Bad Request if query parameter page_size is absent")
     @Test
-    @Disabled("TODO")
-    void returnBadRequestIfPageSizeAbsent() {
+    void returnBadRequestIfPageSizeAbsent() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$", is("Required request parameter 'page_size' for method parameter type int is not present")));
+    }
 
+    @DisplayName("Should return HTTP 400 Bad Request if page size less than 1")
+    @Test
+    void returnBadRequestPageSize0() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                .param("page_size", "0")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$", is("searchOrders.pageSize: must be greater than or equal to 1")));
     }
 
 

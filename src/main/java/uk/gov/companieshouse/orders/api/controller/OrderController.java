@@ -5,8 +5,10 @@ import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECK
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 import java.util.Map;
+import javax.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -27,6 +29,7 @@ import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 
+@Validated
 @RestController
 public class OrderController {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
@@ -83,7 +86,7 @@ public class OrderController {
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,
             @RequestParam(value = "company_number", required = false) final String companyNumber,
-            @RequestParam(value = "page_size", required = false, defaultValue = "1") final int pageSize,
+            @Min(1) @RequestParam(value = "page_size") final int pageSize,
             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
