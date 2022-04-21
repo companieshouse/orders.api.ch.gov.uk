@@ -188,7 +188,7 @@ class UserAuthorisationInterceptorTests {
         givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
-        thenRequestIsAccepted();
+        thenRequestIsRejected();
     }
 
     @ParameterizedTest(name = "{index}: {0}")

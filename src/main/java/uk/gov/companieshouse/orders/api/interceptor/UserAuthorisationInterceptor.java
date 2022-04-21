@@ -16,6 +16,8 @@ import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
 import java.util.Optional;
+import org.apache.http.HttpResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -79,11 +81,26 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
             case PATCH_PAYMENT_DETAILS:
                 return clientIsAuthorisedInternalApi(request, response);
             case SEARCH:
-                // TODO: check search orders permission
-                return true;
+                return isOrdersSearchAuthorised(request, response);
             default:
                 // This should not happen.
                 throw new IllegalArgumentException("Mapped request with no authoriser: " + name);
+        }
+    }
+
+    private boolean isOrdersSearchAuthorised(HttpServletRequest request, HttpServletResponse response) {
+        Map<String, Object> logMap = LoggingUtils.createLogMap();
+        final String identityType = EricHeaderHelper.getIdentityType(request);
+        logMap.put(LoggingUtils.IDENTITY_TYPE, identityType);
+        if (API_KEY_IDENTITY_TYPE.equals(identityType)) {
+            LOGGER.infoRequest(request,
+                    "UserAuthorisationInterceptor: client is presenting an API key", logMap);
+            return clientIsAuthorisedInternalApi(request, response);
+        } else {
+            LOGGER.infoRequest(request,
+                    "UserAuthorisationInterceptor: client is unauthorised", logMap);
+            response.setStatus(UNAUTHORIZED.value());
+            return false;
         }
     }
 
