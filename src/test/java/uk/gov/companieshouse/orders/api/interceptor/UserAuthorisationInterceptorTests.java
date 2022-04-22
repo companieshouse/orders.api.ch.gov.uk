@@ -179,16 +179,15 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts search user request that has the required headers")
-    void preHandleAcceptsAuthorisedUserSearchRequest() {
+    @DisplayName("preHandle rejects unauthorised order search request")
+    void preHandleRejectsUnauthorisedUserSearchRequest() {
 
         // Given
         givenRequest(GET, "/orders/search");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
-        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
-        thenRequestIsAccepted();
+        thenRequestIsRejected();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
