@@ -110,6 +110,18 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
+    @Test
+    @DisplayName("preHandle accepts search orders request that has authenticated API headers")
+    void preHandleAcceptsAuthenticatedApiSearchOrdersRequest() {
+
+        // Given
+        givenRequest(GET, "/orders/search");
+        givenRequestHasAuthenticatedApi();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("unauthenticatedRequestFixtures")
     void preHandleRejectsUnauthenticatedRequest(final String displayName, String uri) {
