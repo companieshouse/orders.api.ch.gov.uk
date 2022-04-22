@@ -110,18 +110,6 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
-    @Test
-    @DisplayName("preHandle accepts search orders request that has authenticated API headers")
-    void preHandleAcceptsAuthenticatedApiSearchOrdersRequest() {
-
-        // Given
-        givenRequest(GET, "/orders/search");
-        givenRequestHasAuthenticatedApi();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("unauthenticatedRequestFixtures")
     void preHandleRejectsUnauthenticatedRequest(final String displayName, String uri) {
@@ -170,18 +158,6 @@ class UserAuthenticationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get payment details request that has authenticated API headers")
-    void preHandleAcceptsAuthenticatedApiGetPaymentDetailsRequest() {
-
-        // Given
-        givenRequest(GET, "/basket/checkouts/1234/payment");
-        givenRequestHasAuthenticatedApi();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
     @DisplayName("preHandle accepts patch basket request that has the required headers")
     void preHandleAcceptsAuthenticatedPatchBasketRequest() {
 
@@ -218,18 +194,6 @@ class UserAuthenticationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get order request that has authenticated API headers")
-    void preHandleAcceptsAuthenticatedApiGetOrderRequest() {
-
-        // Given
-        givenRequest(GET, "/orders/1234");
-        givenRequestHasAuthenticatedApi();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
     @DisplayName("preHandle accepts get checkout request that has signed in user headers")
     void preHandleAcceptsSignedInUserGetCheckoutRequest() {
 
@@ -241,12 +205,12 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    @Test
-    @DisplayName("preHandle accepts get checkout request that has authenticated API headers")
-    void preHandleAcceptsAuthenticatedApiGetCheckoutRequest() {
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("authenticatedRequestFixtures")
+    void preHandleAcceptsAuthenticatedApiRequest(String displayName, String uriPath) {
 
         // Given
-        givenRequest(GET, "/checkouts/1234");
+        givenRequest(GET, uriPath);
         givenRequestHasAuthenticatedApi();
 
         // When and then
@@ -388,6 +352,13 @@ class UserAuthenticationInterceptorTests {
     private void thenRequestIsRejected() {
         assertThat(interceptorUnderTest.preHandle(request, response, handler), is(false));
         verify(response).setStatus(HttpStatus.UNAUTHORIZED.value());
+    }
+
+    private static Stream<Arguments> authenticatedRequestFixtures() {
+        return Stream.of(arguments("preHandle accepts get checkout request that has authenticated API headers", "/checkouts/1234"),
+                arguments("preHandle accepts get order request that has authenticated API headers", "/orders/1234"),
+                arguments("preHandle accepts get payment details request that has authenticated API headers", "/basket/checkouts/1234/payment"),
+                arguments("preHandle accepts search orders request that has authenticated API headers", "/orders/search"));
     }
 
     private static Stream<Arguments> unauthenticatedRequestFixtures() {
