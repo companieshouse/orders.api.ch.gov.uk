@@ -16,8 +16,6 @@ import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
 import java.util.Optional;
-import org.apache.http.HttpResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
