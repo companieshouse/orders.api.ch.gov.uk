@@ -76,29 +76,12 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
                 return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
             case GET_ORDER:
                 return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
+            case SEARCH:
             case PATCH_PAYMENT_DETAILS:
                 return clientIsAuthorisedInternalApi(request, response);
-            case SEARCH:
-                return isOrdersSearchAuthorised(request, response);
             default:
                 // This should not happen.
                 throw new IllegalArgumentException("Mapped request with no authoriser: " + name);
-        }
-    }
-
-    private boolean isOrdersSearchAuthorised(HttpServletRequest request, HttpServletResponse response) {
-        Map<String, Object> logMap = LoggingUtils.createLogMap();
-        final String identityType = EricHeaderHelper.getIdentityType(request);
-        logMap.put(LoggingUtils.IDENTITY_TYPE, identityType);
-        if (API_KEY_IDENTITY_TYPE.equals(identityType)) {
-            LOGGER.infoRequest(request,
-                    "UserAuthorisationInterceptor: client is presenting an API key", logMap);
-            return clientIsAuthorisedInternalApi(request, response);
-        } else {
-            LOGGER.infoRequest(request,
-                    "UserAuthorisationInterceptor: client is unauthorised", logMap);
-            response.setStatus(UNAUTHORIZED.value());
-            return false;
         }
     }
 
