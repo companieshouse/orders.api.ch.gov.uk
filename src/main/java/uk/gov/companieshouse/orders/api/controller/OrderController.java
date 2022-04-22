@@ -6,6 +6,7 @@ import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_
 
 import java.util.Map;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -86,7 +87,7 @@ public class OrderController {
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,
             @RequestParam(value = "company_number", required = false) final String companyNumber,
-            @Min(1) @RequestParam(value = "page_size") final int pageSize,
+            @RequestParam(value = "page_size", required = false) @NotNull(message = "page_size is mandatory") @Min(value = 1, message = "page_size must be greater than 0") final Integer pageSize,
             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);

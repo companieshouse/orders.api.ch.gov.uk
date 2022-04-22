@@ -365,7 +365,11 @@ class OrderControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$", is("Required request parameter 'page_size' for method parameter type int is not present")));
+                .andExpect(jsonPath("$.status_code", is(400)))
+                .andExpect(jsonPath("$.errors[0].error", is("constraint-violation")))
+                .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size is mandatory")))
+                .andExpect(jsonPath("$.errors[0].location", is("searchOrders.pageSize")))
+                .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
     }
 
     @DisplayName("Should return HTTP 400 Bad Request if page size less than 1")
@@ -379,7 +383,11 @@ class OrderControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$", is("searchOrders.pageSize: must be greater than or equal to 1")));
+                .andExpect(jsonPath("$.status_code", is(400)))
+                .andExpect(jsonPath("$.errors[0].error", is("constraint-violation")))
+                .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size must be greater than 0")))
+                .andExpect(jsonPath("$.errors[0].location", is("searchOrders.pageSize")))
+                .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
     }
 
 
