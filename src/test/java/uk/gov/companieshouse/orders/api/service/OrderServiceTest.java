@@ -5,6 +5,7 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,12 +13,16 @@ import static org.mockito.Mockito.when;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.ActionedBy;
@@ -32,6 +37,7 @@ import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.Links;
+import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -73,6 +79,10 @@ class OrderServiceTest {
     private Item item;
     @Mock
     private SearchFieldMapper searchFieldMapper;
+    @Mock
+    private PageCriteria pageCriteria;
+    @Mock
+    private Page<Order> pages;
 
     @Test
     void createOrderCreatesOrder() {
@@ -121,11 +131,14 @@ class OrderServiceTest {
     void searchOrders() {
         //given
         when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
+        when(orderSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
         when(orderCriteria.getOrderId()).thenReturn("ORD-123-456");
         when(orderCriteria.getEmail()).thenReturn("demo@ch.gov.uk");
         when(orderCriteria.getCompanyNumber()).thenReturn("12345678");
-        when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
-                Collections.singletonList(orderResult));
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(orderRepository.searchOrders(anyString(), anyString(), anyString(), eq(PageRequest.of(0, 1, Sort.by("data.ordered_at").descending().and(Sort.by("_id")))))).thenReturn(pages);
+        when(pages.getTotalElements()).thenReturn(42L);
+        when(pages.toList()).thenReturn(Collections.singletonList(orderResult));
         when(orderResult.getId()).thenReturn("ORD-123-456");
         when(orderResult.getData()).thenReturn(orderData);
         when(orderData.getOrderedBy()).thenReturn(orderedBy);
@@ -139,7 +152,7 @@ class OrderServiceTest {
         when(searchFieldMapper.exactMatchOrAny("12345678")).thenReturn("mapped company number");
         when(searchFieldMapper.partialMatchOrAny("demo@ch.gov.uk")).thenReturn("mapped email");
 
-        OrderSearchResults expected = new OrderSearchResults(1,
+        OrderSearchResults expected = new OrderSearchResults(42L,
                 Collections.singletonList(
                         OrderSummary.newBuilder()
                                 .withId("ORD-123-456")
@@ -155,7 +168,8 @@ class OrderServiceTest {
         //then
         verify(orderRepository).searchOrders("mapped order id",
                 "mapped email",
-                "mapped company number");
+                "mapped company number",
+                PageRequest.of(0, 1, Sort.by("data.ordered_at").descending().and(Sort.by("_id"))));
         assertThat(actual, is(expected));
     }
 
@@ -164,17 +178,20 @@ class OrderServiceTest {
     void searchOrdersWithBlankDetails() {
         //given
         when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
+        when(orderSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
         when(orderCriteria.getOrderId()).thenReturn("");
         when(orderCriteria.getEmail()).thenReturn("");
         when(orderCriteria.getCompanyNumber()).thenReturn("");
-        when(orderRepository.searchOrders(anyString(), anyString(), anyString())).thenReturn(
-                Collections.singletonList(orderResult));
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(orderRepository.searchOrders(anyString(), anyString(), anyString(), eq(PageRequest.of(0, 1, Sort.by("data.ordered_at").descending().and(Sort.by("_id")))))).thenReturn(pages);
+        when(pages.getTotalElements()).thenReturn(42L);
+        when(pages.toList()).thenReturn(Collections.singletonList(orderResult));
         when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
         when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
 
         OrderSummary orderSummary = OrderSummary.newBuilder().build();
 
-        OrderSearchResults expected = new OrderSearchResults(1,
+        OrderSearchResults expected = new OrderSearchResults(42L,
                 Collections.singletonList(orderSummary));
 
         //when
@@ -182,5 +199,29 @@ class OrderServiceTest {
 
         //then
         assertThat(actual, is(expected));
+    }
+
+    @Test
+    @DisplayName("search orders returns a single order when page size is one")
+    void searchOrdersLimitsSearchResults() {
+        //given
+        when(orderSearchCriteria.getOrderCriteria()).thenReturn(orderCriteria);
+        when(orderSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
+        when(orderCriteria.getOrderId()).thenReturn("");
+        when(orderCriteria.getEmail()).thenReturn("");
+        when(orderCriteria.getCompanyNumber()).thenReturn("");
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(orderRepository.searchOrders(anyString(), anyString(), anyString(), eq(PageRequest.of(0, 1, Sort.by("data.ordered_at").descending().and(Sort.by("_id")))))).thenReturn(pages);
+        when(pages.getTotalElements()).thenReturn(42L);
+        when(pages.toList()).thenReturn(Collections.singletonList(orderResult));
+        when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
+        when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
+
+        //when
+        OrderSearchResults actual = serviceUnderTest.searchOrders(orderSearchCriteria);
+
+        //then
+        assertThat(actual.getTotalOrders(), is(42L));
+        assertThat(actual.getOrderSummaries().size(), is(1));
     }
 }

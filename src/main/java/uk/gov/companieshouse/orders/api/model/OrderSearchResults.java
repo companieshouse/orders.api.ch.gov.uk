@@ -4,15 +4,15 @@ import java.util.List;
 import java.util.Objects;
 
 public class OrderSearchResults {
-    private final int totalOrders;
+    private final long totalOrders;
     private final List<OrderSummary> orderSummaries;
 
-    public OrderSearchResults(int totalOrders, List<OrderSummary> orderSummaries) {
+    public OrderSearchResults(long totalOrders, List<OrderSummary> orderSummaries) {
         this.totalOrders = totalOrders;
         this.orderSummaries = orderSummaries;
     }
 
-    public int getTotalOrders() {
+    public long getTotalOrders() {
         return totalOrders;
     }
 

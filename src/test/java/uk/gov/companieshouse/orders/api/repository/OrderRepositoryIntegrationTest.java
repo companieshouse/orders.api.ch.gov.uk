@@ -2,16 +2,18 @@ package uk.gov.companieshouse.orders.api.repository;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Collections;
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
-import uk.gov.companieshouse.orders.api.model.ActionedBy;
-import uk.gov.companieshouse.orders.api.model.Item;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import uk.gov.companieshouse.orders.api.model.Order;
-import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.util.OrderHelper;
 
 @DataMongoTest
 class OrderRepositoryIntegrationTest {
@@ -23,13 +25,7 @@ class OrderRepositoryIntegrationTest {
     @Test
     void testSearchOrdersId() {
         // given
-        Order order = new Order();
-        order.setId("ORD-123-456");
-        order.setData(new OrderData());
-        order.getData().setOrderedBy(new ActionedBy());
-        order.getData().getOrderedBy().setEmail("demo@ch.gov.uk");
-        order.getData().setItems(Collections.singletonList(new Item()));
-        order.getData().getItems().get(0).setCompanyNumber("12345678");
+        Order order = OrderHelper.getOrder("ORD-123-456", "demo@ch.gov.uk", "12345678");
         orderRepository.save(order);
 
         // when
@@ -46,13 +42,7 @@ class OrderRepositoryIntegrationTest {
     @Test
     void testSearchOrdersNotFound() {
         // given
-        Order order = new Order();
-        order.setId("ORD-123-456");
-        order.setData(new OrderData());
-        order.getData().setOrderedBy(new ActionedBy());
-        order.getData().getOrderedBy().setEmail("demo@ch.gov.uk");
-        order.getData().setItems(Collections.singletonList(new Item()));
-        order.getData().getItems().get(0).setCompanyNumber("12345678");
+        Order order = OrderHelper.getOrder("ORD-123-456", "demo@ch.gov.uk", "12345678");
         orderRepository.save(order);
 
         // when
@@ -66,13 +56,7 @@ class OrderRepositoryIntegrationTest {
     @Test
     void testSearchOrdersEmail() {
         // given
-        Order order = new Order();
-        order.setId("ORD-123-456");
-        order.setData(new OrderData());
-        order.getData().setOrderedBy(new ActionedBy());
-        order.getData().getOrderedBy().setEmail("demo@ch.gov.uk");
-        order.getData().setItems(Collections.singletonList(new Item()));
-        order.getData().getItems().get(0).setCompanyNumber("12345678");
+        Order order = OrderHelper.getOrder("ORD-123-456", "demo@ch.gov.uk", "12345678");
         orderRepository.save(order);
 
         // when
@@ -82,5 +66,25 @@ class OrderRepositoryIntegrationTest {
         assertEquals(1, orders.size());
         assertEquals(order.getId(), orders.get(0).getId());
         assertEquals(order.getData().getOrderedBy().getEmail(), orders.get(0).getData().getOrderedBy().getEmail());
+    }
+
+    @Test
+    @DisplayName("repository returns one order if page size of 1 specified")
+    void testSearchOrdersWithPageSize() {
+        // given
+        Order firstOrder = OrderHelper.getOrder("ORD-123-456", "demo1@ch.gov.uk", "12345678", LocalDate.of(2021, 1, 1).atStartOfDay());
+        Order secondOrder = OrderHelper.getOrder("ORD-654-321", "demo2@ch.gov.uk", "87654321", LocalDate.of(2022, 1, 1).atStartOfDay());
+        Order thirdOrder = OrderHelper.getOrder("ORD-987-654", "demo3@ch.gov.uk", "87654321", LocalDate.of(2022, 1, 1).atStartOfDay());
+        orderRepository.saveAll(Arrays.asList(firstOrder, secondOrder, thirdOrder));
+
+        // when
+        Page<Order> actual = orderRepository.searchOrders("", "", "", PageRequest.of(0, 1, Sort.by("data.ordered_at").descending().and(Sort.by("_id"))));
+
+        // then
+        assertEquals(3, actual.getTotalElements());
+        assertEquals(3, actual.getTotalPages());
+        assertEquals(secondOrder.getId(), actual.stream().findFirst().get().getId());
+        assertEquals(secondOrder.getData().getOrderedBy().getEmail(), actual.stream().findFirst().get().getData().getOrderedBy().getEmail());
+        assertEquals(secondOrder.getData().getItems().get(0).getCompanyNumber(), actual.stream().findFirst().get().getData().getItems().get(0).getCompanyNumber());
     }
 }

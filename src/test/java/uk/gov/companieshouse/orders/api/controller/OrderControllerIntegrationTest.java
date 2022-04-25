@@ -20,7 +20,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import uk.gov.companieshouse.api.util.security.Permission;
-import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
@@ -28,10 +27,8 @@ import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.HRef;
-import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
-import uk.gov.companieshouse.orders.api.model.OrderLinks;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
@@ -40,8 +37,8 @@ import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
 import static java.util.Collections.singletonList;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -50,11 +47,13 @@ import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORI
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
+import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_API_KEY_TYPE_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
@@ -76,6 +75,8 @@ class OrderControllerIntegrationTest {
     private static final String CHECKOUT_REFERENCE = "0002";
     private static final String COMPANY_STATUS_ACTIVE = "active";
     public static final String ORDERS_SEARCH_PATH = "/orders/search";
+    private static final String PAGE_SIZE_PARAM = "page_size";
+    private static final String PAGE_SIZE_VALUE = "1";
 
     @Autowired
     private MockMvc mockMvc;
@@ -250,6 +251,7 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("id", ORDER_ID)
+                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
                 .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
@@ -279,6 +281,7 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .param("email", "demo@ch")
+                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
                 .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
@@ -310,6 +313,7 @@ class OrderControllerIntegrationTest {
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .param("company_number", "12345678")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
@@ -328,6 +332,7 @@ class OrderControllerIntegrationTest {
         OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                         .param(searchField, searchValue)
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -339,28 +344,59 @@ class OrderControllerIntegrationTest {
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
 
-    private Order getOrder(String orderId, String email, String companyNumber) {
-        final Order order = new Order();
-        order.setId(orderId);
-        order.setUserId(ERIC_IDENTITY_VALUE);
-        order.setCreatedAt(LocalDate.of(2022, 4, 12).atStartOfDay());
+    @DisplayName("Should return a page containing a single order when page_size is one")
+    @Test
+    void limitSearchResultsToPageSize() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(ORDER_ID));
+        orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
+        checkoutRepository.save(getCheckout("0002"));
 
-        final OrderData orderData = new OrderData();
-        orderData.setReference(ORDER_REFERENCE);
-        orderData.setTotalOrderCost("100");
-        orderData.setOrderedBy(new ActionedBy());
-        orderData.getOrderedBy().setEmail(email);
-        orderData.setItems(Collections.singletonList(new Item()));
-        orderData.getItems().get(0).setId("item-id-123");
-        orderData.getItems().get(0).setKind("item#certificate");
-        orderData.getItems().get(0).setCompanyNumber(companyNumber);
-        orderData.setLinks(new OrderLinks());
-        orderData.getLinks().setSelf("http");
-
-        order.setData(orderData);
-
-        return order;
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                        .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total_orders", is(2)))
+                .andExpect(jsonPath("$.order_summaries.*", hasSize(1)));
     }
+
+    @DisplayName("Should return HTTP 400 Bad Request if query parameter page_size is absent")
+    @Test
+    void returnBadRequestIfPageSizeAbsent() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].error", is("constraint-violation")))
+                .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size is mandatory")))
+                .andExpect(jsonPath("$.errors[0].location", is("page_size")))
+                .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
+    }
+
+    @DisplayName("Should return HTTP 400 Bad Request if page size less than 1")
+    @Test
+    void returnBadRequestPageSize0() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                .param("page_size", "0")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].error", is("constraint-violation")))
+                .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size must be greater than 0")))
+                .andExpect(jsonPath("$.errors[0].location", is("page_size")))
+                .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
+    }
+
 
     private Checkout getCheckout(String orderId) {
         Checkout checkout = new Checkout();

@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -117,12 +120,14 @@ public class OrderService {
      */
     public OrderSearchResults searchOrders(OrderSearchCriteria orderSearchCriteria) {
         OrderCriteria orderCriteria = orderSearchCriteria.getOrderCriteria();
-        List<Order> orders = orderRepository.searchOrders(
+        Page<Order> orderPages = orderRepository.searchOrders(
                 searchFieldMapper.exactMatchOrAny(orderCriteria.getOrderId()),
                 searchFieldMapper.partialMatchOrAny(orderCriteria.getEmail()),
-                searchFieldMapper.exactMatchOrAny(orderCriteria.getCompanyNumber()));
+                searchFieldMapper.exactMatchOrAny(orderCriteria.getCompanyNumber()),
+                PageRequest.of(0, orderSearchCriteria.getPageCriteria().getPageSize(), Sort.by("data.ordered_at").descending().and(Sort.by("_id")))); //TODO: refactor into mapper implementation
+        List<Order> orders = orderPages.toList();
 
-        return new OrderSearchResults(orders.size(),
+        return new OrderSearchResults(orderPages.getTotalElements(),
                 orders.stream().map(
                         order -> OrderSummary.newBuilder()
                                 .withId(order.getId())

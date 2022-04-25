@@ -1,6 +1,12 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static java.util.Collections.singletonList;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.validation.ConstraintViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,23 +18,23 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
+import uk.gov.companieshouse.api.error.ApiErrorResponse;
 import uk.gov.companieshouse.orders.api.exception.KafkaMessagingException;
+import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.model.ApiError;
 import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static java.util.Collections.singletonList;
 
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    public static final String MESSAGE_ERROR_VALUE_KEY = "message";
+    public static final String CONSTRAINT_VIOLATION_ERROR = "constraint-violation";
     private final FieldNameConverter converter;
+    private final ConstraintViolationHelper constraintViolationHelper;
 
-    public GlobalExceptionHandler(FieldNameConverter converter) {
+    public GlobalExceptionHandler(FieldNameConverter converter, ConstraintViolationHelper constraintViolationHelper) {
         this.converter = converter;
+        this.constraintViolationHelper = constraintViolationHelper;
     }
 
     @Override
@@ -76,6 +82,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
+     * Returns bad request error for request parameter constraint violation.
+     *
+     * @param ex exception
+     * @return response entity containing error information
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolation(final ConstraintViolationException ex) {
+        return ApiErrorResponseEntityBuilder.builder(HttpStatus.BAD_REQUEST)
+                .addApiErrors(ex.getConstraintViolations()
+                        .stream()
+                        .map(constraintViolation ->
+                                ApiErrorBuilder.builder(CONSTRAINT_VIOLATION_ERROR, ErrorType.VALIDATION)
+                                .withLocation(constraintViolationHelper.propertyName(constraintViolation))
+                                .withErrorValue(MESSAGE_ERROR_VALUE_KEY, constraintViolation.getMessage())
+                                .build()
+                        ).collect(Collectors.toList()))
+                .build();
+    }
+
+    /**
      * Utility to build ApiError from MethodArgumentNotValidException.
      *
      * @param ex the MethodArgumentNotValidException handled
@@ -104,5 +130,4 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         final String errorMessage = jpe.getOriginalMessage();
         return new ApiError(HttpStatus.BAD_REQUEST, singletonList(errorMessage));
     }
-
 }
