@@ -59,8 +59,8 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
             case GET_PAYMENT_DETAILS:
             case GET_ORDER:
             case GET_CHECKOUT:
-                return hasAuthenticatedClient(request, response);
             case SEARCH:
+                return hasAuthenticatedClient(request, response);
             case PATCH_PAYMENT_DETAILS:
                 return hasAuthenticatedApi(request, response);
             default:
