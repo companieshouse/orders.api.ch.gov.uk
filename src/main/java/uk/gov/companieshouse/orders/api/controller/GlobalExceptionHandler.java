@@ -4,10 +4,13 @@ import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
+import javax.validation.Path;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import uk.gov.companieshouse.api.error.ApiErrorResponse;
 import uk.gov.companieshouse.orders.api.exception.KafkaMessagingException;
 import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.model.ApiError;
@@ -27,6 +31,8 @@ import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    public static final String MESSAGE_ERROR_VALUE_KEY = "message";
+    public static final String CONSTRAINT_VIOLATION_ERROR = "constraint-violation";
     private final FieldNameConverter converter;
 
     public GlobalExceptionHandler(FieldNameConverter converter) {
@@ -84,17 +90,27 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
      * @return response entity containing error information
      */
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Object> handleConstraintViolation(final ConstraintViolationException ex) {
-        return ResponseEntityBuilder.<Void>builder(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiErrorResponse> handleConstraintViolation(final ConstraintViolationException ex) {
+        return ApiErrorResponseEntityBuilder.builder(HttpStatus.BAD_REQUEST)
                 .addApiErrors(ex.getConstraintViolations()
                         .stream()
                         .map(constraintViolation ->
-                                ApiErrorBuilder.builder("constraint-violation", ErrorType.VALIDATION)
-                                .withLocation(constraintViolation.getPropertyPath().toString())
-                                .withErrorValue("message", constraintViolation.getMessage())
+                                ApiErrorBuilder.builder(CONSTRAINT_VIOLATION_ERROR, ErrorType.VALIDATION)
+                                .withLocation(propertyName(constraintViolation))
+                                .withErrorValue(MESSAGE_ERROR_VALUE_KEY, constraintViolation.getMessage())
                                 .build()
                         ).collect(Collectors.toList()))
                 .build();
+    }
+
+    private String propertyName(ConstraintViolation<?> constraintViolation) {
+        return Optional.ofNullable(constraintViolation)
+                .map(ConstraintViolation::getPropertyPath)
+                .map(Path::toString)
+                .flatMap(path -> Arrays.stream(path.split("\\."))
+                        .reduce((first, last) -> last))
+                .map(converter::toSnakeCase)
+                .orElse("");
     }
 
     /**
@@ -125,17 +141,5 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ApiError buildBadRequestApiError(final JsonProcessingException jpe) {
         final String errorMessage = jpe.getOriginalMessage();
         return new ApiError(HttpStatus.BAD_REQUEST, singletonList(errorMessage));
-    }
-
-    private ResponseEntity<Object> newBadRequestResponseEntity(
-            Exception ex,
-            HttpHeaders headers,
-            HttpStatus status,
-            WebRequest request) {
-        return handleExceptionInternal(ex,
-                new ApiError(status, Collections.singletonList(ex.getMessage())),
-                headers,
-                status,
-                request);
     }
 }

@@ -10,6 +10,12 @@ import static org.springframework.http.HttpStatus.MULTI_STATUS;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Path;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,13 +30,14 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.WebRequest;
+import uk.gov.companieshouse.api.error.ApiErrorResponse;
 import uk.gov.companieshouse.orders.api.exception.KafkaMessagingException;
 import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.model.ApiError;
 import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
 
 @ExtendWith(MockitoExtension.class)
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
 
     private static final String OBJECT1 = "object1";
     private static final String OBJECT2 = "object2";
@@ -90,6 +97,12 @@ public class GlobalExceptionHandlerTest {
 
     @Mock
     private WebRequest request;
+
+    @Mock
+    private ConstraintViolation<Void> constraintViolation;
+
+    @Mock
+    private Path path;
 
     @Test
     void buildsApiErrorFromMethodArgumentNotValidException() {
@@ -172,5 +185,43 @@ public class GlobalExceptionHandlerTest {
         assertThat(response, is(notNullValue()));
         assertThat(response.getStatusCode(), is(INTERNAL_SERVER_ERROR));
         assertThat(response.getBody(), is(MONGO_OPERATION_FAILURE));
+    }
+
+    @DisplayName("Builds expected response entity from empty constraint violation exception")
+    @Test
+    void buildExpectedResponseEntity() {
+        ConstraintViolationException exception = new ConstraintViolationException(Collections.emptySet());
+
+        ResponseEntity<ApiErrorResponse> expected = ApiErrorResponseEntityBuilder.builder(HttpStatus.BAD_REQUEST).build();
+
+        ResponseEntity<ApiErrorResponse> actual = handlerUnderTest.handleConstraintViolation(exception);
+
+        assertThat(actual.getStatusCode(), is(expected.getStatusCode()));
+    }
+
+    @DisplayName("Builds expected response entity from parameter constraint violation exception")
+    @Test
+    void buildExpectedResponseEntityFromParameterConstrainViolation() {
+
+        Set<ConstraintViolation<Void>> constraintViolations = new HashSet<ConstraintViolation<Void>>();
+        constraintViolations.add(constraintViolation);
+        when(constraintViolation.getMessage()).thenReturn("error message");
+        when(constraintViolation.getPropertyPath()).thenReturn(path);
+        when(path.toString()).thenReturn("abcde.efg.hijk");
+
+        ConstraintViolationException exception = new ConstraintViolationException(constraintViolations);
+
+        ResponseEntity<ApiErrorResponse> expected = ApiErrorResponseEntityBuilder.builder(HttpStatus.BAD_REQUEST)
+                .addApiErrors(Collections.singletonList(
+                        ApiErrorBuilder.builder("field-error", ErrorType.VALIDATION)
+                        .withErrorValue("message", "error message")
+                        .withLocation("hijk")
+                                .build()))
+
+                .build();
+
+        ResponseEntity<ApiErrorResponse> actual = handlerUnderTest.handleConstraintViolation(exception);
+
+        assertThat(actual.getStatusCode(), is(expected.getStatusCode()));
     }
 }
