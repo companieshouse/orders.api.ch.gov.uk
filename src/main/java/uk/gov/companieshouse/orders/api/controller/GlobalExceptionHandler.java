@@ -4,13 +4,9 @@ import static java.util.Collections.singletonList;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
-import javax.validation.Path;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,9 +30,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public static final String MESSAGE_ERROR_VALUE_KEY = "message";
     public static final String CONSTRAINT_VIOLATION_ERROR = "constraint-violation";
     private final FieldNameConverter converter;
+    private final ConstraintViolationHelper constraintViolationHelper;
 
-    public GlobalExceptionHandler(FieldNameConverter converter) {
+    public GlobalExceptionHandler(FieldNameConverter converter, ConstraintViolationHelper constraintViolationHelper) {
         this.converter = converter;
+        this.constraintViolationHelper = constraintViolationHelper;
     }
 
     @Override
@@ -96,21 +94,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                         .stream()
                         .map(constraintViolation ->
                                 ApiErrorBuilder.builder(CONSTRAINT_VIOLATION_ERROR, ErrorType.VALIDATION)
-                                .withLocation(propertyName(constraintViolation))
+                                .withLocation(constraintViolationHelper.propertyName(constraintViolation))
                                 .withErrorValue(MESSAGE_ERROR_VALUE_KEY, constraintViolation.getMessage())
                                 .build()
                         ).collect(Collectors.toList()))
                 .build();
-    }
-
-    private String propertyName(ConstraintViolation<?> constraintViolation) {
-        return Optional.ofNullable(constraintViolation)
-                .map(ConstraintViolation::getPropertyPath)
-                .map(Path::toString)
-                .flatMap(path -> Arrays.stream(path.split("\\."))
-                        .reduce((first, last) -> last))
-                .map(converter::toSnakeCase)
-                .orElse("");
     }
 
     /**

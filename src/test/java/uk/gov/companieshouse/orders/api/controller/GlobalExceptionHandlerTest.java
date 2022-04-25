@@ -54,8 +54,8 @@ class GlobalExceptionHandlerTest {
      */
     private static final class TestGlobalExceptionHandler extends GlobalExceptionHandler {
 
-        public TestGlobalExceptionHandler(FieldNameConverter converter) {
-            super(converter);
+        public TestGlobalExceptionHandler(FieldNameConverter converter, ConstraintViolationHelper helper) {
+            super(converter, helper);
         }
 
         @Override
@@ -100,6 +100,9 @@ class GlobalExceptionHandlerTest {
 
     @Mock
     private ConstraintViolation<Void> constraintViolation;
+
+    @Mock
+    private ConstraintViolationHelper constraintViolationHelper;
 
     @Mock
     private Path path;
@@ -206,8 +209,7 @@ class GlobalExceptionHandlerTest {
         Set<ConstraintViolation<Void>> constraintViolations = new HashSet<ConstraintViolation<Void>>();
         constraintViolations.add(constraintViolation);
         when(constraintViolation.getMessage()).thenReturn("error message");
-        when(constraintViolation.getPropertyPath()).thenReturn(path);
-        when(path.toString()).thenReturn("abcde.efg.hijk");
+        when(constraintViolationHelper.propertyName(constraintViolation)).thenReturn("converted_field");
 
         ConstraintViolationException exception = new ConstraintViolationException(constraintViolations);
 
@@ -215,7 +217,7 @@ class GlobalExceptionHandlerTest {
                 .addApiErrors(Collections.singletonList(
                         ApiErrorBuilder.builder("field-error", ErrorType.VALIDATION)
                         .withErrorValue("message", "error message")
-                        .withLocation("hijk")
+                        .withLocation("converted_field")
                                 .build()))
 
                 .build();
