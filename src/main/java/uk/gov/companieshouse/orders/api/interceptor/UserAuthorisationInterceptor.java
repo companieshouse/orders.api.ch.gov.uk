@@ -45,13 +45,16 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
     private final RequestMapper requestMapper;
     private final CheckoutRepository checkoutRepository;
     private final OrderRepository orderRepository;
+    private final SecurityManager securityManager;
 
     public UserAuthorisationInterceptor(final RequestMapper requestMapper,
                                         final CheckoutRepository checkoutRepository,
-                                        final OrderRepository orderRepository) {
+                                        final OrderRepository orderRepository,
+                                        final SecurityManager securityManager) {
         this.requestMapper = requestMapper;
         this.checkoutRepository = checkoutRepository;
         this.orderRepository = orderRepository;
+        this.securityManager = securityManager;
     }
 
     @Override
@@ -68,8 +71,7 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
     private boolean checkAuthorised(HttpServletRequest request, HttpServletResponse response, String name) {
         switch (name) {
             case ADD_ITEM:
-            case CHECKOUT_BASKET:
-            case BASKET:
+            case CHECKOUT_BASKET: case BASKET:
                 return true; // no authorisation required
             case GET_PAYMENT_DETAILS:
             case GET_CHECKOUT:
@@ -77,6 +79,7 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
             case GET_ORDER:
                 return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
             case SEARCH:
+                return securityManager.authorise();
             case PATCH_PAYMENT_DETAILS:
                 return clientIsAuthorisedInternalApi(request, response);
             default:
