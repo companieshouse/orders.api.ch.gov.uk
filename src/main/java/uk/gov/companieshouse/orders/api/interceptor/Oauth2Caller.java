@@ -8,33 +8,34 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 import uk.gov.companieshouse.api.util.security.RequestUtils;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
-import uk.gov.companieshouse.orders.api.util.StringUtils;
+import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @Component
 @RequestScope
 class Oauth2Caller {
     private final HttpServletRequest request;
     private final Responder responder;
-    private final StringUtils stringUtils;
+    private final StringHelper stringHelper;
     private boolean authorisedRole;
 
-    Oauth2Caller(HttpServletRequest request, Responder responder, StringUtils stringUtils) {
+    Oauth2Caller(HttpServletRequest request, Responder responder, StringHelper stringHelper) {
         this.request = request;
         this.responder = responder;
-        this.stringUtils = stringUtils;
+        this.stringHelper = stringHelper;
     }
 
-    Oauth2Caller checkAuthorisedRole(String role) {
+    Oauth2Caller checkAuthorisedRole() {
         String authorisedRolesHeader = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Roles");
         if (isNull(authorisedRolesHeader)) {
             responder.invalidate("Authentication error: caller authorised roles are absent");
             return this;
         }
 
-        Set<String> authorisedRoles = stringUtils.asSet("\\s+", authorisedRolesHeader);
-        if (! authorisedRoles.contains(role)) {
+        Set<String> authorisedRoles = stringHelper.asSet("\\s+", authorisedRolesHeader);
+        if (! authorisedRoles.contains("chs-order-investigator")) {
             responder.logMapPut(LoggingUtils.AUTHORISED_ROLES, authorisedRolesHeader)
-                    .invalidate(String.format("Authentication error: caller is not in role %s", role));
+                    .invalidate(String.format("Authentication error: caller is not in role %s",
+                            "chs-order-investigator"));
             return this;
         }
 
