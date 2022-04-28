@@ -12,7 +12,7 @@ public class ApiKeyAuthorisationStrategy implements AuthorisationStrategy {
 
     @Override
     public boolean authorise() {
-        return caller.checkAuthorisedKeyPrivilege("internal-app");
+        return caller.checkAuthorisedKeyPrivilege("internal-app").isAuthorisedKeyPrivilege();
     }
 
     @Override

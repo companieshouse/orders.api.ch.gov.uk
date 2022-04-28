@@ -23,8 +23,8 @@ public enum IdentityType {
         this.type = type;
     }
 
-    public static IdentityType getEnumValue(String companyStatus) {
-        return companyStatus != null ? enumValues.get(companyStatus) : null;
+    public static IdentityType getEnumValue(String identityType) {
+        return identityType != null ? enumValues.get(identityType) : null;
     }
 
     public String getType() {

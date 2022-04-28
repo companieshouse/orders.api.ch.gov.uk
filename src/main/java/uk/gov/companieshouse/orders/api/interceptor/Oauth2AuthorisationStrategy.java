@@ -12,7 +12,7 @@ public class Oauth2AuthorisationStrategy implements AuthorisationStrategy {
 
     @Override
     public boolean authorise() {
-        return caller.checkAuthorisedRole("chs-order-investigator");
+        return caller.checkAuthorisedRole("chs-order-investigator").isAuthorisedRole();
     }
 
     @Override
