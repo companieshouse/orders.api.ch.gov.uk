@@ -32,19 +32,19 @@ class AuthenticationCaller {
         }
 
         // Check identity type provided
-        String identityType = AuthorisationUtil.getAuthorisedIdentityType(httpServletRequest);
-        if (isNull(identityType)) {
+        String identityTypeHeader = AuthorisationUtil.getAuthorisedIdentityType(httpServletRequest);
+        if (isNull(identityTypeHeader)) {
             responder.invalidate("Authentication error: no caller identity type");
             return this;
         }
 
         // Check identity type has an expected value
-        this.identityType = IdentityType.getEnumValue(identityType);
+        identityType = IdentityType.getEnumValue(identityTypeHeader);
         if (isNull(this.identityType)) {
-            responder.logMapPut(LoggingUtils.IDENTITY_TYPE, identityType);
+            responder.logMapPut(LoggingUtils.IDENTITY_TYPE, identityTypeHeader);
             responder.invalidate(String.format(
                     "Authentication error: invalid caller identity type %s",
-                    identityType));
+                    identityTypeHeader));
             return this;
         }
 
