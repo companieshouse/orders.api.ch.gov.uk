@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @ExtendWith(MockitoExtension.class)
-public class Oauth2CallerTest {
+class Oauth2CallerTest {
     @Mock
     private HttpServletRequest request;
 
