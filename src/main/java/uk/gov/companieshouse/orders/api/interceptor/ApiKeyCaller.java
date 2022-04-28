@@ -27,7 +27,7 @@ class ApiKeyCaller {
     ApiKeyCaller checkAuthorisedKeyPrivilege(String privilege) {
         String privilegeList = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Key-Privileges");
         if (isNull(privilegeList)) {
-            responder.invalidate("Authentication error: caller privileges are absent");
+            responder.invalidate("Authorisation error: caller privileges are absent");
             return this;
         }
 
