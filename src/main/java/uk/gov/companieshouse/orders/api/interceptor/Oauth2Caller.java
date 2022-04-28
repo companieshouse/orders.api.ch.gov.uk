@@ -15,11 +15,13 @@ import uk.gov.companieshouse.orders.api.util.StringUtils;
 class Oauth2Caller {
     private final HttpServletRequest request;
     private final Responder responder;
+    private final StringUtils stringUtils;
     private boolean authorisedRole;
 
-    Oauth2Caller(HttpServletRequest request, Responder responder) {
+    Oauth2Caller(HttpServletRequest request, Responder responder, StringUtils stringUtils) {
         this.request = request;
         this.responder = responder;
+        this.stringUtils = stringUtils;
     }
 
     Oauth2Caller checkAuthorisedRole(String role) {
@@ -29,7 +31,7 @@ class Oauth2Caller {
             return this;
         }
 
-        Set<String> authorisedRoles = StringUtils.asSet("\\s+", authorisedRolesHeader);
+        Set<String> authorisedRoles = stringUtils.asSet("\\s+", authorisedRolesHeader);
         if (! authorisedRoles.contains(role)) {
             responder.logMapPut(LoggingUtils.AUTHORISED_ROLES, authorisedRolesHeader)
                     .invalidate(String.format("Authentication error: caller is not in role %s", role));
