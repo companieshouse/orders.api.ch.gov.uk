@@ -9,9 +9,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.orders.api.util.Loggable;
 
 @ExtendWith(MockitoExtension.class)
 class AuthenticationCallerTest {
@@ -20,6 +23,9 @@ class AuthenticationCallerTest {
 
     @Mock
     private Responder responder;
+
+    @Captor
+    private ArgumentCaptor<Loggable> loggableArgumentCaptor;
 
     @InjectMocks
     private AuthenticationCaller authenticationCaller;
@@ -30,7 +36,8 @@ class AuthenticationCallerTest {
 
         authenticationCaller.checkIdentity();
 
-        verify(responder).invalidate("Authentication error: no caller identity");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authentication error: no caller identity"));
         assertThat(authenticationCaller.isIdentityValid(), is(false));
     }
 
@@ -41,7 +48,9 @@ class AuthenticationCallerTest {
         when(request.getHeader("ERIC-Identity")).thenReturn("identity");
         authenticationCaller.checkIdentity();
 
-        verify(responder).invalidate("Authentication error: no caller identity type");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authentication error: no caller identity type"));
+
         assertThat(authenticationCaller.isIdentityValid(), is(false));
     }
 
@@ -53,8 +62,8 @@ class AuthenticationCallerTest {
         when(request.getHeader("ERIC-Identity-Type")).thenReturn("bad-identity-type");
         authenticationCaller.checkIdentity();
 
-        verify(responder).invalidate("Authentication error: invalid caller identity type bad-identity-type");
-        verify(responder).logMapPut("identity_type", "bad-identity-type");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authentication error: invalid caller identity type bad-identity-type"));
         assertThat(authenticationCaller.isIdentityValid(), is(false));
     }
 

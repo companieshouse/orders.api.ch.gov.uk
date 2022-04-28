@@ -11,9 +11,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.orders.api.util.Loggable;
 import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +30,9 @@ class Oauth2CallerTest {
     @Mock
     private StringHelper stringHelper;
 
+    @Captor
+    private ArgumentCaptor<Loggable> loggableArgumentCaptor;
+
     @InjectMocks
     private Oauth2Caller caller;
 
@@ -36,7 +42,8 @@ class Oauth2CallerTest {
 
         caller.checkAuthorisedRole("any-role");
 
-        verify(responder).invalidate("Authorisation error: caller authorised roles are absent");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller authorised roles are absent"));
         assertThat(caller.isAuthorisedRole(), is(false));
     }
 
@@ -47,7 +54,8 @@ class Oauth2CallerTest {
         when(request.getHeader("ERIC-Authorised-Roles")).thenReturn("abc def");
         caller.checkAuthorisedRole("any-role");
 
-        verify(responder).invalidate("Authorisation error: caller is not in role any-role");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller is not in role any-role"));
         assertThat(caller.isAuthorisedRole(), is(false));
     }
 

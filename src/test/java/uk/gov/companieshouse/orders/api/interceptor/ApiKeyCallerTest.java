@@ -11,9 +11,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.orders.api.util.Loggable;
 import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @ExtendWith(MockitoExtension.class)
@@ -28,6 +31,9 @@ class ApiKeyCallerTest {
     @Mock
     private StringHelper stringHelper;
 
+    @Captor
+    private ArgumentCaptor<Loggable> loggableArgumentCaptor;
+
     @InjectMocks
     private ApiKeyCaller caller;
 
@@ -36,7 +42,8 @@ class ApiKeyCallerTest {
     void testAuthorisationFailsPrivilegesAbsent() {
         caller.checkAuthorisedKeyPrivilege("any");
 
-        verify(responder).invalidate("Authorisation error: caller privileges are absent");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller privileges are absent"));
         assertThat(caller.isAuthorisedKeyPrivilege(), is(false));
     }
 
@@ -46,7 +53,8 @@ class ApiKeyCallerTest {
         when(request.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("bad-privilege");
         caller.checkAuthorisedKeyPrivilege("internal-app");
 
-        verify(responder).invalidate("Authorisation error: caller is without privilege internal-app");
+        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller is without privilege internal-app"));
         assertThat(caller.isAuthorisedKeyPrivilege(), is(false));
     }
 

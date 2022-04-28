@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
+import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
 
 @Component
 @RequestScope
@@ -27,24 +28,28 @@ class AuthenticationCaller {
         // Check identity provided
         this.identity = AuthorisationUtil.getAuthorisedIdentity(httpServletRequest);
         if (isNull(this.identity)) {
-            responder.invalidate("Authentication error: no caller identity");
+            responder.invalidate(LoggableBuilder.newBuilder()
+                    .withMessage("Authentication error: no caller identity")
+                    .build());
             return this;
         }
 
         // Check identity type provided
         String identityTypeHeader = AuthorisationUtil.getAuthorisedIdentityType(httpServletRequest);
         if (isNull(identityTypeHeader)) {
-            responder.invalidate("Authentication error: no caller identity type");
+            responder.invalidate(LoggableBuilder.newBuilder()
+                    .withMessage("Authentication error: no caller identity type")
+                    .build());
             return this;
         }
 
         // Check identity type has an expected value
         identityType = IdentityType.getEnumValue(identityTypeHeader);
         if (isNull(this.identityType)) {
-            responder.logMapPut(LoggingUtils.IDENTITY_TYPE, identityTypeHeader);
-            responder.invalidate(String.format(
-                    "Authentication error: invalid caller identity type %s",
-                    identityTypeHeader));
+            responder.invalidate(LoggableBuilder.newBuilder()
+                    .withLogMapPut(LoggingUtils.IDENTITY_TYPE, identityTypeHeader)
+                    .withMessage(String.format("Authentication error: invalid caller identity type %s", identityTypeHeader))
+                    .build());
             return this;
         }
 

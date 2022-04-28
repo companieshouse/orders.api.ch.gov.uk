@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 import uk.gov.companieshouse.api.util.security.RequestUtils;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
+import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
 import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @Component
@@ -25,16 +26,20 @@ class ApiKeyCaller {
     }
 
     ApiKeyCaller checkAuthorisedKeyPrivilege(String privilege) {
-        String privilegeList = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Key-Privileges");
+        String privilegeList = RequestUtils.getRequestHeader(request,"ERIC-Authorised-Key-Privileges");
         if (isNull(privilegeList)) {
-            responder.invalidate("Authorisation error: caller privileges are absent");
+            responder.invalidate(LoggableBuilder.newBuilder()
+                    .withMessage("Authorisation error: caller privileges are absent")
+                    .build());
             return this;
         }
 
         Set<String> privileges = stringHelper.asSet(",", privilegeList);
         if (! (privileges.contains(privilege) || privileges.contains("*"))) {
-            responder.logMapPut(LoggingUtils.AUTHORISED_KEY_PRIVILEGES, privileges);
-            responder.invalidate(String.format("Authorisation error: caller is without privilege %s", privilege));
+            responder.invalidate(LoggableBuilder.newBuilder()
+                    .withLogMapPut(LoggingUtils.AUTHORISED_KEY_PRIVILEGES, privileges)
+                    .withMessage(String.format("Authorisation error: caller is without privilege %s", privilege))
+                    .build());
             return this;
         }
 
