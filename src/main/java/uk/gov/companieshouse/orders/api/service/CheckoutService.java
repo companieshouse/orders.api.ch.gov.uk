@@ -1,14 +1,17 @@
 package uk.gov.companieshouse.orders.api.service;
 
-import org.springframework.stereotype.Service;
-import uk.gov.companieshouse.orders.api.model.*;
-import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
-import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
-
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
+import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
+import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
 
 @Service
 public class CheckoutService {

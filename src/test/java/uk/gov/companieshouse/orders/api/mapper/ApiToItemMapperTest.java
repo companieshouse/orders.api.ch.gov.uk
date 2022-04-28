@@ -1,21 +1,5 @@
 package uk.gov.companieshouse.orders.api.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import uk.gov.companieshouse.api.model.order.item.*;
-import uk.gov.companieshouse.orders.api.model.*;
-
-import java.util.Map;
-
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,6 +12,57 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_DELIVERY_KIND;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import uk.gov.companieshouse.api.model.order.item.AdministratorsDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.CertificateApi;
+import uk.gov.companieshouse.api.model.order.item.CertificateItemOptionsApi;
+import uk.gov.companieshouse.api.model.order.item.CertificateTypeApi;
+import uk.gov.companieshouse.api.model.order.item.CertifiedCopyApi;
+import uk.gov.companieshouse.api.model.order.item.CertifiedCopyItemOptionsApi;
+import uk.gov.companieshouse.api.model.order.item.CollectionLocationApi;
+import uk.gov.companieshouse.api.model.order.item.DeliveryMethodApi;
+import uk.gov.companieshouse.api.model.order.item.DeliveryTimescaleApi;
+import uk.gov.companieshouse.api.model.order.item.DesignatedMemberDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.DirectorOrSecretaryDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.FilingHistoryDocumentApi;
+import uk.gov.companieshouse.api.model.order.item.GeneralPartnerDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.IncludeAddressRecordsTypeApi;
+import uk.gov.companieshouse.api.model.order.item.IncludeDobTypeApi;
+import uk.gov.companieshouse.api.model.order.item.ItemCostsApi;
+import uk.gov.companieshouse.api.model.order.item.LimitedPartnerDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.LinksApi;
+import uk.gov.companieshouse.api.model.order.item.LiquidatorsDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.MemberDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.MissingImageDeliveryApi;
+import uk.gov.companieshouse.api.model.order.item.MissingImageDeliveryItemOptionsApi;
+import uk.gov.companieshouse.api.model.order.item.PrincipalPlaceOfBusinessDetailsApi;
+import uk.gov.companieshouse.api.model.order.item.RegisteredOfficeAddressDetailsApi;
+import uk.gov.companieshouse.orders.api.model.AdministratorsDetails;
+import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
+import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
+import uk.gov.companieshouse.orders.api.model.DesignatedMemberDetails;
+import uk.gov.companieshouse.orders.api.model.DirectorOrSecretaryDetails;
+import uk.gov.companieshouse.orders.api.model.GeneralPartnerDetails;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.model.LimitedPartnerDetails;
+import uk.gov.companieshouse.orders.api.model.LiquidatorsDetails;
+import uk.gov.companieshouse.orders.api.model.MemberDetails;
+import uk.gov.companieshouse.orders.api.model.MissingImageDeliveryItemOptions;
+import uk.gov.companieshouse.orders.api.model.PrincipalPlaceOfBusinessDetails;
+import uk.gov.companieshouse.orders.api.model.RegisteredOfficeAddressDetails;
 
 @ExtendWith(SpringExtension.class)
 @SpringJUnitConfig(ApiToItemMapperTest.Config.class)
