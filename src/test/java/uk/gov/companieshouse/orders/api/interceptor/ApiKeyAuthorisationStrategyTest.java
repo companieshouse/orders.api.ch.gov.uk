@@ -42,4 +42,9 @@ class ApiKeyAuthorisationStrategyTest {
         verify(caller).checkAuthorisedKeyPrivilege("internal-app");
     }
 
+    @Test
+    @DisplayName("identity type should return key identity type enum")
+    void testIdentityType() {
+        assertThat(strategy.identityType(), is(IdentityType.KEY));
+    }
 }

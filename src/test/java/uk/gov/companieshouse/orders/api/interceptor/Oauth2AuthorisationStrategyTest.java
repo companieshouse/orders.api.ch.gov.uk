@@ -48,4 +48,10 @@ public class Oauth2AuthorisationStrategyTest {
         assertThat(actual, is(false));
         verify(caller).checkAuthorisedRole("chs-order-investigator");
     }
+
+    @DisplayName("identity type should return oauth2 identity type enum")
+    @Test
+    void testIdentityType() {
+        assertThat(strategy.identityType(), is(IdentityType.OAUTH2));
+    }
 }
