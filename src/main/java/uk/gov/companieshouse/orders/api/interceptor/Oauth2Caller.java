@@ -24,7 +24,7 @@ class Oauth2Caller {
         this.stringHelper = stringHelper;
     }
 
-    Oauth2Caller checkAuthorisedRole() {
+    Oauth2Caller checkAuthorisedRole(String role) {
         String authorisedRolesHeader = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Roles");
         if (isNull(authorisedRolesHeader)) {
             responder.invalidate("Authentication error: caller authorised roles are absent");
@@ -32,10 +32,9 @@ class Oauth2Caller {
         }
 
         Set<String> authorisedRoles = stringHelper.asSet("\\s+", authorisedRolesHeader);
-        if (! authorisedRoles.contains("chs-order-investigator")) {
+        if (! authorisedRoles.contains(role)) {
             responder.logMapPut(LoggingUtils.AUTHORISED_ROLES, authorisedRolesHeader)
-                    .invalidate(String.format("Authentication error: caller is not in role %s",
-                            "chs-order-investigator"));
+                    .invalidate(String.format("Authentication error: caller is not in role %s", role));
             return this;
         }
 
