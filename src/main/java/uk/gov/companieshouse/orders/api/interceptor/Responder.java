@@ -27,15 +27,13 @@ class Responder {
         this.httpServletResponse = httpServletResponse;
     }
 
-    Responder logMapPut(String key, Object value) {
+    void logMapPut(String key, Object value) {
         logMap.put(key, value);
-        return this;
     }
 
-    Responder invalidate(String logMessage) {
+    void invalidate(String logMessage) {
         logMap.put(LoggingUtils.STATUS, UNAUTHORIZED);
         LOGGER.infoRequest(httpServletRequest, logMessage, logMap);
         httpServletResponse.setStatus(UNAUTHORIZED.value());
-        return this;
     }
 }
