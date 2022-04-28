@@ -2,15 +2,10 @@ package uk.gov.companieshouse.orders.api.interceptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 import uk.gov.companieshouse.orders.api.exception.ForbiddenException;
 
 @Component
-@RequestScope
 public class SecurityManager {
-    private boolean authenticated;
-    private AuthorisationStrategy authorisationStrategy;
-
     private final AuthorisationStrategyFactory authStrategyFactory;
     private final Caller caller;
 
@@ -20,15 +15,15 @@ public class SecurityManager {
         this.caller = caller;
     }
 
-    boolean authenticate(/* String endpointId */) {
-        return (authenticated = caller.hasIdentity());
+    boolean checkIdentity() {
+        return caller.checkIdentity();
     }
 
-    boolean authorise(/* String endPointId */) {
-        if (! authenticated) {
+    boolean checkPermission() {
+        if (! caller.isIdentityValid()) {
             throw new ForbiddenException("Caller is unauthenticated");
         }
 
-        return authStrategyFactory.authorisationStrategy(caller.getIdentityType()/* ,endPointId */).authorise(caller);
+        return authStrategyFactory.authorisationStrategy(caller.getIdentityType()).authorise();
     }
 }

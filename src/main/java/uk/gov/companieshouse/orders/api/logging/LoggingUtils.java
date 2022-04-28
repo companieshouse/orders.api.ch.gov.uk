@@ -32,7 +32,10 @@ public class LoggingUtils {
     public static final String TOPIC = "topic";
     public static final String USER_ID = "user_id";
     public static final String VALIDATION_ERRORS = "validation_errors";
-    
+    public static final String IDENTITY = "identity";
+    public static final String AUTHORISED_ROLES = "authorised_roles";
+    public static final String AUTHORISED_KEY_PRIVILEGES = "authorised_key_privileges";
+
     public static final String REQUEST_ID_HEADER_NAME = "X-Request-ID";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);

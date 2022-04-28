@@ -4,9 +4,15 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class Oauth2AuthorisationStrategy implements AuthorisationStrategy {
+    private final Oauth2Caller caller;
+
+    public Oauth2AuthorisationStrategy(Oauth2Caller caller) {
+        this.caller = caller;
+    }
+
     @Override
-    public boolean authorise(Caller caller) {
-        return caller.inAuthorisedRole("chs-order-investigator");
+    public boolean authorise() {
+        return caller.checkAuthorisedRole("chs-order-investigator");
     }
 
     @Override

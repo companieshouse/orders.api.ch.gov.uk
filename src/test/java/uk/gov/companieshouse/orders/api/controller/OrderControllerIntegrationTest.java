@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
@@ -76,6 +75,7 @@ class OrderControllerIntegrationTest {
     public static final String ORDERS_SEARCH_PATH = "/orders/search";
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String PAGE_SIZE_VALUE = "1";
+    public static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
 
     @Autowired
     private MockMvc mockMvc;
@@ -253,7 +253,7 @@ class OrderControllerIntegrationTest {
                 .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -283,7 +283,7 @@ class OrderControllerIntegrationTest {
                 .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -316,7 +316,7 @@ class OrderControllerIntegrationTest {
                 .param("company_number", "12345678")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -336,7 +336,7 @@ class OrderControllerIntegrationTest {
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                         .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                        .header("ERIC-Authorised-Key-Privileges", INTERNAL_USER_ROLE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                         .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -355,7 +355,7 @@ class OrderControllerIntegrationTest {
                         .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                        .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -369,7 +369,7 @@ class OrderControllerIntegrationTest {
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -386,7 +386,7 @@ class OrderControllerIntegrationTest {
                 .param("page_size", "0")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -395,7 +395,6 @@ class OrderControllerIntegrationTest {
                 .andExpect(jsonPath("$.errors[0].location", is("page_size")))
                 .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
     }
-
 
     private Checkout getCheckout(String orderId) {
         Checkout checkout = new Checkout();

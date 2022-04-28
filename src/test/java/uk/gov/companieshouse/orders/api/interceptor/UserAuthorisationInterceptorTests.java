@@ -79,6 +79,9 @@ class UserAuthorisationInterceptorTests {
     @Mock
     private Order order;
 
+    @Mock
+    private Caller caller;
+
     @Test
     @DisplayName("preHandle accepts a request it has not been configured to authorise")
     void preHandleAcceptsUnknownRequest() {
@@ -183,6 +186,7 @@ class UserAuthorisationInterceptorTests {
     void preHandleRejectsUnauthorisedUserSearchRequest() {
 
         // Given
+        when(caller.isIdentityValid()).thenReturn(true);
         givenRequest(GET, "/orders/search");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
 
@@ -195,6 +199,7 @@ class UserAuthorisationInterceptorTests {
     void preHandleAcceptsAuthorisedInternalApiGetRequest(final String displayName, final String uri) {
 
         // Given
+        when(caller.isIdentityValid()).thenReturn(true);
         givenRequest(GET, uri);
         givenRequestHasInternalUserRole();
 
