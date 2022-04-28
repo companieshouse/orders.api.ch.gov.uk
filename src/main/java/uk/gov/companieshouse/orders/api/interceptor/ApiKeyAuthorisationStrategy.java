@@ -3,10 +3,10 @@ package uk.gov.companieshouse.orders.api.interceptor;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ApiKeyAuthorisationStrategy implements AuthorisationStrategy {
+class ApiKeyAuthorisationStrategy implements AuthorisationStrategy {
     private final ApiKeyCaller caller;
 
-    public ApiKeyAuthorisationStrategy(ApiKeyCaller caller) {
+    ApiKeyAuthorisationStrategy(ApiKeyCaller caller) {
         this.caller = caller;
     }
 

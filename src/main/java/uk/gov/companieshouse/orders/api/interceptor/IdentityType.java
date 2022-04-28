@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public enum IdentityType {
+enum IdentityType {
     OAUTH2("oauth2"),
     KEY("key");
 
@@ -23,15 +23,15 @@ public enum IdentityType {
         this.type = type;
     }
 
-    public static IdentityType getEnumValue(String identityType) {
+    static IdentityType getEnumValue(String identityType) {
         return identityType != null ? enumValues.get(identityType) : null;
     }
 
-    public String getType() {
+    String getType() {
         return type;
     }
 
-    public static Set<IdentityType> asSet() {
+    static Set<IdentityType> asSet() {
         return Arrays.stream(IdentityType.values()).collect(Collectors.toSet());
     }
 }

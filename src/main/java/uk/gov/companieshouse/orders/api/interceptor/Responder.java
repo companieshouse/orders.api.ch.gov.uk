@@ -14,7 +14,7 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 
 @Component
 @RequestScope
-public class Responder {
+class Responder {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
 
     private final HttpServletRequest httpServletRequest;
@@ -22,17 +22,17 @@ public class Responder {
 
     private Map<String, Object> logMap = LoggingUtils.createLogMap();
 
-    public Responder(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
+    Responder(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
         this.httpServletRequest = httpServletRequest;
         this.httpServletResponse = httpServletResponse;
     }
 
-    public Responder logMapPut(String key, Object value) {
+    Responder logMapPut(String key, Object value) {
         logMap.put(key, value);
         return this;
     }
 
-    public Responder invalidate(String logMessage) {
+    Responder invalidate(String logMessage) {
         logMap.put(LoggingUtils.STATUS, UNAUTHORIZED);
         LOGGER.infoRequest(httpServletRequest, logMessage, logMap);
         httpServletResponse.setStatus(UNAUTHORIZED.value());

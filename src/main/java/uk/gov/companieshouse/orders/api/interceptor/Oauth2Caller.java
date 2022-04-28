@@ -12,17 +12,17 @@ import uk.gov.companieshouse.orders.api.util.StringUtils;
 
 @Component
 @RequestScope
-public class Oauth2Caller {
+class Oauth2Caller {
     private final HttpServletRequest request;
     private final Responder responder;
     private boolean authorisedRole;
 
-    public Oauth2Caller(HttpServletRequest request, Responder responder) {
+    Oauth2Caller(HttpServletRequest request, Responder responder) {
         this.request = request;
         this.responder = responder;
     }
 
-    public Oauth2Caller checkAuthorisedRole(String role) {
+    Oauth2Caller checkAuthorisedRole(String role) {
         String authorisedRolesHeader = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Roles");
         if (isNull(authorisedRolesHeader)) {
             responder.invalidate("Authentication error: caller authorised roles are absent");
@@ -40,7 +40,7 @@ public class Oauth2Caller {
         return this;
     }
 
-    public boolean isAuthorisedRole() {
+    boolean isAuthorisedRole() {
         return authorisedRole;
     }
 }

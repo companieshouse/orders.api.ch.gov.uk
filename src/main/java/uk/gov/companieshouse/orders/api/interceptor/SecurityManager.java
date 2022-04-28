@@ -5,12 +5,12 @@ import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.orders.api.exception.ForbiddenException;
 
 @Component
-public class SecurityManager {
+class SecurityManager {
     private final AuthorisationStrategyFactory factory;
     private final AuthenticationCaller caller;
 
     @Autowired
-    public SecurityManager(AuthorisationStrategyFactory factory, AuthenticationCaller caller) {
+    SecurityManager(AuthorisationStrategyFactory factory, AuthenticationCaller caller) {
         this.factory = factory;
         this.caller = caller;
     }

@@ -13,17 +13,17 @@ import uk.gov.companieshouse.orders.api.util.StringUtils;
 
 @Component
 @RequestScope
-public class ApiKeyCaller {
+class ApiKeyCaller {
     private final HttpServletRequest request;
     private final Responder responder;
     private boolean authorisedKeyPrivilege;
 
-    public ApiKeyCaller(HttpServletRequest request, Responder responder) {
+    ApiKeyCaller(HttpServletRequest request, Responder responder) {
         this.request = request;
         this.responder = responder;
     }
 
-    public ApiKeyCaller checkAuthorisedKeyPrivilege(String privilege) {
+    ApiKeyCaller checkAuthorisedKeyPrivilege(String privilege) {
         String privilegeList = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Key-Privileges");
         if (isNull(privilegeList)) {
             responder.invalidate("Authentication error: caller privileges are absent");
@@ -43,7 +43,7 @@ public class ApiKeyCaller {
         return this;
     }
 
-    public boolean isAuthorisedKeyPrivilege() {
+    boolean isAuthorisedKeyPrivilege() {
         return authorisedKeyPrivilege;
     }
 }

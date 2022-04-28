@@ -10,7 +10,7 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 
 @Component
 @RequestScope
-public class AuthenticationCaller {
+class AuthenticationCaller {
     private final HttpServletRequest httpServletRequest;
     private final Responder responder;
 
@@ -18,12 +18,12 @@ public class AuthenticationCaller {
     private String identity;
     private IdentityType identityType;
 
-    public AuthenticationCaller(HttpServletRequest httpServletRequest, Responder responder) {
+    AuthenticationCaller(HttpServletRequest httpServletRequest, Responder responder) {
         this.httpServletRequest = httpServletRequest;
         this.responder = responder;
     }
 
-    public AuthenticationCaller checkIdentity() {
+    AuthenticationCaller checkIdentity() {
         // Check identity provided
         this.identity = AuthorisationUtil.getAuthorisedIdentity(httpServletRequest);
         if (isNull(this.identity)) {
@@ -52,11 +52,11 @@ public class AuthenticationCaller {
         return this;
     }
 
-    public boolean isIdentityValid() {
+    boolean isIdentityValid() {
         return identityValid;
     }
 
-    public IdentityType getIdentityType() {
+    IdentityType getIdentityType() {
         return identityType;
     }
 }
