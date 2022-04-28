@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @ExtendWith(MockitoExtension.class)
-public class ApiKeyCallerTest {
+class ApiKeyCallerTest {
 
     @Mock
     private HttpServletRequest request;
