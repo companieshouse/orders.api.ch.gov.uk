@@ -205,8 +205,7 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
      * @param response the response, updated by this should the request be found to be unauthorised
      * @return whether the request is authorised (<code>true</code>), or not (<code>false</code>)
      */
-    private boolean clientIsAuthorisedInternalApi(final HttpServletRequest request, final HttpServletResponse response)
-    {
+    private boolean clientIsAuthorisedInternalApi(final HttpServletRequest request, final HttpServletResponse response) {
         // We know we are dealing with an API request here due to prior work carried out by the
         // UserAuthenticationInterceptor on this request.
         final boolean isAuthorisedInternalApi = AuthorisationUtil.hasInternalUserRole(request);

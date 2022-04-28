@@ -41,7 +41,7 @@ class ResponderTest {
 
         responder.invalidate(loggable);
 
-        Mockito.verify(logger).info(eq("log-message"), any());
+        Mockito.verify(logger).infoRequest(eq(request), eq("log-message"), any());
         Mockito.verify(response).setStatus(401);
     }
 }

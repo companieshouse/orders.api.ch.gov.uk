@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class Oauth2AuthorisationStrategyTest {
+class Oauth2AuthorisationStrategyTest {
 
     @Mock
     private Oauth2Caller caller;

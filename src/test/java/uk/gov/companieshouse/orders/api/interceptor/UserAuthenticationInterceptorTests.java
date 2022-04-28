@@ -29,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.test.context.EmbeddedKafka;
@@ -54,6 +55,9 @@ class UserAuthenticationInterceptorTests {
 
     @Mock
     private Object handler;
+
+    @MockBean
+    private SecurityManager securityManager;
 
     @Test
     @DisplayName("preHandle accepts a request it has not been configured to authenticate")
@@ -278,6 +282,28 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
+    @DisplayName("Authentication for orders/search endpoint succeeds if caller identity is valid")
+    @Test
+    void ordersSearchValidIdentity() {
+        when(securityManager.checkIdentity()).thenReturn(true);
+        givenRequest(GET, "/orders/search");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authentication for orders/search endpoint false if caller identity is invalid")
+    @Test
+    void ordersSearchInvalidIdentity() {
+        when(securityManager.checkIdentity()).thenReturn(false);
+        givenRequest(GET, "/orders/search");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
     /**
      * Sets up request givens.
      * @param method the HTTP request method
@@ -358,13 +384,11 @@ class UserAuthenticationInterceptorTests {
         return Stream.of(arguments("preHandle accepts get checkout request that has authenticated API headers", "/checkouts/1234"),
                 arguments("preHandle accepts get order request that has authenticated API headers", "/orders/1234"),
                 arguments("preHandle accepts get payment details request that has authenticated API headers", "/basket/checkouts/1234/payment"));
-// TODO:                arguments("preHandle accepts search orders request that has authenticated API headers", "/orders/search"));
     }
 
     private static Stream<Arguments> unauthenticatedRequestFixtures() {
         return Stream.of(arguments("preHandle rejects get payment details request that lacks required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
                 arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"));
-// TODO:                arguments("preHandle rejects search request that lacks required headers", "/orders/search"));
     }
 }

@@ -32,7 +32,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -76,6 +78,9 @@ class UserAuthorisationInterceptorTests {
 
     @Mock
     private Order order;
+
+    @MockBean
+    private SecurityManager securityManager;
 
     @Test
     @DisplayName("preHandle accepts a request it has not been configured to authorise")
@@ -176,30 +181,39 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    // TODO: test via controller as proper integration tests
-//    @Test
-//    @DisplayName("preHandle rejects unauthorised order search request")
-//    void preHandleRejectsUnauthorisedUserSearchRequest() {
-//
-//        // Given
-//        givenRequest(GET, "/orders/search");
-//        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
-//
-//        // When and then
-//        thenRequestIsRejected();
-//    }
-//
-//    @ParameterizedTest(name = "{index}: {0}")
-//    @MethodSource("apiGetRequestFixtures")
-//    void preHandleAcceptsAuthorisedInternalApiGetRequest(final String displayName, final String uri) {
-//
-//        // Given
-//        givenRequest(GET, uri);
-//        givenRequestHasInternalUserRole();
-//
-//        // When and then
-//        thenRequestIsAccepted();
-//    }
+    @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
+    @Test
+    void ordersSearchValidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(true);
+        givenRequest(GET, "/orders/search");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authentication for orders/search endpoint false if caller has incorrect permissions")
+    @Test
+    void ordersSearchInvalidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/orders/search");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("apiGetRequestFixtures")
+    void preHandleAcceptsAuthorisedInternalApiGetRequest(final String displayName, final String uri) {
+
+        // Given
+        givenRequest(GET, uri);
+        givenRequestHasInternalUserRole();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
 
     @Test
     @DisplayName("preHandle accepts get checkout user request that has the required headers")
@@ -340,7 +354,6 @@ class UserAuthorisationInterceptorTests {
     private static Stream<Arguments> apiGetRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get payment details internal API request that has the required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle accepts get order internal API request that has the required headers", "/orders/1234"),
-                arguments("preHandle accepts search internal API request that has the required headers", "/orders/search"),
                 arguments("preHandle accepts get checkout internal API request that has the required headers", "/checkouts/1234"));
     }
 }

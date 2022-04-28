@@ -15,20 +15,20 @@ import uk.gov.companieshouse.orders.api.util.Logger;
 @Component
 @RequestScope
 class Responder {
-    private final HttpServletRequest httpServletRequest;
-    private final HttpServletResponse httpServletResponse;
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
     private final Logger logger;
 
-    public Responder(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Logger logger) {
-        this.httpServletRequest = httpServletRequest;
-        this.httpServletResponse = httpServletResponse;
+    public Responder(HttpServletRequest request, HttpServletResponse response, Logger logger) {
+        this.request = request;
+        this.response = response;
         this.logger = logger;
     }
 
     void invalidate(Loggable loggable) {
         Map<String, Object> logMap = new HashMap<>(loggable.getLogMap());
         logMap.put(LoggingUtils.STATUS, UNAUTHORIZED);
-        logger.info(loggable.getMessage(), logMap);
-        httpServletResponse.setStatus(UNAUTHORIZED.value());
+        logger.infoRequest(request, loggable.getMessage(), logMap);
+        response.setStatus(UNAUTHORIZED.value());
     }
 }

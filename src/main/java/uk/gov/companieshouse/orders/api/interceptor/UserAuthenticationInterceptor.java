@@ -52,8 +52,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
                 .orElse(true);
     }
 
-    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {
-        switch (name) {
+    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {switch (name) {
             case ADD_ITEM:
             case CHECKOUT_BASKET:
             case BASKET:

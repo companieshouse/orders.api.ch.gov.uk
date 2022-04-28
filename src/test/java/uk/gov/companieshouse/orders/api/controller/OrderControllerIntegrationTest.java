@@ -11,7 +11,10 @@ import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORI
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_AUTHORISED_ROLES;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
@@ -75,7 +78,8 @@ class OrderControllerIntegrationTest {
     public static final String ORDERS_SEARCH_PATH = "/orders/search";
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String PAGE_SIZE_VALUE = "1";
-    public static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
+    private static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
+    private static final String ERIC_AUTHORISED_ROLES_HEADER_NAME = "ERIC-Authorised-Roles";
 
     @Autowired
     private MockMvc mockMvc;
@@ -394,6 +398,57 @@ class OrderControllerIntegrationTest {
                 .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size must be greater than 0")))
                 .andExpect(jsonPath("$.errors[0].location", is("page_size")))
                 .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
+    }
+
+    @DisplayName("Order search fails to authenticate caller when identity not provided")
+    @Test
+    void ordersSearchFailsAuthenticationNullIdentity() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Order search fails to authenticate caller when identity type not provided")
+    @Test
+    void ordersSearchFailsAuthenticationNullIdentityType() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Order search fails to authorise caller when identity type is oauth2 and authorised roles do not contain chs-order-investigator")
+    @Test
+    void ordersSearchFailsOauth2Authorisation() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, OAUTH2_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_ROLES, "role-a role-b")
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Order search correctly authorises caller when identity type is oauth2 and authorised roles contain chs-order-investigator")
+    @Test
+    void ordersSearchWithOauth2AuthorisationSucceeds() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, OAUTH2_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_ROLES, "role-a chs-order-investigator role-b")
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     private Checkout getCheckout(String orderId) {
