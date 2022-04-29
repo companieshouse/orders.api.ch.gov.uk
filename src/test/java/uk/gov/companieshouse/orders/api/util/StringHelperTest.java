@@ -25,7 +25,13 @@ class StringHelperTest {
 
     @Test
     void testAsSetSplitsSpacesSuccessfully() {
-        Set<String> actual = utils.asSet("\\s+", "example test string test");
+        Set<String> actual = utils.asSet("\\s", "example test string test");
+        assertEquals(new HashSet<>(Arrays.asList("example","test", "string")), actual);
+    }
+
+    @Test
+    void testAsSetSplitsSpacesOrCommasSuccessfully() {
+        Set<String> actual = utils.asSet("[,\\s+]", "example,test string test");
         assertEquals(new HashSet<>(Arrays.asList("example","test", "string")), actual);
     }
 
@@ -34,8 +40,6 @@ class StringHelperTest {
         Set<String> actual = utils.asSet(",", "test");
         assertEquals(new HashSet<>(Collections.singletonList("test")), actual);
     }
-
-
 
     @Test
     void testAsSetNullValues() {

@@ -1,7 +1,8 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import javax.servlet.http.HttpServletRequest;
@@ -9,12 +10,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.orders.api.util.Loggable;
-import uk.gov.companieshouse.orders.api.util.Logger;
+import uk.gov.companieshouse.orders.api.util.Log;
 
 @ExtendWith(MockitoExtension.class)
 class ResponderTest {
@@ -26,10 +28,13 @@ class ResponderTest {
     private HttpServletResponse response;
 
     @Mock
-    private Logger logger;
+    private Log log;
 
     @Mock
     private Loggable loggable;
+
+    @Captor
+    private ArgumentCaptor<Loggable> loggableArgumentCaptor;
 
     @InjectMocks
     private Responder responder;
@@ -41,7 +46,9 @@ class ResponderTest {
 
         responder.invalidate(loggable);
 
-        Mockito.verify(logger).infoRequest(eq(request), eq("log-message"), any());
-        Mockito.verify(response).setStatus(401);
+        verify(log).infoRequest(loggableArgumentCaptor.capture());
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("log-message"));
+        assertThat(loggableArgumentCaptor.getValue().getRequest(), is(request));
+        verify(response).setStatus(401);
     }
 }

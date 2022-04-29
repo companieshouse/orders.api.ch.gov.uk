@@ -3,6 +3,7 @@ package uk.gov.companieshouse.orders.api.controller;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.REQUEST_ID;
 
 import java.util.Map;
 import javax.validation.constraints.Min;
@@ -29,15 +30,13 @@ import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
+import uk.gov.companieshouse.orders.api.util.Log;
+import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
 
 @Validated
 @RestController
 public class OrderController {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
-
-    private final OrderService orderService;
-
-    private final CheckoutService checkoutService;
 
     public static final String ORDER_ID_PATH_VARIABLE = "id";
 
@@ -51,9 +50,14 @@ public class OrderController {
 
     public static final String ORDERS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
 
-    public OrderController(OrderService orderService, CheckoutService checkoutService) {
+    private final OrderService orderService;
+    private final CheckoutService checkoutService;
+    private final Log log;
+
+    public OrderController(OrderService orderService, CheckoutService checkoutService, Log log) {
         this.orderService = orderService;
         this.checkoutService = checkoutService;
+        this.log = log;
     }
 
     @GetMapping(GET_ORDER_URI)
@@ -89,9 +93,10 @@ public class OrderController {
             @RequestParam(value = "company_number", required = false) final String companyNumber,
             @RequestParam(value = "page_size", required = false) @NotNull(message = "page_size is mandatory") @Min(value = 1, message = "page_size must be greater than 0") final Integer pageSize,
             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
-        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
-        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
-        LOGGER.info("Search orders", logMap);
+        LoggableBuilder loggableBuilder = LoggableBuilder.newBuilder()
+                .withLogMapPut(REQUEST_ID, requestId)
+                .withLogMapIfNotNullPut(LoggingUtils.ORDER_ID, id);
+        log.info(loggableBuilder.withMessage("Search orders").build());
         OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteria(
                 OrderCriteria.newBuilder()
                         .withOrderId(id)
@@ -101,8 +106,9 @@ public class OrderController {
                 new PageCriteria(pageSize)
         );
         OrderSearchResults orderSearchResults = orderService.searchOrders(orderSearchCriteria);
-        logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
-        LOGGER.info(String.format("Total orders found %d", orderSearchResults.getTotalOrders()));
+        log.info(loggableBuilder.withLogMapPut(LoggingUtils.STATUS, HttpStatus.OK)
+                .withMessage("Total orders found %d", orderSearchResults.getTotalOrders())
+                .build());
         return ResponseEntity.ok().body(orderSearchResults);
     }
 }

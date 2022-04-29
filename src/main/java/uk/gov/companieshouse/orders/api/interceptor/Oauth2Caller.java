@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
 import static java.util.Objects.isNull;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_AUTHORISED_ROLES;
 
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -26,7 +27,7 @@ class Oauth2Caller {
     }
 
     Oauth2Caller checkAuthorisedRole(String role) {
-        String authorisedRolesHeader = RequestUtils.getRequestHeader(request, "ERIC-Authorised-Roles");
+        String authorisedRolesHeader = RequestUtils.getRequestHeader(request, ERIC_AUTHORISED_ROLES);
         if (isNull(authorisedRolesHeader)) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withMessage("Authorisation error: caller authorised roles are absent")
@@ -34,11 +35,12 @@ class Oauth2Caller {
             return this;
         }
 
+        // Note: authorised roles are space separated
         Set<String> authorisedRoles = stringHelper.asSet("\\s+", authorisedRolesHeader);
         if (! authorisedRoles.contains(role)) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withLogMapPut(LoggingUtils.AUTHORISED_ROLES, authorisedRolesHeader)
-                    .withMessage(String.format("Authorisation error: caller is not in role %s", role))
+                    .withMessage("Authorisation error: caller is not in role %s", role)
                     .build());
             return this;
         }

@@ -13,6 +13,7 @@ public class EricHeaderHelper {
     public static final String ERIC_IDENTITY_TYPE = "ERIC-Identity-Type";
     public static final String ERIC_AUTHORISED_USER = "ERIC-Authorised-User";
     public static final String ERIC_AUTHORISED_ROLES = "ERIC-Authorised-Roles";
+    public static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
 
     private EricHeaderHelper() { }
 

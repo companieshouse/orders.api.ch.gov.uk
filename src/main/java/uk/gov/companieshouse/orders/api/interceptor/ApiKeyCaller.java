@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
 import static java.util.Objects.isNull;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_AUTHORISED_KEY_PRIVILEGES;
 
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -26,7 +27,7 @@ class ApiKeyCaller {
     }
 
     ApiKeyCaller checkAuthorisedKeyPrivilege(String privilege) {
-        String privilegeList = RequestUtils.getRequestHeader(request,"ERIC-Authorised-Key-Privileges");
+        String privilegeList = RequestUtils.getRequestHeader(request, ERIC_AUTHORISED_KEY_PRIVILEGES);
         if (isNull(privilegeList)) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withMessage("Authorisation error: caller privileges are absent")
@@ -34,11 +35,12 @@ class ApiKeyCaller {
             return this;
         }
 
+        // Note: authorised key privileges are comma separated
         Set<String> privileges = stringHelper.asSet(",", privilegeList);
         if (! (privileges.contains(privilege) || privileges.contains("*"))) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withLogMapPut(LoggingUtils.AUTHORISED_KEY_PRIVILEGES, privileges)
-                    .withMessage(String.format("Authorisation error: caller is without privilege %s", privilege))
+                    .withMessage("Authorisation error: caller is without privilege %s", privilege)
                     .build());
             return this;
         }

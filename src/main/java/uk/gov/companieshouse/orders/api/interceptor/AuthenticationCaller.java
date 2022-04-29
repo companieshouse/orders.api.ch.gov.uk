@@ -1,11 +1,13 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
 import static java.util.Objects.isNull;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
 
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
-import uk.gov.companieshouse.api.util.security.AuthorisationUtil;
+import uk.gov.companieshouse.api.util.security.RequestUtils;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
 
@@ -16,7 +18,6 @@ class AuthenticationCaller {
     private final Responder responder;
 
     private boolean identityValid;
-    private String identity;
     private IdentityType identityType;
 
     AuthenticationCaller(HttpServletRequest httpServletRequest, Responder responder) {
@@ -26,8 +27,7 @@ class AuthenticationCaller {
 
     AuthenticationCaller checkIdentity() {
         // Check identity provided
-        this.identity = AuthorisationUtil.getAuthorisedIdentity(httpServletRequest);
-        if (isNull(this.identity)) {
+        if (isNull(RequestUtils.getRequestHeader(httpServletRequest, ERIC_IDENTITY))) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withMessage("Authentication error: no caller identity")
                     .build());
@@ -35,7 +35,7 @@ class AuthenticationCaller {
         }
 
         // Check identity type provided
-        String identityTypeHeader = AuthorisationUtil.getAuthorisedIdentityType(httpServletRequest);
+        String identityTypeHeader = RequestUtils.getRequestHeader(httpServletRequest, ERIC_IDENTITY_TYPE);
         if (isNull(identityTypeHeader)) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withMessage("Authentication error: no caller identity type")
@@ -48,7 +48,7 @@ class AuthenticationCaller {
         if (isNull(this.identityType)) {
             responder.invalidate(LoggableBuilder.newBuilder()
                     .withLogMapPut(LoggingUtils.IDENTITY_TYPE, identityTypeHeader)
-                    .withMessage(String.format("Authentication error: invalid caller identity type %s", identityTypeHeader))
+                    .withMessage("Authentication error: invalid caller identity type %s", identityTypeHeader)
                     .build());
             return this;
         }
