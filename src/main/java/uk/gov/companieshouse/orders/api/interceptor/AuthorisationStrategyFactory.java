@@ -1,7 +1,6 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
