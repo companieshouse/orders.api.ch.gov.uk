@@ -4,13 +4,11 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 @Component
-@RequestScope
 class AuthorisationStrategyFactory {
 
-    private Map<IdentityType, AuthorisationStrategy> authStrategyMap;
+    private final Map<IdentityType, AuthorisationStrategy> authStrategyMap;
 
     AuthorisationStrategyFactory(Set<AuthorisationStrategy> authStrategies) {
         authStrategyMap = new EnumMap<>(IdentityType.class);

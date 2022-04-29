@@ -1,7 +1,6 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,7 +59,7 @@ class SecurityManagerTest {
         assertThat(securityManager.checkIdentity(), is(true));
     }
 
-    @DisplayName("Check identity returns true for invalid caller identity")
+    @DisplayName("Check identity returns false for invalid caller identity")
     @Test
     void testCheckIdentityFalse() {
         when(caller.checkIdentity()).thenReturn(caller);
