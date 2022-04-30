@@ -4,9 +4,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 class ApiKeyAuthorisationStrategy implements AuthorisationStrategy {
-    private final ApiKeyCaller caller;
+    private final ApiKeyAuthoriser caller;
 
-    ApiKeyAuthorisationStrategy(ApiKeyCaller caller) {
+    ApiKeyAuthorisationStrategy(ApiKeyAuthoriser caller) {
         this.caller = caller;
     }
 

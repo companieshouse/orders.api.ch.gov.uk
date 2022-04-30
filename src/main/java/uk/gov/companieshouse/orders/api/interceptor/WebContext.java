@@ -13,15 +13,19 @@ import uk.gov.companieshouse.orders.api.util.Log;
 
 @Component
 @RequestScope
-class Responder {
+class WebContext {
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final Log log;
 
-    public Responder(HttpServletRequest request, HttpServletResponse response, Log log) {
+    public WebContext(HttpServletRequest request, HttpServletResponse response, Log log) {
         this.request = request;
         this.response = response;
         this.log = log;
+    }
+
+    String getHeader(final String key) {
+        return request.getHeader(key);
     }
 
     void invalidate(Loggable loggable) {

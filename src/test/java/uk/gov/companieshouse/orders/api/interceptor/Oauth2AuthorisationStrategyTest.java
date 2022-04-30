@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class Oauth2AuthorisationStrategyTest {
 
     @Mock
-    private Oauth2Caller caller;
+    private Oauth2Authorizer authoriser;
 
     @InjectMocks
     private Oauth2AuthorisationStrategy strategy;
@@ -27,26 +27,26 @@ class Oauth2AuthorisationStrategyTest {
     @Test
     void testAuthorised() {
 
-        when(caller.checkAuthorisedRole(any())).thenReturn(caller);
-        when(caller.isAuthorisedRole()).thenReturn(true);
+        when(authoriser.checkAuthorisedRole(any())).thenReturn(authoriser);
+        when(authoriser.isAuthorisedRole()).thenReturn(true);
 
         boolean actual = strategy.authorise();
 
         assertThat(actual, is(true));
-        verify(caller).checkAuthorisedRole("chs-order-investigator");
+        verify(authoriser).checkAuthorisedRole("chs-order-investigator");
     }
 
     @DisplayName("Should not authorise caller")
     @Test
     void testUnauthorised() {
 
-        when(caller.checkAuthorisedRole(anyString())).thenReturn(caller);
-        when(caller.isAuthorisedRole()).thenReturn(false);
+        when(authoriser.checkAuthorisedRole(anyString())).thenReturn(authoriser);
+        when(authoriser.isAuthorisedRole()).thenReturn(false);
 
         boolean actual = strategy.authorise();
 
         assertThat(actual, is(false));
-        verify(caller).checkAuthorisedRole("chs-order-investigator");
+        verify(authoriser).checkAuthorisedRole("chs-order-investigator");
     }
 
     @DisplayName("identity type should return oauth2 identity type enum")

@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.HashSet;
-import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,13 +19,10 @@ import uk.gov.companieshouse.orders.api.util.Loggable;
 import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @ExtendWith(MockitoExtension.class)
-class ApiKeyCallerTest {
+class ApiKeyAuthoriserTest {
 
     @Mock
-    private HttpServletRequest request;
-
-    @Mock
-    private Responder responder;
+    private WebContext webContext;
 
     @Mock
     private StringHelper stringHelper;
@@ -35,48 +31,48 @@ class ApiKeyCallerTest {
     private ArgumentCaptor<Loggable> loggableArgumentCaptor;
 
     @InjectMocks
-    private ApiKeyCaller caller;
+    private ApiKeyAuthoriser authoriser;
 
     @DisplayName("Should fail authorisation if caller privileges absent")
     @Test
     void testAuthorisationFailsPrivilegesAbsent() {
-        caller.checkAuthorisedKeyPrivilege("any");
+        authoriser.checkAuthorisedKeyPrivilege("any");
 
-        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        verify(webContext).invalidate(loggableArgumentCaptor.capture());
         assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller privileges are absent"));
-        assertThat(caller.isAuthorisedKeyPrivilege(), is(false));
+        assertThat(authoriser.isAuthorisedKeyPrivilege(), is(false));
     }
 
     @DisplayName("Should fail authorisation if wrong privilege is set")
     @Test
     void testAuthorisationFailsPrivilegeWrong() {
-        when(request.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("bad-privilege");
-        caller.checkAuthorisedKeyPrivilege("internal-app");
+        when(webContext.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("bad-privilege");
+        authoriser.checkAuthorisedKeyPrivilege("internal-app");
 
-        verify(responder).invalidate(loggableArgumentCaptor.capture());
+        verify(webContext).invalidate(loggableArgumentCaptor.capture());
         assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller is without privilege internal-app"));
-        assertThat(caller.isAuthorisedKeyPrivilege(), is(false));
+        assertThat(authoriser.isAuthorisedKeyPrivilege(), is(false));
     }
 
     @DisplayName("Should pass authorisation caller has internal app privilege")
     @Test
     void testAuthorisationPassesCorrectPrivilege() {
-        when(request.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("internal-app");
+        when(webContext.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("internal-app");
         when(stringHelper.asSet(",", "internal-app"))
                 .thenReturn(new HashSet<>(Collections.singletonList("internal-app")));
-        caller.checkAuthorisedKeyPrivilege("internal-app");
+        authoriser.checkAuthorisedKeyPrivilege("internal-app");
 
-        assertThat(caller.isAuthorisedKeyPrivilege(), is(true));
+        assertThat(authoriser.isAuthorisedKeyPrivilege(), is(true));
     }
 
     @DisplayName("Should pass authorisation if caller has asterisk privilege")
     @Test
     void testAuthorisationPassesPrivilegeAsterisk() {
-        when(request.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("*");
+        when(webContext.getHeader("ERIC-Authorised-Key-Privileges")).thenReturn("*");
         when(stringHelper.asSet(",", "*"))
                 .thenReturn(new HashSet<>(Collections.singletonList("*")));
-        caller.checkAuthorisedKeyPrivilege("*");
+        authoriser.checkAuthorisedKeyPrivilege("*");
 
-        assertThat(caller.isAuthorisedKeyPrivilege(), is(true));
+        assertThat(authoriser.isAuthorisedKeyPrivilege(), is(true));
     }
 }

@@ -7,23 +7,23 @@ import uk.gov.companieshouse.orders.api.exception.ForbiddenException;
 @Component
 class SecurityManager {
     private final AuthorisationStrategyFactory factory;
-    private final AuthenticationCaller caller;
+    private final Authenticator authenticator;
 
     @Autowired
-    SecurityManager(AuthorisationStrategyFactory factory, AuthenticationCaller caller) {
+    SecurityManager(AuthorisationStrategyFactory factory, Authenticator authenticator) {
         this.factory = factory;
-        this.caller = caller;
+        this.authenticator = authenticator;
     }
 
     boolean checkIdentity() {
-        return caller.checkIdentity().isIdentityValid();
+        return authenticator.checkIdentity().isIdentityValid();
     }
 
     boolean checkPermission() {
-        if (! caller.isIdentityValid()) {
+        if (! authenticator.isIdentityValid()) {
             throw new ForbiddenException("Caller is unauthenticated");
         }
 
-        return factory.authorisationStrategy(caller.getIdentityType()).authorise();
+        return factory.authorisationStrategy(authenticator.getIdentityType()).authorise();
     }
 }

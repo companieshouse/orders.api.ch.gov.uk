@@ -25,7 +25,7 @@ class SecurityManagerTest {
     private AuthorisationStrategyFactory factory;
 
     @Mock
-    private AuthenticationCaller caller;
+    private Authenticator authenticator;
 
     @InjectMocks
     private SecurityManager securityManager;
@@ -33,7 +33,7 @@ class SecurityManagerTest {
     @DisplayName("check permission throws programming exception when identity is in valid")
     @Test
     void testCheckPermissionException() throws ForbiddenException {
-        when(caller.isIdentityValid()).thenReturn(false);
+        when(authenticator.isIdentityValid()).thenReturn(false);
 
         Exception exception = assertThrows(ForbiddenException.class, () -> securityManager.checkPermission());
         assertThat(exception.getMessage(), is("Caller is unauthenticated"));
@@ -42,8 +42,8 @@ class SecurityManagerTest {
     @DisplayName("check permission returns true if authorisation strategy authorised")
     @Test
     void testCheckPermissionReturnsTrue() throws ForbiddenException {
-        when(caller.isIdentityValid()).thenReturn(true);
-        when(caller.getIdentityType()).thenReturn(IdentityType.KEY);
+        when(authenticator.isIdentityValid()).thenReturn(true);
+        when(authenticator.getIdentityType()).thenReturn(IdentityType.KEY);
         when(factory.authorisationStrategy(any())).thenReturn(strategy);
         when(strategy.authorise()).thenReturn(true);
 
@@ -54,16 +54,16 @@ class SecurityManagerTest {
     @DisplayName("Check identity returns true for valid caller identity")
     @Test
     void testCheckIdentityTrue() {
-        when(caller.checkIdentity()).thenReturn(caller);
-        when(caller.isIdentityValid()).thenReturn(true);
+        when(authenticator.checkIdentity()).thenReturn(authenticator);
+        when(authenticator.isIdentityValid()).thenReturn(true);
         assertThat(securityManager.checkIdentity(), is(true));
     }
 
     @DisplayName("Check identity returns false for invalid caller identity")
     @Test
     void testCheckIdentityFalse() {
-        when(caller.checkIdentity()).thenReturn(caller);
-        when(caller.isIdentityValid()).thenReturn(false);
+        when(authenticator.checkIdentity()).thenReturn(authenticator);
+        when(authenticator.isIdentityValid()).thenReturn(false);
         assertThat(securityManager.checkIdentity(), is(false));
     }
 }

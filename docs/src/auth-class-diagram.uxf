@@ -5,7 +5,7 @@
     <id>UMLClass</id>
     <coordinates>
       <x>28</x>
-      <y>588</y>
+      <y>546</y>
       <w>280</w>
       <h>63</h>
     </coordinates>
@@ -20,34 +20,34 @@ orders.api.interceptor::UserAuthenticationInterceptor
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>168</x>
-      <y>441</y>
-      <w>301</w>
-      <h>56</h>
+      <x>147</x>
+      <y>462</y>
+      <w>322</w>
+      <h>49</h>
     </coordinates>
     <panel_attributes>SecurityManager
 --
-+authenticateCaller(): boolean
-+isAuthorised()
++checkIdentity(): boolean
++checkPermission(): boolean
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>273</x>
-      <y>490</y>
+      <x>210</x>
+      <y>504</y>
       <w>21</w>
-      <h>112</h>
+      <h>56</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;140.0</additional_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>364</x>
-      <y>588</y>
+      <x>322</x>
+      <y>546</y>
       <w>273</w>
       <h>63</h>
     </coordinates>
@@ -61,13 +61,13 @@ orders.api.interceptor::UserAuthorisationInterceptor
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>273</x>
-      <y>266</y>
+      <x>252</x>
+      <y>357</y>
       <w>210</w>
-      <h>91</h>
+      <h>63</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse
-.orders.api.interceptor::AuthenticationCaller
+.orders.api.interceptor::Authenticator
 --
 +isIdentityValid(): boolean
 +getIdentityType(): IdentityType
@@ -78,25 +78,25 @@ orders.api.interceptor::UserAuthorisationInterceptor
     <id>Relation</id>
     <coordinates>
       <x>343</x>
-      <y>350</y>
+      <y>413</y>
       <w>21</w>
-      <h>105</h>
+      <h>63</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;130.0</additional_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>896</x>
-      <y>266</y>
-      <w>273</w>
+      <x>700</x>
+      <y>245</y>
+      <w>287</w>
       <h>63</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse
-.orders.api.interceptor::Oauth2Caller
+.orders.api.interceptor::Oauth2Authoriser
 --
-+checkAuthorisedRole(String role): Oauth2Caller
++checkAuthorisedRole(String role): Oauth2Authoriser
 +isAuthorisedRole(): boolean
 </panel_attributes>
     <additional_attributes/>
@@ -104,39 +104,39 @@ orders.api.interceptor::UserAuthorisationInterceptor
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>539</x>
-      <y>266</y>
-      <w>287</w>
+      <x>343</x>
+      <y>245</y>
+      <w>322</w>
       <h>63</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse
-.orders.api.interceptor::ApiKeyCaller
+.orders.api.interceptor::ApiKeyAuthoriser
 --
-+checkAuthorisedKeyPrivilege(String privilege): boolean
-</panel_attributes>
++checkAuthorisedKeyPrivilege(String privilege): ApiKeyAuthoriser
++isAuthorisedKeyPrivilege(0: boolean</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>539</x>
-      <y>392</y>
+      <x>532</x>
+      <y>357</y>
       <w>294</w>
-      <h>70</h>
+      <h>63</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse
-.orders.api.interceptor::Responder
+.orders.api.interceptor::WebContext
 --
-+logMapPut(String key, Object value): Responder
-+invalidate(String logMessage): Responder
++getHeader(String key): String
++invalidate(Loggable loggable): Responder
 </panel_attributes>
     <additional_attributes/>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>602</x>
-      <y>511</y>
+      <x>686</x>
+      <y>462</y>
       <w>147</w>
       <h>28</h>
     </coordinates>
@@ -146,8 +146,8 @@ orders.api.interceptor::UserAuthorisationInterceptor
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>511</x>
-      <y>469</y>
+      <x>490</x>
+      <y>539</y>
       <w>21</w>
       <h>21</h>
     </coordinates>
@@ -157,8 +157,19 @@ orders.api.interceptor::UserAuthorisationInterceptor
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>672</x>
-      <y>455</y>
+      <x>756</x>
+      <y>413</y>
+      <w>21</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>763</x>
+      <y>301</y>
       <w>21</w>
       <h>70</h>
     </coordinates>
@@ -168,42 +179,31 @@ orders.api.interceptor::UserAuthorisationInterceptor
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>826</x>
-      <y>322</y>
-      <w>105</w>
-      <h>84</h>
+      <x>581</x>
+      <y>301</y>
+      <w>21</w>
+      <h>70</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;100.0;130.0;10.0</additional_attributes>
+    <additional_attributes>10.0;80.0;10.0;10.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>679</x>
-      <y>322</y>
+      <x>399</x>
+      <y>504</y>
       <w>21</w>
-      <h>84</h>
+      <h>56</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;100.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>420</x>
-      <y>490</y>
-      <w>21</w>
-      <h>112</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;140.0</additional_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0</additional_attributes>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>735</x>
-      <y>28</y>
-      <w>259</w>
+      <x>567</x>
+      <y>21</y>
+      <w>231</w>
       <h>77</h>
     </coordinates>
     <panel_attributes>&lt;&lt;interface&gt;&gt;
@@ -219,9 +219,9 @@ orders.api.interceptor::AuthorisationStrategy
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>539</x>
-      <y>168</y>
-      <w>287</w>
+      <x>350</x>
+      <y>161</y>
+      <w>315</w>
       <h>42</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse.
@@ -233,9 +233,9 @@ orders.api.interceptor::ApiKeyAuthorisationStrategy
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>896</x>
-      <y>168</y>
-      <w>273</w>
+      <x>700</x>
+      <y>161</y>
+      <w>287</w>
       <h>42</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse.
@@ -246,9 +246,9 @@ orders.api.interceptor::Oauth2AuthorisationStrategy
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>161</x>
-      <y>42</y>
-      <w>504</w>
+      <x>147</x>
+      <y>35</y>
+      <w>364</w>
       <h>49</h>
     </coordinates>
     <panel_attributes>uk.gov.companieshouse.
@@ -260,19 +260,19 @@ orders.api.interceptor::AuthorisationStrategyFactory
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>658</x>
-      <y>56</y>
-      <w>91</w>
+      <x>504</x>
+      <y>49</y>
+      <w>77</w>
       <h>21</h>
     </coordinates>
     <panel_attributes>lt=&lt;.</panel_attributes>
-    <additional_attributes>110.0;10.0;10.0;10.0</additional_attributes>
+    <additional_attributes>90.0;10.0;10.0;10.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>854</x>
-      <y>98</y>
+      <x>672</x>
+      <y>91</y>
       <w>189</w>
       <h>84</h>
     </coordinates>
@@ -282,8 +282,8 @@ orders.api.interceptor::AuthorisationStrategyFactory
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>679</x>
-      <y>98</y>
+      <x>497</x>
+      <y>91</y>
       <w>196</w>
       <h>84</h>
     </coordinates>
@@ -293,85 +293,52 @@ orders.api.interceptor::AuthorisationStrategyFactory
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>1022</x>
-      <y>203</y>
-      <w>21</w>
-      <h>77</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;90.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>679</x>
-      <y>203</y>
-      <w>21</w>
-      <h>77</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;90.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>UMLClass</id>
-    <coordinates>
-      <x>329</x>
+      <x>840</x>
       <y>196</y>
-      <w>147</w>
-      <h>28</h>
+      <w>21</w>
+      <h>63</h>
     </coordinates>
-    <panel_attributes>HttpServletRequest</panel_attributes>
-    <additional_attributes/>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;10.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>462</x>
-      <y>217</y>
+      <x>497</x>
+      <y>196</y>
+      <w>21</w>
+      <h>63</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;-</panel_attributes>
+    <additional_attributes>10.0;70.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>455</x>
+      <y>378</y>
       <w>91</w>
-      <h>63</h>
+      <h>21</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;110.0;70.0</additional_attributes>
+    <additional_attributes>110.0;10.0;10.0;10.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>385</x>
-      <y>217</y>
+      <x>182</x>
+      <y>77</y>
       <w>21</w>
-      <h>63</h>
+      <h>399</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;70.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>476</x>
-      <y>350</y>
-      <w>77</w>
-      <h>56</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>90.0;60.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>203</x>
-      <y>84</y>
-      <w>21</w>
-      <h>371</h>
-    </coordinates>
-    <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;510.0</additional_attributes>
+    <additional_attributes>10.0;10.0;10.0;550.0</additional_attributes>
   </element>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>952</x>
-      <y>364</y>
+      <x>525</x>
+      <y>462</y>
       <w>147</w>
       <h>28</h>
     </coordinates>
@@ -381,12 +348,12 @@ orders.api.interceptor::AuthorisationStrategyFactory
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>1022</x>
-      <y>322</y>
+      <x>595</x>
+      <y>413</y>
       <w>21</w>
-      <h>56</h>
+      <h>63</h>
     </coordinates>
     <panel_attributes>lt=&lt;-</panel_attributes>
-    <additional_attributes>10.0;60.0;10.0;10.0</additional_attributes>
+    <additional_attributes>10.0;70.0;10.0;10.0</additional_attributes>
   </element>
 </diagram>

@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ApiKeyAuthorisationStrategyTest {
 
     @Mock
-    private ApiKeyCaller caller;
+    private ApiKeyAuthoriser authoriser;
 
     @InjectMocks
     private ApiKeyAuthorisationStrategy strategy;
@@ -25,21 +25,21 @@ class ApiKeyAuthorisationStrategyTest {
     @Test
     @DisplayName("should authorise caller")
     void testAuthorised() {
-        when(caller.checkAuthorisedKeyPrivilege(anyString())).thenReturn(caller);
-        when(caller.isAuthorisedKeyPrivilege()).thenReturn(true);
+        when(authoriser.checkAuthorisedKeyPrivilege(anyString())).thenReturn(authoriser);
+        when(authoriser.isAuthorisedKeyPrivilege()).thenReturn(true);
 
         assertThat(strategy.authorise(), is(true));
-        verify(caller).checkAuthorisedKeyPrivilege("internal-app");
+        verify(authoriser).checkAuthorisedKeyPrivilege("internal-app");
     }
 
     @Test
     @DisplayName("should not authorise caller")
     void testUnauthorised() {
-        when(caller.checkAuthorisedKeyPrivilege(anyString())).thenReturn(caller);
-        when(caller.isAuthorisedKeyPrivilege()).thenReturn(false);
+        when(authoriser.checkAuthorisedKeyPrivilege(anyString())).thenReturn(authoriser);
+        when(authoriser.isAuthorisedKeyPrivilege()).thenReturn(false);
 
         assertThat(strategy.authorise(), is(false));
-        verify(caller).checkAuthorisedKeyPrivilege("internal-app");
+        verify(authoriser).checkAuthorisedKeyPrivilege("internal-app");
     }
 
     @Test

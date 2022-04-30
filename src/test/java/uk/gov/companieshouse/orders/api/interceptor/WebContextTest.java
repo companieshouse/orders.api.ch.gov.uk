@@ -19,7 +19,7 @@ import uk.gov.companieshouse.orders.api.util.Loggable;
 import uk.gov.companieshouse.orders.api.util.Log;
 
 @ExtendWith(MockitoExtension.class)
-class ResponderTest {
+class WebContextTest {
 
     @Mock
     private HttpServletRequest request;
@@ -37,18 +37,28 @@ class ResponderTest {
     private ArgumentCaptor<Loggable> loggableArgumentCaptor;
 
     @InjectMocks
-    private Responder responder;
+    private WebContext webContext;
 
     @DisplayName("Should correctly invalidate response")
     @Test
     void correctlyInvalidateResponse() {
         when(loggable.getMessage()).thenReturn("log-message");
 
-        responder.invalidate(loggable);
+        webContext.invalidate(loggable);
 
         verify(log).infoRequest(loggableArgumentCaptor.capture());
         assertThat(loggableArgumentCaptor.getValue().getMessage(), is("log-message"));
         assertThat(loggableArgumentCaptor.getValue().getRequest(), is(request));
         verify(response).setStatus(401);
+    }
+
+    @DisplayName("Should return an expected header value from web context")
+    @Test
+    void correctlyReturnsHeaderValue() {
+        when(request.getHeader("some-header-key")).thenReturn("some-header-value");
+
+        String actual = webContext.getHeader("some-header-key");
+
+        assertThat(actual, is("some-header-value"));
     }
 }
