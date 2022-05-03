@@ -79,6 +79,9 @@ class UserAuthorisationInterceptorTests {
     @Mock
     private Order order;
 
+    @MockBean
+    private SecurityManager securityManager;
+
     @Test
     @DisplayName("preHandle accepts a request it has not been configured to authorise")
     void preHandleAcceptsUnknownRequest() {
@@ -178,16 +181,26 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
+    @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
     @Test
-    @DisplayName("preHandle rejects unauthorised order search request")
-    void preHandleRejectsUnauthorisedUserSearchRequest() {
-
-        // Given
+    void ordersSearchValidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(true);
         givenRequest(GET, "/orders/search");
-        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
 
-        // When and then
-        thenRequestIsRejected();
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authentication for orders/search endpoint false if caller has incorrect permissions")
+    @Test
+    void ordersSearchInvalidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/orders/search");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -341,7 +354,6 @@ class UserAuthorisationInterceptorTests {
     private static Stream<Arguments> apiGetRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get payment details internal API request that has the required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle accepts get order internal API request that has the required headers", "/orders/1234"),
-                arguments("preHandle accepts search internal API request that has the required headers", "/orders/search"),
                 arguments("preHandle accepts get checkout internal API request that has the required headers", "/checkouts/1234"));
     }
 }

@@ -1,12 +1,15 @@
 package uk.gov.companieshouse.orders.api.util;
 
-import uk.gov.companieshouse.orders.api.model.*;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
-
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.OrderLinks;
 
 public final class OrderHelper {
     private OrderHelper() {

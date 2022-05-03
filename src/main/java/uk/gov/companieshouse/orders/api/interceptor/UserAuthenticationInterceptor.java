@@ -34,9 +34,11 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
 
     private final RequestMapper requestMapper;
+    private final SecurityManager securityManager;
 
-    public UserAuthenticationInterceptor(final RequestMapper requestMapper) {
+    public UserAuthenticationInterceptor(RequestMapper requestMapper, SecurityManager securityManager) {
         this.requestMapper = requestMapper;
+        this.securityManager = securityManager;
     }
 
     @Override
@@ -50,8 +52,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
                 .orElse(true);
     }
 
-    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {
-        switch (name) {
+    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {switch (name) {
             case ADD_ITEM:
             case CHECKOUT_BASKET:
             case BASKET:
@@ -61,6 +62,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
             case GET_CHECKOUT:
                 return hasAuthenticatedClient(request, response);
             case SEARCH:
+                return securityManager.checkIdentity();
             case PATCH_PAYMENT_DETAILS:
                 return hasAuthenticatedApi(request, response);
             default:

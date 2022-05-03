@@ -1,5 +1,34 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static java.util.Collections.singletonList;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
+import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
+import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_AUTHORISED_ROLES;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_API_KEY_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSION_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -18,7 +47,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-
 import uk.gov.companieshouse.api.util.security.Permission;
 import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
@@ -27,41 +55,14 @@ import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
 import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
-import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-
-import static java.util.Collections.singletonList;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
-import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
-import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
-import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_API_KEY_TYPE_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSION_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
 @DirtiesContext
 @AutoConfigureMockMvc
@@ -77,6 +78,8 @@ class OrderControllerIntegrationTest {
     public static final String ORDERS_SEARCH_PATH = "/orders/search";
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String PAGE_SIZE_VALUE = "1";
+    private static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
+    private static final String ERIC_AUTHORISED_ROLES_HEADER_NAME = "ERIC-Authorised-Roles";
 
     @Autowired
     private MockMvc mockMvc;
@@ -254,7 +257,7 @@ class OrderControllerIntegrationTest {
                 .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -284,7 +287,7 @@ class OrderControllerIntegrationTest {
                 .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -317,7 +320,7 @@ class OrderControllerIntegrationTest {
                 .param("company_number", "12345678")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
@@ -337,7 +340,7 @@ class OrderControllerIntegrationTest {
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                         .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                        .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                         .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -356,7 +359,7 @@ class OrderControllerIntegrationTest {
                         .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                        .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
                         .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -370,7 +373,7 @@ class OrderControllerIntegrationTest {
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -387,7 +390,7 @@ class OrderControllerIntegrationTest {
                 .param("page_size", "0")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                .header(ERIC_AUTHORISED_KEY_ROLES, "*")
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -397,6 +400,56 @@ class OrderControllerIntegrationTest {
                 .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
     }
 
+    @DisplayName("Order search fails to authenticate caller when identity not provided")
+    @Test
+    void ordersSearchFailsAuthenticationNullIdentity() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Order search fails to authenticate caller when identity type not provided")
+    @Test
+    void ordersSearchFailsAuthenticationNullIdentityType() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Order search fails to authorise caller when identity type is oauth2 and authorised roles does not contain permission /admin/chs-order-investigator")
+    @Test
+    void ordersSearchFailsOauth2Authorisation() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, OAUTH2_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_ROLES, "permission-a permission-b")
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Order search correctly authorises caller when identity type is oauth2 and authorised roles contain permission /admin/chs-order-investigation")
+    @Test
+    void ordersSearchWithOauth2AuthorisationSucceeds() throws Exception {
+        mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, OAUTH2_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_ROLES, "permission-a /admin/chs-order-investigation permission-b")
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
 
     private Checkout getCheckout(String orderId) {
         Checkout checkout = new Checkout();
