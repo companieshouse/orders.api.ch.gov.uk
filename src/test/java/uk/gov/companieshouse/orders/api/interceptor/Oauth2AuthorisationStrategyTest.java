@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class Oauth2AuthorisationStrategyTest {
 
     @Mock
-    private Oauth2Authorizer authoriser;
+    private Oauth2Authoriser authoriser;
 
     @InjectMocks
     private Oauth2AuthorisationStrategy strategy;

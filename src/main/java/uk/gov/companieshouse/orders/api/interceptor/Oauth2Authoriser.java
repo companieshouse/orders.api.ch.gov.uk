@@ -12,17 +12,17 @@ import uk.gov.companieshouse.orders.api.util.StringHelper;
 
 @Component
 @RequestScope
-class Oauth2Authorizer {
+class Oauth2Authoriser {
     private final WebContext webContext;
     private final StringHelper stringHelper;
     private boolean hasPermission;
 
-    Oauth2Authorizer(WebContext webContext, StringHelper stringHelper) {
+    Oauth2Authoriser(WebContext webContext, StringHelper stringHelper) {
         this.webContext = webContext;
         this.stringHelper = stringHelper;
     }
 
-    Oauth2Authorizer checkPermission(String permission) {
+    Oauth2Authoriser checkPermission(String permission) {
         // Note: ERIC_AUTHORISED_ROLES contains a space separated list of permissions
         String authorisedRolesHeader = webContext.getHeader(ERIC_AUTHORISED_ROLES);
         if (isNull(authorisedRolesHeader)) {

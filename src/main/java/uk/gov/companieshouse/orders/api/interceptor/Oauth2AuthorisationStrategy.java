@@ -4,9 +4,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 class Oauth2AuthorisationStrategy implements AuthorisationStrategy {
-    private final Oauth2Authorizer authoriser;
+    private final Oauth2Authoriser authoriser;
 
-    Oauth2AuthorisationStrategy(Oauth2Authorizer authoriser) {
+    Oauth2AuthorisationStrategy(Oauth2Authoriser authoriser) {
         this.authoriser = authoriser;
     }
 

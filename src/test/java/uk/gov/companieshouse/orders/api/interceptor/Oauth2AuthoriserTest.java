@@ -30,7 +30,7 @@ class Oauth2AuthoriserTest {
     private ArgumentCaptor<Loggable> loggableArgumentCaptor;
 
     @InjectMocks
-    private Oauth2Authorizer authoriser;
+    private Oauth2Authoriser authoriser;
 
     @DisplayName("Should fail authorisation if caller roles are absent")
     @Test

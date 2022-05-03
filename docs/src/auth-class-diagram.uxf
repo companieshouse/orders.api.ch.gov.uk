@@ -128,7 +128,7 @@ orders.api.interceptor::UserAuthorisationInterceptor
 .orders.api.interceptor::WebContext
 --
 +getHeader(String key): String
-+invalidate(Loggable loggable): Responder
++invalidate(Loggable loggable): WebContext
 </panel_attributes>
     <additional_attributes/>
   </element>
