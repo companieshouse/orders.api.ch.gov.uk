@@ -15,14 +15,15 @@ import uk.gov.companieshouse.orders.api.util.StringHelper;
 class Oauth2Authorizer {
     private final WebContext webContext;
     private final StringHelper stringHelper;
-    private boolean authorisedRole;
+    private boolean hasPermission;
 
     Oauth2Authorizer(WebContext webContext, StringHelper stringHelper) {
         this.webContext = webContext;
         this.stringHelper = stringHelper;
     }
 
-    Oauth2Authorizer checkAuthorisedRole(String role) {
+    Oauth2Authorizer checkPermission(String permission) {
+        // Note: ERIC_AUTHORISED_ROLES contains a space separated list of permissions
         String authorisedRolesHeader = webContext.getHeader(ERIC_AUTHORISED_ROLES);
         if (isNull(authorisedRolesHeader)) {
             webContext.invalidate(LoggableBuilder.newBuilder()
@@ -31,21 +32,21 @@ class Oauth2Authorizer {
             return this;
         }
 
-        // Note: authorised roles are space separated
-        Set<String> authorisedRoles = stringHelper.asSet("\\s+", authorisedRolesHeader);
-        if (! authorisedRoles.contains(role)) {
+        // Note: permissions are space separated
+        Set<String> permissions = stringHelper.asSet("\\s+", authorisedRolesHeader);
+        if (! permissions.contains(permission)) {
             webContext.invalidate(LoggableBuilder.newBuilder()
                     .withLogMapPut(LoggingUtils.AUTHORISED_ROLES, authorisedRolesHeader)
-                    .withMessage("Authorisation error: caller is not in role %s", role)
+                    .withMessage("Authorisation error: caller does not have permission %s", permission)
                     .build());
             return this;
         }
 
-        authorisedRole = true;
+        hasPermission = true;
         return this;
     }
 
-    boolean isAuthorisedRole() {
-        return authorisedRole;
+    boolean hasPermission() {
+        return hasPermission;
     }
 }

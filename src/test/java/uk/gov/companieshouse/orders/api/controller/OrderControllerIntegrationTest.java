@@ -423,7 +423,7 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    @DisplayName("Order search fails to authorise caller when identity type is oauth2 and authorised roles do not contain chs-order-investigator")
+    @DisplayName("Order search fails to authorise caller when identity type is oauth2 and authorised roles does not contain permission /admin/chs-order-investigator")
     @Test
     void ordersSearchFailsOauth2Authorisation() throws Exception {
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
@@ -431,13 +431,13 @@ class OrderControllerIntegrationTest {
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
                         .header(ERIC_IDENTITY_TYPE, OAUTH2_IDENTITY_TYPE)
-                        .header(ERIC_AUTHORISED_ROLES, "role-a role-b")
+                        .header(ERIC_AUTHORISED_ROLES, "permission-a permission-b")
                         .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
-    @DisplayName("Order search correctly authorises caller when identity type is oauth2 and authorised roles contain chs-order-investigator")
+    @DisplayName("Order search correctly authorises caller when identity type is oauth2 and authorised roles contain permission /admin/chs-order-investigation")
     @Test
     void ordersSearchWithOauth2AuthorisationSucceeds() throws Exception {
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
@@ -445,7 +445,7 @@ class OrderControllerIntegrationTest {
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY, ERIC_IDENTITY_VALUE)
                         .header(ERIC_IDENTITY_TYPE, OAUTH2_IDENTITY_TYPE)
-                        .header(ERIC_AUTHORISED_ROLES, "role-a chs-order-investigator role-b")
+                        .header(ERIC_AUTHORISED_ROLES, "permission-a /admin/chs-order-investigation permission-b")
                         .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

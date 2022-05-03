@@ -36,11 +36,11 @@ class Oauth2AuthoriserTest {
     @Test
     void authorisationFailsRolesAbsent() {
 
-        authoriser.checkAuthorisedRole("any-role");
+        authoriser.checkPermission("any-role");
 
         verify(webContext).invalidate(loggableArgumentCaptor.capture());
         assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller authorised roles are absent"));
-        assertThat(authoriser.isAuthorisedRole(), is(false));
+        assertThat(authoriser.hasPermission(), is(false));
     }
 
     @DisplayName("Should fail authorisation if caller is not in role")
@@ -48,11 +48,11 @@ class Oauth2AuthoriserTest {
     void authorisationFailsCallNotInRole() {
 
         when(webContext.getHeader("ERIC-Authorised-Roles")).thenReturn("abc def");
-        authoriser.checkAuthorisedRole("any-role");
+        authoriser.checkPermission("any-permission");
 
         verify(webContext).invalidate(loggableArgumentCaptor.capture());
-        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller is not in role any-role"));
-        assertThat(authoriser.isAuthorisedRole(), is(false));
+        assertThat(loggableArgumentCaptor.getValue().getMessage(), is("Authorisation error: caller does not have permission any-permission"));
+        assertThat(authoriser.hasPermission(), is(false));
     }
 
     @DisplayName("Authorisation should succeed if caller has authorised role")
@@ -61,8 +61,8 @@ class Oauth2AuthoriserTest {
 
         when(webContext.getHeader("ERIC-Authorised-Roles")).thenReturn("abc def");
         when(stringHelper.asSet("\\s+", "abc def")).thenReturn(new HashSet<>(Arrays.asList("abc", "def")));
-        authoriser.checkAuthorisedRole("def");
+        authoriser.checkPermission("def");
 
-        assertThat(authoriser.isAuthorisedRole(), is(true));
+        assertThat(authoriser.hasPermission(), is(true));
     }
 }

@@ -27,26 +27,26 @@ class Oauth2AuthorisationStrategyTest {
     @Test
     void testAuthorised() {
 
-        when(authoriser.checkAuthorisedRole(any())).thenReturn(authoriser);
-        when(authoriser.isAuthorisedRole()).thenReturn(true);
+        when(authoriser.checkPermission(any())).thenReturn(authoriser);
+        when(authoriser.hasPermission()).thenReturn(true);
 
         boolean actual = strategy.authorise();
 
         assertThat(actual, is(true));
-        verify(authoriser).checkAuthorisedRole("chs-order-investigator");
+        verify(authoriser).checkPermission("/admin/chs-order-investigation");
     }
 
     @DisplayName("Should not authorise caller")
     @Test
     void testUnauthorised() {
 
-        when(authoriser.checkAuthorisedRole(anyString())).thenReturn(authoriser);
-        when(authoriser.isAuthorisedRole()).thenReturn(false);
+        when(authoriser.checkPermission(anyString())).thenReturn(authoriser);
+        when(authoriser.hasPermission()).thenReturn(false);
 
         boolean actual = strategy.authorise();
 
         assertThat(actual, is(false));
-        verify(authoriser).checkAuthorisedRole("chs-order-investigator");
+        verify(authoriser).checkPermission("/admin/chs-order-investigation");
     }
 
     @DisplayName("identity type should return oauth2 identity type enum")

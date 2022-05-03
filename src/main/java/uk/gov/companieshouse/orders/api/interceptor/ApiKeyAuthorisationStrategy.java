@@ -4,15 +4,15 @@ import org.springframework.stereotype.Component;
 
 @Component
 class ApiKeyAuthorisationStrategy implements AuthorisationStrategy {
-    private final ApiKeyAuthoriser caller;
+    private final ApiKeyAuthoriser authoriser;
 
-    ApiKeyAuthorisationStrategy(ApiKeyAuthoriser caller) {
-        this.caller = caller;
+    ApiKeyAuthorisationStrategy(ApiKeyAuthoriser authoriser) {
+        this.authoriser = authoriser;
     }
 
     @Override
     public boolean authorise() {
-        return caller.checkAuthorisedKeyPrivilege("internal-app").isAuthorisedKeyPrivilege();
+        return authoriser.checkAuthorisedKeyPrivilege("internal-app").isAuthorisedKeyPrivilege();
     }
 
     @Override
