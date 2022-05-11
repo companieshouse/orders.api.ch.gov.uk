@@ -200,8 +200,8 @@ class UserAuthenticationInterceptorTests {
     @Test
     @DisplayName("preHandle accepts get checkout request that has signed in user headers")
     void preHandleAcceptsSignedInUserGetCheckoutRequest() {
-
         // Given
+        when(securityManager.checkIdentity()).thenReturn(true);
         givenRequest(GET, "/checkouts/1234");
         givenRequestHasSignedInUser();
 
@@ -212,8 +212,8 @@ class UserAuthenticationInterceptorTests {
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("authenticatedRequestFixtures")
     void preHandleAcceptsAuthenticatedApiRequest(String displayName, String uriPath) {
-
         // Given
+        when(securityManager.checkIdentity()).thenReturn(true);
         givenRequest(GET, uriPath);
         givenRequestHasAuthenticatedApi();
 

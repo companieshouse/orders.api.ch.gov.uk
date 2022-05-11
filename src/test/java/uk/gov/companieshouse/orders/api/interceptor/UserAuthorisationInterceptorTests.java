@@ -18,10 +18,7 @@ import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORI
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.*;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
@@ -229,6 +226,18 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
+    @DisplayName("preHandle accepts get checkout admin request that has the required headers")
+    void preHandleAcceptsAuthorisedAdminGetCheckoutRequest() {
+        // Given
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInAdminUser(ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
     @DisplayName("preHandle rejects get order internal API request that lacks the required headers")
     void preHandleRejectsUnauthorisedInternalApiGetOrderRequest() {
 
@@ -317,6 +326,11 @@ class UserAuthorisationInterceptorTests {
     private void givenRequestHasSignedInUser(final String userId) {
         when(request.getHeader(ERIC_IDENTITY_TYPE)).thenReturn(OAUTH2_IDENTITY_TYPE);
         when(request.getHeader(ERIC_IDENTITY)).thenReturn(userId);
+    }
+
+    private void givenRequestHasSignedInAdminUser(final String userId) {
+        this.givenRequestHasSignedInUser(userId);
+        when(request.getHeader(ERIC_AUTHORISED_ROLES)).thenReturn("/admin/chs-order-investigation");
     }
 
     /**

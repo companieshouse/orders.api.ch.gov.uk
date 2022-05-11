@@ -59,8 +59,8 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
                 return hasSignedInUser(request, response);
             case GET_PAYMENT_DETAILS:
             case GET_ORDER:
-            case GET_CHECKOUT:
                 return hasAuthenticatedClient(request, response);
+            case GET_CHECKOUT:
             case SEARCH:
                 return securityManager.checkIdentity();
             case PATCH_PAYMENT_DETAILS:
