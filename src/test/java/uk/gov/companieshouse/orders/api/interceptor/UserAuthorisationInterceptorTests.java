@@ -213,10 +213,10 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get checkout user request that has the required headers")
-    void preHandleAcceptsAuthorisedUserGetCheckoutRequest() {
-
+    @DisplayName("preHandle accepts get checkout request authorised by security manager")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedBySecurityManager() {
         // Given
+        when(securityManager.checkPermission()).thenReturn(true);
         givenRequest(GET, "/checkouts/1234");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
         givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
@@ -226,15 +226,42 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get checkout admin request that has the required headers")
-    void preHandleAcceptsAuthorisedAdminGetCheckoutRequest() {
+    @DisplayName("preHandle accepts get checkout request authorised by user ownership")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedByOwnership() {
         // Given
+        when(securityManager.checkPermission()).thenReturn(false);
         givenRequest(GET, "/checkouts/1234");
-        givenRequestHasSignedInAdminUser(ERIC_IDENTITY_VALUE);
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
         givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
         thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout request authorised with internal user role")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedAsInternalUser() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasInternalUserRole();
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get checkout request if neither authorised by security manager nor as resource owner")
+    void preHandleRejectsGetCheckoutRequestIfNotResourceOwner() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser(WRONG_ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsRejected();
     }
 
     @Test
@@ -326,11 +353,6 @@ class UserAuthorisationInterceptorTests {
     private void givenRequestHasSignedInUser(final String userId) {
         when(request.getHeader(ERIC_IDENTITY_TYPE)).thenReturn(OAUTH2_IDENTITY_TYPE);
         when(request.getHeader(ERIC_IDENTITY)).thenReturn(userId);
-    }
-
-    private void givenRequestHasSignedInAdminUser(final String userId) {
-        this.givenRequestHasSignedInUser(userId);
-        when(request.getHeader(ERIC_AUTHORISED_ROLES)).thenReturn("/admin/chs-order-investigation");
     }
 
     /**
