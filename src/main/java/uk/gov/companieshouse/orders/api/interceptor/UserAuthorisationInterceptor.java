@@ -74,8 +74,9 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
             case CHECKOUT_BASKET: case BASKET:
                 return true; // no authorisation required
             case GET_PAYMENT_DETAILS:
-            case GET_CHECKOUT:
                 return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
+            case GET_CHECKOUT:
+                return securityManager.checkPermission() || getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
             case GET_ORDER:
                 return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
             case SEARCH:

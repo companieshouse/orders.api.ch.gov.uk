@@ -18,10 +18,7 @@ import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORI
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.*;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
@@ -216,16 +213,55 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get checkout user request that has the required headers")
-    void preHandleAcceptsAuthorisedUserGetCheckoutRequest() {
-
+    @DisplayName("preHandle accepts get checkout request authorised by security manager")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedBySecurityManager() {
         // Given
+        when(securityManager.checkPermission()).thenReturn(true);
         givenRequest(GET, "/checkouts/1234");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
         givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
         thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout request authorised by user ownership")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedByOwnership() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout request authorised with internal user role")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedAsInternalUser() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasInternalUserRole();
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get checkout request if neither authorised by security manager nor as resource owner")
+    void preHandleRejectsGetCheckoutRequestIfNotResourceOwner() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser(WRONG_ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsRejected();
     }
 
     @Test
