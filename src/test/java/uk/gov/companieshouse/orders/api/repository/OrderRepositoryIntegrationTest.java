@@ -68,6 +68,22 @@ class OrderRepositoryIntegrationTest {
         assertEquals(order.getData().getOrderedBy().getEmail(), orders.get(0).getData().getOrderedBy().getEmail());
     }
 
+    @DisplayName("repository returns an order when only email specified and ignore case")
+    @Test
+    void testSearchOrdersEmailIgnoresCase() {
+        // given
+        Order order = OrderHelper.getOrder("ORD-123-456", "Demo@Ch.gov.uk", "12345678");
+        orderRepository.save(order);
+
+        // when
+        List<Order> orders = orderRepository.searchOrders(".*", "deMo@ch.GOV.uk", ".*");
+
+        // then
+        assertEquals(1, orders.size());
+        assertEquals(order.getId(), orders.get(0).getId());
+        assertEquals(order.getData().getOrderedBy().getEmail(), orders.get(0).getData().getOrderedBy().getEmail());
+    }
+
     @Test
     @DisplayName("repository returns one order if page size of 1 specified")
     void testSearchOrdersWithPageSize() {
