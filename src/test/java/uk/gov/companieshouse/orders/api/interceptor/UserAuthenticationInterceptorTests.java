@@ -304,6 +304,41 @@ class UserAuthenticationInterceptorTests {
         assertThat(actual, is(false));
     }
 
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that is unauthenticated")
+    void preHandleRejectsUnauthenticatedPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that is from an authenticated user")
+    void preHandleRejectsAuthenticatedUserPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts post reprocess order request that is from an internal API")
+    void preHandleAcceptsAuthenticatedInternalApiPostReprocessOrderRequestRequest() {
+
+        // Given
+        givenRequest(POST, "/basket/checkouts/1234/payment");
+        givenRequestHasAuthenticatedApi();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
     /**
      * Sets up request givens.
      * @param method the HTTP request method

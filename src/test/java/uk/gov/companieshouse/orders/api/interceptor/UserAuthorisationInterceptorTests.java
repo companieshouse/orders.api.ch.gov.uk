@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
@@ -127,7 +128,7 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get payment details internal API request that has the required headers")
+    @DisplayName("preHandle rejects get payment details internal API request that does not have internal user role")
     void preHandleRejectsUnauthorisedInternalApiGetPaymentDetailsRequest() {
 
         // Given
@@ -301,6 +302,41 @@ class UserAuthorisationInterceptorTests {
         final IllegalStateException exception = assertThrows(IllegalStateException.class,
                 () -> interceptorUnderTest.preHandle(request, response, handler));
         assertEquals("No URI template path variables found in the request!", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that lacks the required headers")
+    void preHandleRejectsUnauthorisedPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that does not have internal user role")
+    void preHandleRejectsPostReprocessOrderRequestWithoutInternalUserRole() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestDoesNotHaveInternalUserRole();
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts post reprocess order request that has internal user role")
+    void preHandleAcceptsAuthorisedPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestHasInternalUserRole();
+
+        // When and then
+        thenRequestIsAccepted();
     }
 
     /**

@@ -10,6 +10,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECK
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.POST_REPROCESS_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
@@ -64,6 +65,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
             case SEARCH:
                 return securityManager.checkIdentity();
             case PATCH_PAYMENT_DETAILS:
+            case POST_REPROCESS_ORDER:
                 return hasAuthenticatedApi(request, response);
             default:
                 // This should not happen.
