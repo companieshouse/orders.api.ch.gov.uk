@@ -1,13 +1,5 @@
 package uk.gov.companieshouse.orders.api.controller;
 
-import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.REQUEST_ID;
-
-import java.util.Map;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -33,6 +25,17 @@ import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 import uk.gov.companieshouse.orders.api.util.Log;
 import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
+
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import java.util.Map;
+
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.REQUEST_ID;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.createLogMapWithRequestId;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.logIfNotNull;
 
 @Validated
 @RestController
@@ -67,8 +70,8 @@ public class OrderController {
     @GetMapping(GET_ORDER_URI)
     public ResponseEntity<OrderData> getOrder(final @PathVariable(ORDER_ID_PATH_VARIABLE) String id,
                                               final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
-        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
-        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
+        Map<String, Object> logMap = createLogMapWithRequestId(requestId);
+        logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
         LOGGER.info("Retrieving order", logMap);
         final Order orderRetrieved = orderService.getOrder(id)
                 .orElseThrow(ResourceNotFoundException::new);
@@ -80,8 +83,8 @@ public class OrderController {
     @GetMapping(GET_CHECKOUT_URI)
     public ResponseEntity<CheckoutData> getCheckout(final @PathVariable(CHECKOUT_ID_PATH_VARIABLE) String id,
                                                     final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
-       Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
-       LoggingUtils.logIfNotNull(logMap, LoggingUtils.CHECKOUT_ID, id);
+       Map<String, Object> logMap = createLogMapWithRequestId(requestId);
+       logIfNotNull(logMap, LoggingUtils.CHECKOUT_ID, id);
        LOGGER.info("Retrieving checkout", logMap);
        final Checkout checkoutRetrieved = checkoutService.getCheckoutById(id)
            .orElseThrow(ResourceNotFoundException::new);
@@ -119,10 +122,14 @@ public class OrderController {
     @PostMapping(POST_REPROCESS_ORDER_URI)
     public ResponseEntity<?> reprocessOrder(@PathVariable(ORDER_ID_PATH_VARIABLE) final String id,
                                             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
-        final LoggableBuilder loggableBuilder = LoggableBuilder.newBuilder()
-                .withLogMapPut(REQUEST_ID, requestId)
-                .withLogMapIfNotNullPut(LoggingUtils.ORDER_ID, id);
-        log.info(loggableBuilder.withMessage("Reprocess order").build());
+        final Map<String, Object> logMap = createLogMapWithRequestId(requestId);
+        logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
+        LOGGER.info("Reprocess order", logMap);
+
+        final Order order = orderService.getOrder(id).orElseThrow(ResourceNotFoundException::new);
+        orderService.reprocessOrder(order);
+
         return ResponseEntity.ok().build();
     }
+
 }
