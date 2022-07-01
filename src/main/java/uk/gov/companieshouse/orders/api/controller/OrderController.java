@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,6 +50,9 @@ public class OrderController {
         "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
 
     public static final String ORDERS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
+
+    public static final String POST_REPROCESS_ORDER_URI =
+            "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}/reprocess";
 
     private final OrderService orderService;
     private final CheckoutService checkoutService;
@@ -110,5 +114,15 @@ public class OrderController {
                 .withMessage("Total orders found %d", orderSearchResults.getTotalOrders())
                 .build());
         return ResponseEntity.ok().body(orderSearchResults);
+    }
+
+    @PostMapping(POST_REPROCESS_ORDER_URI)
+    public ResponseEntity<?> reprocessOrder(@PathVariable(ORDER_ID_PATH_VARIABLE) final String id,
+                                            @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
+        final LoggableBuilder loggableBuilder = LoggableBuilder.newBuilder()
+                .withLogMapPut(REQUEST_ID, requestId)
+                .withLogMapIfNotNullPut(LoggingUtils.ORDER_ID, id);
+        log.info(loggableBuilder.withMessage("Reprocess order").build());
+        return ResponseEntity.ok().build();
     }
 }
