@@ -455,9 +455,11 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // TODO BI-11304 Review tests - apparently they pass even before auth/auth has been set up for
+    // the reprocess order request - so they are probably wrong.
     @DisplayName("Unauthenticated reprocess order request is unauthorised")
     @Test
-    void unauthenticatedReprocessOrderIsUnauthorised() throws Exception {
+    void reprocessOrderWithoutAuthIsUnauthorised() throws Exception {
         mockMvc.perform(post("/orders/" + ORDER_ID + "/reprocess")
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
@@ -465,10 +467,21 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // TODO BI-11304 Improve tests with authentication.
-    @DisplayName("Authenticated reprocess order request is OK")
+    @DisplayName("Authenticated user reprocess order request is unauthorised")
     @Test
-    void authenticatedReprocessOrderIsOK() throws Exception {
+    void reprocessOrderWithUserAuthIsUnauthorised() throws Exception {
+        mockMvc.perform(post("/orders/" + ORDER_ID + "/reprocess")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Authenticated internal API reprocess order request is OK")
+    @Test
+    void reprocessOrderWithInternalApiAuthIsOK() throws Exception {
         mockMvc.perform(post("/orders/" + ORDER_ID + "/reprocess")
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                         .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
