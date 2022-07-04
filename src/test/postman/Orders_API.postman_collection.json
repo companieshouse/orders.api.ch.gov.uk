@@ -1,8 +1,9 @@
 {
 	"info": {
-		"_postman_id": "1c78c5ce-be05-46d2-b1bd-bd0cf9f3b97f",
+		"_postman_id": "ab50e9c4-f259-4b16-ae18-e02fdbed21cf",
 		"name": "Orders API",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "7646296"
 	},
 	"item": [
 		{
@@ -31,9 +32,7 @@
 							},
 							"response": []
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Add item to basket",
@@ -389,9 +388,7 @@
 							},
 							"response": []
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Checkout basket",
@@ -435,9 +432,7 @@
 							},
 							"response": []
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Update basket payment details",
@@ -448,7 +443,6 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"id": "b7689c29-3b53-4386-a18c-419ccc5f5486",
 										"exec": [
 											""
 										],
@@ -495,9 +489,7 @@
 							},
 							"response": []
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Delivery details to basket",
@@ -638,9 +630,7 @@
 							},
 							"response": []
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				},
 				{
 					"name": "Get basket",
@@ -667,7 +657,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "e8c0519a-bc23-4aab-8dbd-f0d2732fd33d",
 								"type": "text/javascript",
 								"exec": [
 									""
@@ -677,19 +666,15 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "3c936319-9da4-4b73-be0d-f66ce031dab5",
 								"type": "text/javascript",
 								"exec": [
 									""
 								]
 							}
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		},
 		{
 			"name": "Orders API",
@@ -703,24 +688,45 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/orders/5e73343ae8cc406d978ef08f",
+									"raw": "{{base_url}}/orders/ORD-065216-517934",
 									"host": [
 										"{{base_url}}"
 									],
 									"path": [
 										"orders",
-										"5e73343ae8cc406d978ef08f"
+										"ORD-065216-517934"
 									]
 								}
 							},
 							"response": []
 						}
-					],
-					"protocolProfileBehavior": {},
-					"_postman_isSubFolder": true
+					]
+				},
+				{
+					"name": "Reprocess an order",
+					"item": [
+						{
+							"name": "Reprocess an order",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/orders/ORD-065216-517934/reprocess",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"orders",
+										"ORD-065216-517934",
+										"reprocess"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
-			],
-			"protocolProfileBehavior": {}
+			]
 		}
 	],
 	"auth": {
@@ -747,7 +753,6 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "4a6a998a-44a2-41b3-9a57-7a695f037e2c",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -757,13 +762,11 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "bc59c0f8-702d-4034-9dca-ce061f1c505d",
 				"type": "text/javascript",
 				"exec": [
 					""
 				]
 			}
 		}
-	],
-	"protocolProfileBehavior": {}
+	]
 }
