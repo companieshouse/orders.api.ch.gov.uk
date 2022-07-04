@@ -124,7 +124,7 @@ public class OrderController {
 
     @PostMapping(POST_REPROCESS_ORDER_URI)
     public ResponseEntity<String> reprocessOrder(@PathVariable(ORDER_ID_PATH_VARIABLE) final String id,
-                                            @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
+                                                 @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         final Map<String, Object> logMap = createLogMapWithRequestId(requestId);
         logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
         LOGGER.info("Reprocess order", logMap);
