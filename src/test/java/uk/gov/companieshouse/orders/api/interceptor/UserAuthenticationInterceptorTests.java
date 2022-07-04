@@ -73,23 +73,13 @@ class UserAuthenticationInterceptorTests {
     @Test
     @DisplayName("preHandle rejects add item request that lacks required headers")
     void preHandleRejectsUnauthenticatedAddItemRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/items");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/basket/items");
     }
 
     @Test
     @DisplayName("preHandle rejects checkout basket request that lacks required headers")
     void preHandleRejectsUnauthenticatedCheckoutBasketRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/checkouts");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/basket/checkouts");
     }
 
     @Test
@@ -307,12 +297,7 @@ class UserAuthenticationInterceptorTests {
     @Test
     @DisplayName("preHandle rejects post reprocess order request that is unauthenticated")
     void preHandleRejectsUnauthenticatedPostReprocessOrderRequest() {
-
-        // Given
-        givenRequest(POST, "/orders/1234/reprocess");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/orders/1234/reprocess");
     }
 
     @Test
@@ -337,6 +322,19 @@ class UserAuthenticationInterceptorTests {
 
         // When and then
         thenRequestIsAccepted();
+    }
+
+    /**
+     * Sets up a POST request to the URI provided, expects the request to be rejected
+     * @param uri the request URI
+     */
+    private void postToUriExpectingRejection(final String uri) {
+
+        // Given
+        givenRequest(POST, uri);
+
+        // When and then
+        thenRequestIsRejected();
     }
 
     /**
