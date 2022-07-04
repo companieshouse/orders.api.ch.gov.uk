@@ -8,6 +8,7 @@ import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDERS_SEARCH_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.POST_REPROCESS_ORDER_URI;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,6 +30,7 @@ class RequestUris {
     static final String GET_ORDER = "getOrder";
     static final String SEARCH = "searchOrders";
     static final String GET_CHECKOUT = "getCheckout";
+    static final String POST_REPROCESS_ORDER = "postReprocessOrder";
 
     @Value(ADD_ITEM_URI)
     private String addItemUri;
@@ -46,6 +48,8 @@ class RequestUris {
     private String getCheckoutUri;
     @Value(PATCH_PAYMENT_DETAILS_URI)
     private String patchPaymentDetailsUri;
+    @Value(POST_REPROCESS_ORDER_URI)
+    private String postReprocessOrderUri;
 
     @Bean
     List<RequestMappingInfo> requestMappingInfoList() {
@@ -105,6 +109,12 @@ class RequestUris {
                 .paths(getCheckoutUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_CHECKOUT)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(postReprocessOrderUri)
+                .methods(RequestMethod.POST)
+                .mappingName(POST_REPROCESS_ORDER)
                 .build());
 
         return Collections.unmodifiableList(knownRequests);

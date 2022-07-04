@@ -4,9 +4,11 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
@@ -19,6 +21,7 @@ import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_ACCESS_TOKEN;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_API_KEY_TYPE_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
@@ -33,6 +36,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.stream.Stream;
+
+import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +52,7 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import uk.gov.companieshouse.api.util.security.Permission;
 import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
@@ -63,6 +69,7 @@ import uk.gov.companieshouse.orders.api.model.OrderSummary;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 @DirtiesContext
 @AutoConfigureMockMvc
@@ -79,7 +86,6 @@ class OrderControllerIntegrationTest {
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String PAGE_SIZE_VALUE = "1";
     private static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
-    private static final String ERIC_AUTHORISED_ROLES_HEADER_NAME = "ERIC-Authorised-Roles";
 
     @Autowired
     private MockMvc mockMvc;
@@ -451,11 +457,81 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    @DisplayName("Unauthenticated reprocess order request is unauthorised")
+    @Test
+    void reprocessOrderWithoutAuthIsUnauthorised() throws Exception {
+        mockMvc.perform(post("/orders/" + ORDER_ID + "/reprocess")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Authenticated user reprocess order request is unauthorised")
+    @Test
+    void reprocessOrderWithUserAuthIsUnauthorised() throws Exception {
+        mockMvc.perform(post("/orders/" + ORDER_ID + "/reprocess")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @DisplayName("Authenticated internal API reprocess order request is OK")
+    @Test
+    void reprocessOrderWithInternalApiAuthIsOK() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        mockMvc.perform(reprocessOrderWithRequiredCredentials())
+                .andExpect(status().isOk());
+    }
+
+    @DisplayName("Reprocess order confirms successful reprocessing")
+    @Test
+    void reprocessOrderConfirmsSuccessfulReprocessing() throws Exception {
+        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+                 mockMvc.perform(reprocessOrderWithRequiredCredentials())
+                .andExpect(status().isOk())
+                .andExpect(content().string(new StringContains("Order number 0001 reprocessed.")));
+    }
+
+    @DisplayName("Reprocess order reports missing order and checkout")
+    @Test
+    void reprocessOrderReportsMissingOrderAndCheckout() throws Exception {
+        mockMvc.perform(reprocessOrderWithRequiredCredentials())
+                .andExpect(status().isConflict())
+                .andExpect(content().string(new StringContains("No order number 0001 found. Is order number correct? ***")));
+    }
+
+    @DisplayName("Reprocess order reports missing order and payment status")
+    @Test
+    void reprocessOrderReportsMissingOrderAndPaymentStatus() throws Exception {
+        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.FAILED));
+        mockMvc.perform(reprocessOrderWithRequiredCredentials())
+                .andExpect(status().isConflict())
+                .andExpect(content().string(new StringContains("No order number 0001 found. Payment status was FAILED. ***")));
+    }
+
+    private MockHttpServletRequestBuilder reprocessOrderWithRequiredCredentials() {
+        return post("/orders/" + ORDER_ID + "/reprocess")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON);
+    }
+
     private Checkout getCheckout(String orderId) {
+        return getCheckout(orderId, PaymentStatus.PAID);
+    }
+
+    private Checkout getCheckout(final String orderId, final PaymentStatus paymentStatus) {
         Checkout checkout = new Checkout();
         checkout.setData(new CheckoutData());
         checkout.setId(orderId);
-        checkout.getData().setStatus(PaymentStatus.PAID);
+        checkout.getData().setStatus(paymentStatus);
         return checkout;
     }
 

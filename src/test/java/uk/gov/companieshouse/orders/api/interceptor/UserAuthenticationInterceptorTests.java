@@ -73,23 +73,13 @@ class UserAuthenticationInterceptorTests {
     @Test
     @DisplayName("preHandle rejects add item request that lacks required headers")
     void preHandleRejectsUnauthenticatedAddItemRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/items");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/basket/items");
     }
 
     @Test
     @DisplayName("preHandle rejects checkout basket request that lacks required headers")
     void preHandleRejectsUnauthenticatedCheckoutBasketRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/checkouts");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/basket/checkouts");
     }
 
     @Test
@@ -302,6 +292,49 @@ class UserAuthenticationInterceptorTests {
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
         assertThat(actual, is(false));
+    }
+
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that is unauthenticated")
+    void preHandleRejectsUnauthenticatedPostReprocessOrderRequest() {
+        postToUriExpectingRejection("/orders/1234/reprocess");
+    }
+
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that is from an authenticated user")
+    void preHandleRejectsAuthenticatedUserPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts post reprocess order request that is from an internal API")
+    void preHandleAcceptsAuthenticatedInternalApiPostReprocessOrderRequestRequest() {
+
+        // Given
+        givenRequest(POST, "/basket/checkouts/1234/payment");
+        givenRequestHasAuthenticatedApi();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    /**
+     * Sets up a POST request to the URI provided, expects the request to be rejected
+     * @param uri the request URI
+     */
+    private void postToUriExpectingRejection(final String uri) {
+
+        // Given
+        givenRequest(POST, uri);
+
+        // When and then
+        thenRequestIsRejected();
     }
 
     /**

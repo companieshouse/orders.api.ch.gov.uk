@@ -164,6 +164,18 @@ public class OrderService {
     }
 
     /**
+     * Resends a message to the Kafka 'order-received' topic for an existing order.
+     * @param order - the order to be reprocessed
+     */
+    public void reprocessOrder(final Order order) {
+        final String orderId = order.getId();
+        final Map<String, Object> logMap = LoggingUtils.createLogMap();
+        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+        LOGGER.info("REPUBLISHING notification to Kafka 'order-received' topic for order - " + orderId + ".", logMap);
+        sendOrderReceivedMessage(order.getId());
+    }
+
+    /**
      * Sends a message to Kafka topic 'order-received'
      * @param orderId order id
      */
