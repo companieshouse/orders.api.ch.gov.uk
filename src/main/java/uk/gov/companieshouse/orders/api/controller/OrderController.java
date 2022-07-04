@@ -28,8 +28,11 @@ import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Optional;
 
+import static org.springframework.http.HttpStatus.CONFLICT;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
@@ -120,16 +123,30 @@ public class OrderController {
     }
 
     @PostMapping(POST_REPROCESS_ORDER_URI)
-    public ResponseEntity<?> reprocessOrder(@PathVariable(ORDER_ID_PATH_VARIABLE) final String id,
+    public ResponseEntity<String> reprocessOrder(@PathVariable(ORDER_ID_PATH_VARIABLE) final String id,
                                             @RequestHeader(REQUEST_ID_HEADER_NAME) final String requestId) {
         final Map<String, Object> logMap = createLogMapWithRequestId(requestId);
         logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
         LOGGER.info("Reprocess order", logMap);
 
-        final Order order = orderService.getOrder(id).orElseThrow(ResourceNotFoundException::new);
-        orderService.reprocessOrder(order);
+        final Optional<Order> order = orderService.getOrder(id);
+        if (order.isPresent()) {
+            orderService.reprocessOrder(order.get());
+            final String confirmation = LocalDateTime.now() + ": Order number " + id + " reprocessed.";
+            LOGGER.info(confirmation, logMap);
+            return ResponseEntity.ok().body("\n" + confirmation + "\n");
+        } else {
+            final String error = buildMissingOrderFeedback(id);
+            LOGGER.error(error, logMap);
+            return ResponseEntity.status(CONFLICT).body("\n" + error + "\n");
+        }
+    }
 
-        return ResponseEntity.ok().build();
+    private String buildMissingOrderFeedback(final String orderId) {
+        final Optional<Checkout> checkout = checkoutService.getCheckoutById(orderId);
+        return  "*** " + LocalDateTime.now() + ": No order number " + orderId + " found. "
+                + (checkout.map(c -> "Payment status was " + c.getData().getStatus() + ".")
+                           .orElse("Is order number correct?")) + " ***";
     }
 
 }
