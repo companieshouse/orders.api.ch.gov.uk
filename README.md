@@ -12,9 +12,9 @@ API handling CRUD operations on CH Ordering Service
 2. Run `./start.sh` to run
 
 ### Environment Variables
-Name | Description | Mandatory | Location
---- | --- | --- | ---
-ORDERS_API_PORT | Port this application runs on when deployed. | ✓ | start.sh
+| Name            | Description                                  | Mandatory | Location |
+|-----------------|----------------------------------------------|-----------|----------|
+| ORDERS_API_PORT | Port this application runs on when deployed. | ✓         | start.sh |
 
 ### Endpoints
 Path | Method | Description
