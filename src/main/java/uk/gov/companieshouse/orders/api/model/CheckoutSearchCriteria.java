@@ -1,15 +1,15 @@
 package uk.gov.companieshouse.orders.api.model;
 
-public class OrderSearchCriteria {
-    private final OrderCriteria orderCriteria;
+public class CheckoutSearchCriteria {
+    private final CheckoutCriteria orderCriteria;
     private final PageCriteria pageCriteria;
 
-    public OrderSearchCriteria(OrderCriteria orderCriteria, PageCriteria pageCriteria) {
+    public CheckoutSearchCriteria(CheckoutCriteria orderCriteria, PageCriteria pageCriteria) {
         this.orderCriteria = orderCriteria;
         this.pageCriteria = pageCriteria;
     }
 
-    public OrderCriteria getOrderCriteria() {
+    public CheckoutCriteria getCheckoutCriteria() {
         return orderCriteria;
     }
 

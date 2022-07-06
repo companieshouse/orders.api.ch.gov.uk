@@ -3,13 +3,15 @@ package uk.gov.companieshouse.orders.api.service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import uk.gov.companieshouse.orders.api.model.ActionedBy;
-import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
-import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.PaymentStatus;
+import uk.gov.companieshouse.orders.api.model.*;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
 
@@ -20,15 +22,18 @@ public class CheckoutService {
     private final EtagGeneratorService etagGeneratorService;
     private final LinksGeneratorService linksGeneratorService;
     private final CheckoutHelper checkoutHelper;
+    private final SearchFieldMapper searchFieldMapper;
 
     public CheckoutService(CheckoutRepository checkoutRepository,
                            EtagGeneratorService etagGeneratorService,
                            LinksGeneratorService linksGeneratorService,
-                           CheckoutHelper checkoutHelper) {
+                           CheckoutHelper checkoutHelper,
+                           SearchFieldMapper searchFieldMapper) {
         this.checkoutRepository = checkoutRepository;
         this.etagGeneratorService = etagGeneratorService;
         this.linksGeneratorService = linksGeneratorService;
         this.checkoutHelper = checkoutHelper;
+        this.searchFieldMapper = searchFieldMapper;
     }
 
     private String autoGenerateId() {
@@ -71,6 +76,58 @@ public class CheckoutService {
 
     public Optional<Checkout> getCheckoutById(String id) {
         return checkoutRepository.findById(id);
+    }
+
+    /**
+     * Returns a result consisting of order summaries corresponding to the supplied search
+     * criteria.
+     *
+     * @param checkoutSearchCriteria to find existing orders
+     * @return OrderSearchResults matching the supplied criteria
+     */
+    public CheckoutSearchResults searchCheckouts(CheckoutSearchCriteria checkoutSearchCriteria) {
+        CheckoutCriteria checkoutCriteria = checkoutSearchCriteria.getCheckoutCriteria();
+        Page<Checkout> checkoutPages = checkoutRepository.searchCheckouts(
+                searchFieldMapper.exactMatchOrAny(checkoutCriteria.getCheckoutId()),
+                searchFieldMapper.partialMatchOrAny(checkoutCriteria.getEmail()),
+                searchFieldMapper.exactMatchOrAny(checkoutCriteria.getCompanyNumber()),
+                PageRequest.of(0, checkoutSearchCriteria.getPageCriteria().getPageSize(), Sort.by("created_at").descending().and(Sort.by("_id")))); //TODO: refactor into mapper implementation
+        List<Checkout> checkouts = checkoutPages.toList();
+
+        return new CheckoutSearchResults(checkoutPages.getTotalElements(),
+                checkouts.stream().map(
+                        checkout -> CheckoutSummary.newBuilder()
+                                .withId(checkout.getId())
+                                .withEmail(
+                                        Optional.ofNullable(checkout.getData())
+                                                .map(CheckoutData::getCheckedOutBy)
+                                                .map(ActionedBy::getEmail)
+                                                .orElse(null))
+                                .withCompanyNumber(Optional.ofNullable(checkout.getData())
+                                        .map(CheckoutData::getItems)
+                                        .flatMap(items -> items.stream().findFirst())
+                                        .map(Item::getCompanyNumber)
+                                        .orElse(null))
+                                .withProductLine(
+                                        Optional.ofNullable(checkout.getData())
+                                                .map(CheckoutData::getItems)
+                                                .flatMap(items -> items.stream().findFirst())
+                                                .map(Item::getKind)
+                                                .orElse(null))
+                                .withCheckoutDate(checkout.getCreatedAt())
+                                .withPaymentStatus(getCheckoutById(checkout.getId())
+                                        .map(Checkout::getData)
+                                        .map(CheckoutData::getStatus)
+                                        .orElse(null))
+                                .withLinks(
+                                        Optional.ofNullable(checkout.getData())
+                                                .map(CheckoutData::getLinks)
+                                                .map(CheckoutLinks::getSelf)
+                                                .map(self -> new Links(new HRef(self),
+                                                        new HRef(self)))
+                                                .orElse(null))
+                                .build()
+                ).collect(Collectors.toList()));
     }
 
     /**

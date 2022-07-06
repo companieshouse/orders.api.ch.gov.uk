@@ -17,7 +17,6 @@ import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_AUTHOR
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.OrderHelper.getOrder;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
@@ -64,11 +63,12 @@ import uk.gov.companieshouse.orders.api.model.HRef;
 import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
-import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
-import uk.gov.companieshouse.orders.api.model.OrderSummary;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
+import uk.gov.companieshouse.orders.api.model.CheckoutSummary;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+import uk.gov.companieshouse.orders.api.util.StubHelper;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 @DirtiesContext
@@ -241,25 +241,25 @@ class OrderControllerIntegrationTest {
             .andExpect(content().json(mapper.writeValueAsString(checkoutData)));
     }
 
-    @DisplayName("Should find a single order when searching by order id")
+    @DisplayName("Should find a single checkout when searching by order id")
     @Test
-    void searchOrdersById() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID));
-        OrderSearchResults expected = new OrderSearchResults(1,
+    void searchCheckoutsById() throws Exception {
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(CHECKOUT_ID));
+        CheckoutSearchResults expected = new CheckoutSearchResults(1,
                 Collections.singletonList(
-                        OrderSummary.newBuilder()
-                                .withId(ORDER_ID)
+                        CheckoutSummary.newBuilder()
+                                .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("id", ORDER_ID)
+                .param("id", CHECKOUT_ID)
                 .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
@@ -271,20 +271,20 @@ class OrderControllerIntegrationTest {
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
 
-    @DisplayName("Should find a single order when searching with a partial email address")
+    @DisplayName("Should find a single checkout when searching with a partial email address")
     @Test
-    void searchOrdersByEmail() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID));
-        OrderSearchResults expected = new OrderSearchResults(1,
+    void searchCheckoutsByEmail() throws Exception {
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(getCheckout(CHECKOUT_ID));
+        CheckoutSearchResults expected = new CheckoutSearchResults(1,
                 Collections.singletonList(
-                        OrderSummary.newBuilder()
-                                .withId(ORDER_ID)
+                        CheckoutSummary.newBuilder()
+                                .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -304,20 +304,20 @@ class OrderControllerIntegrationTest {
     @DisplayName("Should find a single order when a valid company number is provided")
     @Test
     void searchOrdersByCompanyNumber() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         checkoutRepository.save(getCheckout(ORDER_ID));
-        orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
-        checkoutRepository.save(getCheckout("0002"));
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781"));
+        checkoutRepository.save(getCheckout(CHECKOUT_ID));
 
-        OrderSearchResults expected = new OrderSearchResults(1,
+        CheckoutSearchResults expected = new CheckoutSearchResults(1,
                 Collections.singletonList(
-                        OrderSummary.newBuilder()
-                                .withId(ORDER_ID)
+                        CheckoutSummary.newBuilder()
+                                .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withOrderDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -337,8 +337,8 @@ class OrderControllerIntegrationTest {
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("noMatchesFixture")
     void searchReturnsNoMatches(final String displayName, final String searchField, final String searchValue) throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        OrderSearchResults expected = new OrderSearchResults(0, Collections.emptyList());
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678"));
+        CheckoutSearchResults expected = new CheckoutSearchResults(0, Collections.emptyList());
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                         .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
@@ -356,10 +356,10 @@ class OrderControllerIntegrationTest {
     @DisplayName("Should return a page containing a single order when page_size is one")
     @Test
     void limitSearchResultsToPageSize() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         checkoutRepository.save(getCheckout(ORDER_ID));
-        orderRepository.save(getOrder("0002", "demo2@ch.gov.uk", "23456781"));
-        checkoutRepository.save(getCheckout("0002"));
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781"));
+        checkoutRepository.save(getCheckout(CHECKOUT_ID));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                         .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
@@ -482,7 +482,7 @@ class OrderControllerIntegrationTest {
     @DisplayName("Authenticated internal API reprocess order request is OK")
     @Test
     void reprocessOrderWithInternalApiAuthIsOK() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        orderRepository.save(StubHelper.getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
         mockMvc.perform(reprocessOrderWithRequiredCredentials())
                 .andExpect(status().isOk());
     }
@@ -490,7 +490,7 @@ class OrderControllerIntegrationTest {
     @DisplayName("Reprocess order confirms successful reprocessing")
     @Test
     void reprocessOrderConfirmsSuccessfulReprocessing() throws Exception {
-        orderRepository.save(getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
+        orderRepository.save(StubHelper.getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
                  mockMvc.perform(reprocessOrderWithRequiredCredentials())
                 .andExpect(status().isOk())
                 .andExpect(content().string(new StringContains("Order number 0001 reprocessed.")));
