@@ -115,8 +115,7 @@ public class CheckoutService {
                                                 .map(Item::getKind)
                                                 .orElse(null))
                                 .withCheckoutDate(checkout.getCreatedAt())
-                                .withPaymentStatus(getCheckoutById(checkout.getId())
-                                        .map(Checkout::getData)
+                                .withPaymentStatus(Optional.ofNullable(checkout.getData())
                                         .map(CheckoutData::getStatus)
                                         .orElse(null))
                                 .withLinks(
