@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,11 @@ class CheckoutRepositoryIntegrationTest {
 
     @Autowired
     private CheckoutRepository checkoutRepository;
+
+    @AfterEach
+    void teardown() {
+        checkoutRepository.deleteAll();
+    }
 
     @DisplayName("repository returns an order when only checkout id specified")
     @Test

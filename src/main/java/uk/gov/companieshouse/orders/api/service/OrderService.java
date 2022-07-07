@@ -129,4 +129,8 @@ public class OrderService {
         order.setUpdatedAt(now);
         order.getData().setOrderedAt(now);
     }
+
+    void setOrderEndpoint(String orderEndpoint) {
+        this.orderEndpoint = orderEndpoint;
+    }
 }

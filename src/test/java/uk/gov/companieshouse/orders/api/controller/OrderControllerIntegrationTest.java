@@ -244,8 +244,7 @@ class OrderControllerIntegrationTest {
     @DisplayName("Should find a single checkout when searching by order id")
     @Test
     void searchCheckoutsById() throws Exception {
-        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(CHECKOUT_ID));
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678", PaymentStatus.PAID));
         CheckoutSearchResults expected = new CheckoutSearchResults(1,
                 Collections.singletonList(
                         CheckoutSummary.newBuilder()
@@ -274,8 +273,7 @@ class OrderControllerIntegrationTest {
     @DisplayName("Should find a single checkout when searching with a partial email address")
     @Test
     void searchCheckoutsByEmail() throws Exception {
-        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(CHECKOUT_ID));
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo@ch.gov.uk", "12345678", PaymentStatus.PAID));
         CheckoutSearchResults expected = new CheckoutSearchResults(1,
                 Collections.singletonList(
                         CheckoutSummary.newBuilder()
@@ -304,15 +302,13 @@ class OrderControllerIntegrationTest {
     @DisplayName("Should find a single order when a valid company number is provided")
     @Test
     void searchOrdersByCompanyNumber() throws Exception {
-        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID));
-        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781"));
-        checkoutRepository.save(getCheckout(CHECKOUT_ID));
+        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678", PaymentStatus.PAID));
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781", PaymentStatus.PAID));
 
         CheckoutSearchResults expected = new CheckoutSearchResults(1,
                 Collections.singletonList(
                         CheckoutSummary.newBuilder()
-                                .withId(CHECKOUT_ID)
+                                .withId(ORDER_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withCompanyNumber("12345678")
                                 .withProductLine("item#certificate")
@@ -356,10 +352,8 @@ class OrderControllerIntegrationTest {
     @DisplayName("Should return a page containing a single order when page_size is one")
     @Test
     void limitSearchResultsToPageSize() throws Exception {
-        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-        checkoutRepository.save(getCheckout(ORDER_ID));
-        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781"));
-        checkoutRepository.save(getCheckout(CHECKOUT_ID));
+        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678", PaymentStatus.PAID));
+        checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781", PaymentStatus.PAID));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
                         .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
@@ -507,7 +501,7 @@ class OrderControllerIntegrationTest {
     @DisplayName("Reprocess order reports missing order and payment status")
     @Test
     void reprocessOrderReportsMissingOrderAndPaymentStatus() throws Exception {
-        checkoutRepository.save(getCheckout(ORDER_ID, PaymentStatus.FAILED));
+        checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678", PaymentStatus.FAILED));
         mockMvc.perform(reprocessOrderWithRequiredCredentials())
                 .andExpect(status().isConflict())
                 .andExpect(content().string(new StringContains("No order number 0001 found. Payment status was FAILED. ***")));
@@ -521,18 +515,6 @@ class OrderControllerIntegrationTest {
                         .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
                         .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON);
-    }
-
-    private Checkout getCheckout(String orderId) {
-        return getCheckout(orderId, PaymentStatus.PAID);
-    }
-
-    private Checkout getCheckout(final String orderId, final PaymentStatus paymentStatus) {
-        Checkout checkout = new Checkout();
-        checkout.setData(new CheckoutData());
-        checkout.setId(orderId);
-        checkout.getData().setStatus(paymentStatus);
-        return checkout;
     }
 
     private static Stream<Arguments> noMatchesFixture() {

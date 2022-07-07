@@ -4,22 +4,21 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
-import java.util.Collections;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.companieshouse.orders.OrderReceived;
+import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.Order;
@@ -37,6 +36,8 @@ class OrderServiceTest {
     @InjectMocks
     private OrderService serviceUnderTest;
     @Mock
+    private OrderReceivedMessageProducer ordersMessageProducer;
+    @Mock
     private Checkout checkout;
     @Mock
     private CheckoutToOrderMapper mapper;
@@ -46,6 +47,11 @@ class OrderServiceTest {
     private CheckoutRepository checkoutRepository;
     @Mock
     private LinksGeneratorService linksGeneratorService;
+
+    @BeforeEach
+    void setup() {
+        serviceUnderTest.setOrderEndpoint("endpoint");
+    }
 
     @Test
     void createOrderCreatesOrder() {
@@ -57,8 +63,9 @@ class OrderServiceTest {
 
         // When and then
         assertThat(serviceUnderTest.createOrder(checkout), is(order));
+        OrderReceived expectedOrderReceived = new OrderReceived("endpoint/"+ORDER_ID, 0);
         verify(linksGeneratorService, times(1)).generateOrderLinks(ORDER_ID);
-
+        verify(ordersMessageProducer).sendMessage(ORDER_ID, expectedOrderReceived);
     }
 
     @Test

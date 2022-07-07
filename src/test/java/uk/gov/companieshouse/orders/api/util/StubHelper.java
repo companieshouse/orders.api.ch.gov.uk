@@ -12,7 +12,7 @@ public final class StubHelper {
     private StubHelper() {
     }
 
-    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, LocalDateTime creationDate) {
+    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, LocalDateTime creationDate, PaymentStatus paymentStatus) {
         final Checkout checkout = new Checkout();
         checkout.setId(checkoutId);
         checkout.setUserId(ERIC_IDENTITY_VALUE);
@@ -29,6 +29,7 @@ public final class StubHelper {
         checkoutData.getItems().get(0).setCompanyNumber(companyNumber);
         checkoutData.setLinks(new CheckoutLinks());
         checkoutData.getLinks().setSelf("http");
+        checkoutData.setStatus(paymentStatus);
 
         checkout.setData(checkoutData);
 
@@ -36,7 +37,15 @@ public final class StubHelper {
     }
 
     public static Checkout getCheckout(String checkoutId, String email, String companyNumber) {
-        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay());
+        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay(), null);
+    }
+
+    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, LocalDateTime creationDate) {
+        return getCheckout(checkoutId, email, companyNumber, creationDate, null);
+    }
+
+    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, PaymentStatus paymentStatus) {
+        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay(), paymentStatus);
     }
 
     public static Order getOrder(String orderId, String email, String companyNumber, LocalDateTime creationDate) {
