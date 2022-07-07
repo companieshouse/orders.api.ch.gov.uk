@@ -55,7 +55,7 @@ public class OrderController {
     public static final String GET_CHECKOUT_URI =
         "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
 
-    public static final String ORDERS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
+    public static final String CHECKOUTS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.checkouts}";
 
     public static final String POST_REPROCESS_ORDER_URI =
             "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}/reprocess";
@@ -96,8 +96,8 @@ public class OrderController {
        return ResponseEntity.ok().body(checkoutRetrieved.getData());
    }
 
-    @GetMapping(ORDERS_SEARCH_URI)
-    public ResponseEntity<CheckoutSearchResults> searchOrders(
+    @GetMapping(CHECKOUTS_SEARCH_URI)
+    public ResponseEntity<CheckoutSearchResults> searchCheckouts(
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,
             @RequestParam(value = "company_number", required = false) final String companyNumber,
@@ -106,8 +106,8 @@ public class OrderController {
         LoggableBuilder loggableBuilder = LoggableBuilder.newBuilder()
                 .withLogMapPut(REQUEST_ID, requestId)
                 .withLogMapIfNotNullPut(LoggingUtils.ORDER_ID, id);
-        log.info(loggableBuilder.withMessage("Search orders").build());
-        CheckoutSearchCriteria orderSearchCriteria = new CheckoutSearchCriteria(
+        log.info(loggableBuilder.withMessage("Search checkouts").build());
+        CheckoutSearchCriteria checkoutSearchCriteria = new CheckoutSearchCriteria(
                 CheckoutCriteria.newBuilder()
                         .withOrderId(id)
                         .withEmail(email)
@@ -115,9 +115,9 @@ public class OrderController {
                         .build(),
                 new PageCriteria(pageSize)
         );
-        CheckoutSearchResults checkoutSearchResults = checkoutService.searchCheckouts(orderSearchCriteria);
+        CheckoutSearchResults checkoutSearchResults = checkoutService.searchCheckouts(checkoutSearchCriteria);
         log.info(loggableBuilder.withLogMapPut(LoggingUtils.STATUS, HttpStatus.OK)
-                .withMessage("Total orders found %d", checkoutSearchResults.getTotalOrders())
+                .withMessage("Total checkouts found %d", checkoutSearchResults.getTotalOrders())
                 .build());
         return ResponseEntity.ok().body(checkoutSearchResults);
     }

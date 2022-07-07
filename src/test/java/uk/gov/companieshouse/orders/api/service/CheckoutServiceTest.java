@@ -262,8 +262,8 @@ public class CheckoutServiceTest {
     }
 
     @Test
-    @DisplayName("search orders returns an expected order with all details populated")
-    void searchOrders() {
+    @DisplayName("search checkouts returns an expected checkout with all details populated")
+    void searchCheckouts() {
         //given
         when(checkoutSearchCriteria.getCheckoutCriteria()).thenReturn(checkoutCriteria);
         when(checkoutSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
@@ -310,7 +310,7 @@ public class CheckoutServiceTest {
 
     @Test
     @DisplayName("search orders returns an order with blank details")
-    void searchOrdersWithBlankDetails() {
+    void searchCheckoutsWithBlankDetails() {
         //given
         when(checkoutSearchCriteria.getCheckoutCriteria()).thenReturn(checkoutCriteria);
         when(checkoutSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
@@ -338,7 +338,7 @@ public class CheckoutServiceTest {
 
     @Test
     @DisplayName("search orders returns a single order when page size is one")
-    void searchOrdersLimitsSearchResults() {
+    void searchCheckoutsLimitsSearchResults() {
         //given
         when(checkoutSearchCriteria.getCheckoutCriteria()).thenReturn(checkoutCriteria);
         when(checkoutSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);

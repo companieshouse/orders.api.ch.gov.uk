@@ -82,7 +82,7 @@ class OrderControllerIntegrationTest {
     private static final String CHECKOUT_ID = "0002";
     private static final String CHECKOUT_REFERENCE = "0002";
     private static final String COMPANY_STATUS_ACTIVE = "active";
-    public static final String ORDERS_SEARCH_PATH = "/orders/search";
+    public static final String ORDERS_SEARCH_PATH = "/checkouts/search";
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String PAGE_SIZE_VALUE = "1";
     private static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
@@ -299,9 +299,9 @@ class OrderControllerIntegrationTest {
                 .andExpect(content().json(mapper.writeValueAsString(expected)));
     }
 
-    @DisplayName("Should find a single order when a valid company number is provided")
+    @DisplayName("Should find a single checkout when a valid company number is provided")
     @Test
-    void searchOrdersByCompanyNumber() throws Exception {
+    void searchCheckoutsByCompanyNumber() throws Exception {
         checkoutRepository.save(StubHelper.getCheckout(ORDER_ID, "demo@ch.gov.uk", "12345678", PaymentStatus.PAID));
         checkoutRepository.save(StubHelper.getCheckout(CHECKOUT_ID, "demo2@ch.gov.uk", "23456781", PaymentStatus.PAID));
 
