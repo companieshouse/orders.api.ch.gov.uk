@@ -7,7 +7,7 @@ import static uk.gov.companieshouse.orders.api.controller.BasketController.GET_P
 import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDERS_SEARCH_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.CHECKOUTS_SEARCH_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.POST_REPROCESS_ORDER_URI;
 
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ class RequestUris {
     static final String PATCH_BASKET = "basket";
     static final String PATCH_PAYMENT_DETAILS = "patchPaymentDetails";
     static final String GET_ORDER = "getOrder";
-    static final String SEARCH = "searchOrders";
+    static final String SEARCH = "searchCheckouts";
     static final String GET_CHECKOUT = "getCheckout";
     static final String POST_REPROCESS_ORDER = "postReprocessOrder";
 
@@ -42,7 +42,7 @@ class RequestUris {
     private String getPaymentDetailsUri;
     @Value(GET_ORDER_URI)
     private String getOrderUri;
-    @Value(ORDERS_SEARCH_URI)
+    @Value(CHECKOUTS_SEARCH_URI)
     private String searchUri;
     @Value(GET_CHECKOUT_URI)
     private String getCheckoutUri;
@@ -91,7 +91,7 @@ class RequestUris {
                 .mappingName(PATCH_PAYMENT_DETAILS)
                 .build());
 
-        // Note: SEARCH [/orders/search] must rank higher than GET_ORDER [/orders/{id}] so that
+        // Note: SEARCH [/checkouts/search] must rank higher than GET_ORDER [/orders/{id}] so that
         // it is mapped correctly.
         knownRequests.add(RequestMappingInfo
                 .paths(searchUri)

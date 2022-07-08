@@ -2,7 +2,7 @@ package uk.gov.companieshouse.orders.api.config;
 
 import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
 import static uk.gov.companieshouse.orders.api.controller.HealthcheckController.HEALTHCHECK_URI;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDERS_SEARCH_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.CHECKOUTS_SEARCH_URI;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -41,7 +41,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
                              final OrdersSearchEndpointFeatureToggle ordersSearchEndpointFeatureToggle,
                              @Value(HEALTHCHECK_URI) final String healthcheckUri,
                              @Value(PATCH_PAYMENT_DETAILS_URI) final String paymentDetailsUri,
-                             @Value(ORDERS_SEARCH_URI) final String ordersSearchUri) {
+                             @Value(CHECKOUTS_SEARCH_URI) final String ordersSearchUri) {
         this.loggingInterceptor = loggingInterceptor;
         this.authenticationInterceptor = authenticationInterceptor;
         this.authorisationInterceptor = authorisationInterceptor;

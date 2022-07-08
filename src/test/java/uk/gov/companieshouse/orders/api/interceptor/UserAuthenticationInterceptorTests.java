@@ -276,7 +276,7 @@ class UserAuthenticationInterceptorTests {
     @Test
     void ordersSearchValidIdentity() {
         when(securityManager.checkIdentity()).thenReturn(true);
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, "/checkouts/search");
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
@@ -287,7 +287,7 @@ class UserAuthenticationInterceptorTests {
     @Test
     void ordersSearchInvalidIdentity() {
         when(securityManager.checkIdentity()).thenReturn(false);
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, "/checkouts/search");
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 

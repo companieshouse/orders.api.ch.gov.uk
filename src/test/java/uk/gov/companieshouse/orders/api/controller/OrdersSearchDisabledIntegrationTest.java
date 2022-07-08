@@ -33,7 +33,7 @@ import uk.gov.companieshouse.api.util.security.Permission;
 @EmbeddedKafka
 @ActiveProfiles("orders-search-disabled")
 class OrdersSearchDisabledIntegrationTest {
-    public static final String ORDERS_SEARCH_PATH = "/orders/search";
+    public static final String ORDERS_SEARCH_PATH = "/checkouts/search";
 
     @Autowired
     private MockMvc mockMvc;

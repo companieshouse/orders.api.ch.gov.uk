@@ -4,7 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -12,8 +12,10 @@ import static org.mockito.Mockito.when;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISED_USER_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,14 +26,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.companieshouse.orders.api.model.Certificate;
-import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.CheckoutData;
-import uk.gov.companieshouse.orders.api.model.CheckoutLinks;
-import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
-import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.ItemCosts;
-import uk.gov.companieshouse.orders.api.model.PaymentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import uk.gov.companieshouse.orders.api.model.*;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
@@ -81,6 +79,36 @@ public class CheckoutServiceTest {
 
     @Mock
     CheckoutHelper checkoutHelper;
+
+    @Mock
+    private CheckoutCriteria checkoutCriteria;
+
+    @Mock
+    private CheckoutSearchCriteria checkoutSearchCriteria;
+
+    @Mock
+    private Checkout checkoutResult;
+
+    @Mock
+    private CheckoutData checkoutData;
+
+    @Mock
+    private ActionedBy checkedOutBy;
+
+    @Mock
+    private CheckoutLinks links;
+
+    @Mock
+    private Item item;
+
+    @Mock
+    private SearchFieldMapper searchFieldMapper;
+
+    @Mock
+    private PageCriteria pageCriteria;
+
+    @Mock
+    private Page<Checkout> pages;
 
     @Captor
     ArgumentCaptor<Checkout> checkoutCaptor;
@@ -231,6 +259,105 @@ public class CheckoutServiceTest {
         verify(checkoutRepository).save(checkoutCaptor.capture());
         assertThat(checkout().getData().getEtag(), is(ETAG));
         timestamps.verifyUpdatedAtTimestampWithinExecutionInterval(checkout());
+    }
+
+    @Test
+    @DisplayName("search checkouts returns an expected checkout with all details populated")
+    void searchCheckouts() {
+        //given
+        when(checkoutSearchCriteria.getCheckoutCriteria()).thenReturn(checkoutCriteria);
+        when(checkoutSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
+        when(checkoutCriteria.getCheckoutId()).thenReturn("ORD-123-456");
+        when(checkoutCriteria.getEmail()).thenReturn("demo@ch.gov.uk");
+        when(checkoutCriteria.getCompanyNumber()).thenReturn("12345678");
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(checkoutRepository.searchCheckouts(anyString(), anyString(), anyString(), eq(PageRequest.of(0, 1, Sort.by("created_at").descending().and(Sort.by("_id")))))).thenReturn(pages);
+        when(pages.getTotalElements()).thenReturn(42L);
+        when(pages.toList()).thenReturn(Collections.singletonList(checkoutResult));
+        when(checkoutResult.getId()).thenReturn("ORD-123-456");
+        when(checkoutResult.getData()).thenReturn(checkoutData);
+        when(checkoutData.getCheckedOutBy()).thenReturn(checkedOutBy);
+        when(checkedOutBy.getEmail()).thenReturn("demo@ch.gov.uk");
+        when(checkoutData.getItems()).thenReturn(Collections.singletonList(item));
+        when(item.getKind()).thenReturn("item#certificate");
+        when(checkoutResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 04, 11).atStartOfDay());
+        when(checkoutData.getLinks()).thenReturn(links);
+        when(links.getSelf()).thenReturn("http");
+        when(searchFieldMapper.exactMatchOrAny("ORD-123-456")).thenReturn("mapped checkout id");
+        when(searchFieldMapper.exactMatchOrAny("12345678")).thenReturn("mapped company number");
+        when(searchFieldMapper.partialMatchOrAny("demo@ch.gov.uk")).thenReturn("mapped email");
+
+        CheckoutSearchResults expected = new CheckoutSearchResults(42L,
+                Collections.singletonList(
+                        CheckoutSummary.newBuilder()
+                                .withId("ORD-123-456")
+                                .withEmail("demo@ch.gov.uk")
+                                .withProductLine("item#certificate")
+                                .withCheckoutDate(LocalDate.of(2022, 04, 11).atStartOfDay())
+                                .withLinks(new Links(new HRef("http"), new HRef("http")))
+                                .build()));
+
+        //when
+        CheckoutSearchResults actual = serviceUnderTest.searchCheckouts(checkoutSearchCriteria);
+
+        //then
+        verify(checkoutRepository).searchCheckouts("mapped checkout id",
+                "mapped email",
+                "mapped company number",
+                PageRequest.of(0, 1, Sort.by("created_at").descending().and(Sort.by("_id"))));
+        assertThat(actual, is(expected));
+    }
+
+    @Test
+    @DisplayName("search orders returns an order with blank details")
+    void searchCheckoutsWithBlankDetails() {
+        //given
+        when(checkoutSearchCriteria.getCheckoutCriteria()).thenReturn(checkoutCriteria);
+        when(checkoutSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
+        when(checkoutCriteria.getCheckoutId()).thenReturn("");
+        when(checkoutCriteria.getEmail()).thenReturn("");
+        when(checkoutCriteria.getCompanyNumber()).thenReturn("");
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(checkoutRepository.searchCheckouts(anyString(), anyString(), anyString(), eq(PageRequest.of(0, 1, Sort.by("created_at").descending().and(Sort.by("_id")))))).thenReturn(pages);
+        when(pages.getTotalElements()).thenReturn(42L);
+        when(pages.toList()).thenReturn(Collections.singletonList(checkoutResult));
+        when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
+        when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
+
+        CheckoutSummary orderSummary = CheckoutSummary.newBuilder().build();
+
+        CheckoutSearchResults expected = new CheckoutSearchResults(42L,
+                Collections.singletonList(orderSummary));
+
+        //when
+        CheckoutSearchResults actual = serviceUnderTest.searchCheckouts(checkoutSearchCriteria);
+
+        //then
+        assertThat(actual, is(expected));
+    }
+
+    @Test
+    @DisplayName("search orders returns a single order when page size is one")
+    void searchCheckoutsLimitsSearchResults() {
+        //given
+        when(checkoutSearchCriteria.getCheckoutCriteria()).thenReturn(checkoutCriteria);
+        when(checkoutSearchCriteria.getPageCriteria()).thenReturn(pageCriteria);
+        when(checkoutCriteria.getCheckoutId()).thenReturn("");
+        when(checkoutCriteria.getEmail()).thenReturn("");
+        when(checkoutCriteria.getCompanyNumber()).thenReturn("");
+        when(pageCriteria.getPageSize()).thenReturn(1);
+        when(checkoutRepository.searchCheckouts(anyString(), anyString(), anyString(), eq(PageRequest.of(0, 1, Sort.by("created_at").descending().and(Sort.by("_id")))))).thenReturn(pages);
+        when(pages.getTotalElements()).thenReturn(42L);
+        when(pages.toList()).thenReturn(Collections.singletonList(checkoutResult));
+        when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
+        when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
+
+        //when
+        CheckoutSearchResults actual = serviceUnderTest.searchCheckouts(checkoutSearchCriteria);
+
+        //then
+        assertThat(actual.getTotalOrders(), is(42L));
+        assertThat(actual.getOrderSummaries().size(), is(1));
     }
 
     /**

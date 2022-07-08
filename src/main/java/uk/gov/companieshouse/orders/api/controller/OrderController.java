@@ -16,10 +16,10 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Order;
-import uk.gov.companieshouse.orders.api.model.OrderCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderData;
-import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
-import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
 import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
@@ -55,7 +55,7 @@ public class OrderController {
     public static final String GET_CHECKOUT_URI =
         "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
 
-    public static final String ORDERS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.orders}";
+    public static final String CHECKOUTS_SEARCH_URI = "${uk.gov.companieshouse.orders.api.search.checkouts}";
 
     public static final String POST_REPROCESS_ORDER_URI =
             "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}/reprocess";
@@ -96,8 +96,8 @@ public class OrderController {
        return ResponseEntity.ok().body(checkoutRetrieved.getData());
    }
 
-    @GetMapping(ORDERS_SEARCH_URI)
-    public ResponseEntity<OrderSearchResults> searchOrders(
+    @GetMapping(CHECKOUTS_SEARCH_URI)
+    public ResponseEntity<CheckoutSearchResults> searchCheckouts(
             @RequestParam(value = "id", required = false) final String id,
             @RequestParam(value = "email", required = false) final String email,
             @RequestParam(value = "company_number", required = false) final String companyNumber,
@@ -106,20 +106,20 @@ public class OrderController {
         LoggableBuilder loggableBuilder = LoggableBuilder.newBuilder()
                 .withLogMapPut(REQUEST_ID, requestId)
                 .withLogMapIfNotNullPut(LoggingUtils.ORDER_ID, id);
-        log.info(loggableBuilder.withMessage("Search orders").build());
-        OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteria(
-                OrderCriteria.newBuilder()
+        log.info(loggableBuilder.withMessage("Search checkouts").build());
+        CheckoutSearchCriteria checkoutSearchCriteria = new CheckoutSearchCriteria(
+                CheckoutCriteria.newBuilder()
                         .withOrderId(id)
                         .withEmail(email)
                         .withCompanyNumber(companyNumber)
                         .build(),
                 new PageCriteria(pageSize)
         );
-        OrderSearchResults orderSearchResults = orderService.searchOrders(orderSearchCriteria);
+        CheckoutSearchResults checkoutSearchResults = checkoutService.searchCheckouts(checkoutSearchCriteria);
         log.info(loggableBuilder.withLogMapPut(LoggingUtils.STATUS, HttpStatus.OK)
-                .withMessage("Total orders found %d", orderSearchResults.getTotalOrders())
+                .withMessage("Total checkouts found %d", checkoutSearchResults.getTotalOrders())
                 .build());
-        return ResponseEntity.ok().body(orderSearchResults);
+        return ResponseEntity.ok().body(checkoutSearchResults);
     }
 
     @PostMapping(POST_REPROCESS_ORDER_URI)

@@ -183,7 +183,7 @@ class UserAuthorisationInterceptorTests {
     @Test
     void ordersSearchValidAuthorisation() {
         when(securityManager.checkPermission()).thenReturn(true);
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, "/checkouts/search");
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
@@ -194,7 +194,7 @@ class UserAuthorisationInterceptorTests {
     @Test
     void ordersSearchInvalidAuthorisation() {
         when(securityManager.checkPermission()).thenReturn(false);
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, "/checkouts/search");
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
