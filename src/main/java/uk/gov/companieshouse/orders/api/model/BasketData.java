@@ -18,6 +18,8 @@ public class BasketData {
 
     private String totalBasketCost;
 
+    private boolean enrolled;
+
 
     public DeliveryDetails getDeliveryDetails() {
         return deliveryDetails;
@@ -65,6 +67,14 @@ public class BasketData {
 
     public void setTotalBasketCost(String totalBasketCost) {
         this.totalBasketCost = totalBasketCost;
+    }
+
+    public boolean isEnrolled() {
+        return enrolled;
+    }
+
+    public void setEnrolled(boolean enrolled) {
+        this.enrolled = enrolled;
     }
 
     @Override
