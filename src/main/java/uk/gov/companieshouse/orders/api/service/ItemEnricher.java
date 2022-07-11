@@ -24,28 +24,28 @@ public class ItemEnricher {
      * For each {@link Item item}, fetch the related item resource using the item's URI and map the returned entity.
      *
      * @param nonEnrichedItems A {@link List list} of non-enriched {@link Item items}.
-     * @param userIdentity The user's identity.
-     * @param logMap A {@link Map map} containing entries to be logged by the logging framework. Fields item_uri and
-     *               company_number will be populated by this method.
+     * @param userIdentity     The user's identity.
+     * @param logMap           A {@link Map map} containing entries to be logged by the logging framework. Fields item_uri and
+     *                         company_number will be populated by this method.
      * @return A {@link List list of} {@link Item items} enriched with data fetched by each item's URI.
      */
     public List<Item> enrichItemsByIdentifiers(List<Item> nonEnrichedItems, String userIdentity, Map<String, Object> logMap) {
-            List<String> processedItemUris = Collections.synchronizedList(new ArrayList<>());
-            List<String> companyNumbers = Collections.synchronizedList(new ArrayList<>());
-            logMap.put(LoggingUtils.ITEM_URI, processedItemUris);
-            logMap.put(LoggingUtils.COMPANY_NUMBER, companyNumbers);
-            return nonEnrichedItems
-                    .parallelStream()
-                    .map(item -> {
-                        String itemUri = item.getItemUri();
-                        try {
-                            Item result = apiClientService.getItem(userIdentity, itemUri);
-                            processedItemUris.add(itemUri);
-                            companyNumbers.add(result.getCompanyNumber());
-                            return result;
-                        } catch (IOException e) {
-                            throw new ItemEnrichmentException("Failed to enrich item: [" + itemUri + "]", e);
-                        }
-                    }).collect(Collectors.toList());
+        List<String> processedItemUris = Collections.synchronizedList(new ArrayList<>());
+        List<String> companyNumbers = Collections.synchronizedList(new ArrayList<>());
+        logMap.put(LoggingUtils.ITEM_URI, processedItemUris);
+        logMap.put(LoggingUtils.COMPANY_NUMBER, companyNumbers);
+        return nonEnrichedItems
+                .stream()
+                .map(item -> {
+                    String itemUri = item.getItemUri();
+                    try {
+                        Item result = apiClientService.getItem(userIdentity, itemUri);
+                        processedItemUris.add(itemUri);
+                        companyNumbers.add(result.getCompanyNumber());
+                        return result;
+                    } catch (IOException e) {
+                        throw new ItemEnrichmentException("Failed to enrich item: [" + itemUri + "]", e);
+                    }
+                }).collect(Collectors.toList());
     }
 }
