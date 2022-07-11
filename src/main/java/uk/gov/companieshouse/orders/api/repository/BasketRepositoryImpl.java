@@ -29,6 +29,7 @@ public class BasketRepositoryImpl implements BasketRepositoryCustom {
         DeliveryDetails deliveryDetails = basketData.getDeliveryDetails();
         BasketData newBasketData = new BasketData();
         newBasketData.setDeliveryDetails(deliveryDetails);
+        newBasketData.setEnrolled(basketData.isEnrolled());
 
         Update update = new Update();
         update.set("data", newBasketData);
