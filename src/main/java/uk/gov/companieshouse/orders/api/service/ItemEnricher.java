@@ -30,8 +30,8 @@ public class ItemEnricher {
      * @return A {@link List list of} {@link Item items} enriched with data fetched by each item's URI.
      */
     public List<Item> enrichItemsByIdentifiers(List<Item> nonEnrichedItems, String userIdentity, Map<String, Object> logMap) {
-        List<String> processedItemUris = Collections.synchronizedList(new ArrayList<>());
-        List<String> companyNumbers = Collections.synchronizedList(new ArrayList<>());
+        List<String> processedItemUris = new ArrayList<>();
+        List<String> companyNumbers = new ArrayList<>();
         logMap.put(LoggingUtils.ITEM_URI, processedItemUris);
         logMap.put(LoggingUtils.COMPANY_NUMBER, companyNumbers);
         return nonEnrichedItems

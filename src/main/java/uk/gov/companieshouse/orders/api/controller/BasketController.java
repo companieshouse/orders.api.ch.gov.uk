@@ -191,7 +191,7 @@ public class BasketController {
     public ResponseEntity<?> getBasket(HttpServletRequest request,
                                        final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
 
-        Map<String, Object> logMap = new ConcurrentHashMap<>(LoggingUtils.createLogMapWithRequestId(requestId));
+        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LOGGER.infoRequest(request, "Getting basket", logMap);
 
         final Optional<Basket> retrievedBasket = basketService.getBasketById(EricHeaderHelper.getIdentity(request));
