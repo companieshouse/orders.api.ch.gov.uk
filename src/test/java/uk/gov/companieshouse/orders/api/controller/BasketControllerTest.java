@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +14,7 @@ import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
 import uk.gov.companieshouse.orders.api.model.Basket;
+import uk.gov.companieshouse.orders.api.model.BasketData;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Item;
@@ -21,6 +23,8 @@ import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.service.ApiClientService;
 import uk.gov.companieshouse.orders.api.service.BasketService;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
+import uk.gov.companieshouse.orders.api.service.ItemEnricher;
+import uk.gov.companieshouse.orders.api.service.ItemEnrichmentException;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 import uk.gov.companieshouse.orders.api.util.EricHeaderHelper;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
@@ -32,11 +36,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
@@ -46,6 +51,8 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
  */
 @ExtendWith(MockitoExtension.class)
 class BasketControllerTest {
+
+    private static final String USER_ID = "user_id";
 
     @InjectMocks
     private BasketController controllerUnderTest;
@@ -74,38 +81,61 @@ class BasketControllerTest {
     @Mock
     private EricHeaderHelper ericHeaderHelper;
 
+    @Mock
+    private Item certificate, document, missingImage;
+
+    @Mock
+    private ItemEnricher enricher;
+
+    @Test
+    @DisplayName("Fetch basket containing multiple items")
+    void fetchBasketWithMultipleItems() throws Exception {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate, document, missingImage));
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        lenient().when(httpServletRequest.getHeader(eq("ERIC-Access-Token"))).thenReturn(USER_ID);
+        when(enricher.enrichItemsByIdentifiers(any(), any(), any())).thenReturn(Arrays.asList(certificate, document, missingImage));
+
+        // when
+        ResponseEntity<?> responseEntity = controllerUnderTest.getBasket(httpServletRequest, "requestId");
+
+        // then
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(Arrays.asList(certificate, document, missingImage),
+                ((BasketData)responseEntity.getBody()).getItems());
+        verify(enricher).enrichItemsByIdentifiers(eq(Arrays.asList(certificate, document, missingImage)), eq(USER_ID), any());
+    }
+
+    @Test
+    @DisplayName("Fetch basket containing multiple items returns HTTP 400 Bad Request if exception thrown handling item")
+    void fetchBasketWithMultipleItemsReturnsBadRequest() throws Exception {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate, document, missingImage));
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        lenient().when(httpServletRequest.getHeader(eq("ERIC-Access-Token"))).thenReturn(USER_ID);
+        when(enricher.enrichItemsByIdentifiers(any(), any(), any())).thenThrow(ItemEnrichmentException.class);
+
+        // when
+        ResponseEntity<?> responseEntity = controllerUnderTest.getBasket(httpServletRequest, "requestId");
+
+        // then
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        verify(enricher).enrichItemsByIdentifiers(eq(Arrays.asList(certificate, document, missingImage)), eq(USER_ID), any());
+    }
+
     @Test
     @DisplayName("Return 200 OK for when no items are present in GET basket")
     void returnOKWhenNoItemsPresentRequestGetItems() throws Exception {
 
-        Optional<Basket> basket = createBasket();
+        Basket basket = createBasket();
 
-        when(basketService.getBasketById(any())).thenReturn(basket);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
 
         ResponseEntity<?> responseEntity = controllerUnderTest.getBasket(httpServletRequest, "requestId");
 
         assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
-    @DisplayName("Return 400 Bad Request if Items cannot be returned in GET basket")
-    void returnBadRequestGetItems() throws Exception {
-
-        Optional<Basket> basket = createBasket();
-
-        List<Item> items = new ArrayList<>();
-        Item item = new Item();
-        item.setDescription("description");
-        items.add(item);
-
-        basket.get().getData().setItems(items);
-
-        when(basketService.getBasketById(any())).thenReturn(basket);
-        when(apiClientService.getItem(any(), any())).thenThrow(ApiErrorResponseException.class);
-
-        ResponseEntity<?> responseEntity = controllerUnderTest.getBasket(httpServletRequest, "requestId");
-
-        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
     }
 
     @Test
@@ -213,13 +243,13 @@ class BasketControllerTest {
         when(checkoutData.getItems()).thenReturn(items);
     }
 
-    private Optional<Basket> createBasket() {
+    private Basket createBasket() {
         TimestampedEntityVerifier timestamps = new TimestampedEntityVerifier();
         final LocalDateTime start = timestamps.start();
         final Basket basket = new Basket();
         basket.setCreatedAt(start);
         basket.setUpdatedAt(start);
         basket.setId(ERIC_IDENTITY_VALUE);
-        return Optional.of(basket);
+        return basket;
     }
 }

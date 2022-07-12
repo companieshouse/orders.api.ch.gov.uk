@@ -43,6 +43,7 @@ import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
 import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.model.ItemType;
 import uk.gov.companieshouse.orders.api.model.MissingImageDelivery;
 import uk.gov.companieshouse.orders.api.model.MissingImageDeliveryItemOptions;
 import uk.gov.companieshouse.orders.api.model.Order;
@@ -76,10 +77,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
@@ -1075,6 +1076,54 @@ class BasketControllerIntegrationTest {
         assertEquals(TOTAL_ITEM_COST, item.getTotalItemCost());
 
         verifyBasketIsUnchanged(start, basket.getData().getDeliveryDetails(), VALID_CERTIFIED_COPY_URI);
+    }
+
+    @Test
+    @DisplayName("Get basket successfully returns a basket populated with multiple items")
+    void getBasketReturnsBasketPopulatedWithMultipleItems() throws Exception {
+        final LocalDateTime start = timestamps.start();
+        final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().getItems().add(certificateItem);
+
+        Item missingImageItem = new Item();
+        missingImageItem.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        basket.getData().getItems().add(missingImageItem);
+
+        basketRepository.save(basket);
+
+        final CertifiedCopy copy = new CertifiedCopy();
+        copy.setKind(ItemType.CERTIFIED_COPY.getKind());
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFIED_COPY_URI)).thenReturn(copy);
+
+        final Certificate certificate = new Certificate();
+        certificate.setKind(ItemType.CERTIFICATE.getKind());
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFICATE_URI)).thenReturn(certificate);
+
+        final MissingImageDelivery missingImageDelivery = new MissingImageDelivery();
+        missingImageDelivery.setKind(ItemType.MISSING_IMAGE_DELIVERY.getKind());
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_MISSING_IMAGE_DELIVERY_URI)).thenReturn(missingImageDelivery);
+
+        final String jsonResponse = mockMvc.perform(get("/basket")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].kind",
+                        is(ItemType.CERTIFIED_COPY.getKind())))
+                .andExpect(jsonPath("$.items[1].kind",
+                        is(ItemType.CERTIFICATE.getKind())))
+                .andExpect(jsonPath("$.items[2].kind",
+                        is(ItemType.MISSING_IMAGE_DELIVERY.getKind())))
+                .andReturn().getResponse().getContentAsString();
+
+        final BasketData response = mapper.readValue(jsonResponse, BasketData.class);
+        final List<Item> item = response.getItems();
+        assertEquals(3, item.size());
     }
 
     @Test
