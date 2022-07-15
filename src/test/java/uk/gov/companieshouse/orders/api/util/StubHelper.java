@@ -4,6 +4,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 
 import uk.gov.companieshouse.orders.api.model.*;
@@ -74,5 +75,26 @@ public final class StubHelper {
 
     public static Order getOrder(String orderId, String email, String companyNumber) {
         return getOrder(orderId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay());
+    }
+
+    public static Basket getBasket(String id) {
+        final Basket basket = new Basket();
+        basket.setId(id);
+        basket.setCreatedAt(LocalDateTime.of(2022,07,15, 11, 40));
+        basket.setUpdatedAt(LocalDateTime.of(2022,07,15, 11, 40));
+
+        BasketData data = new BasketData();
+        data.setEnrolled(true);
+
+        Item item1 = new Item();
+        item1.setItemUri("/orderable/certificate/123");
+
+        Item item2 = new Item();
+        item2.setId("/orderable/certificate/456");
+
+        data.setItems(Arrays.asList(item1, item2));
+        basket.setData(data);
+
+        return basket;
     }
 }

@@ -1,5 +1,19 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static org.springframework.http.HttpStatus.ACCEPTED;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.NO_CONTENT;
+import static org.springframework.http.HttpStatus.OK;
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,7 +29,7 @@ import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
@@ -45,21 +59,6 @@ import uk.gov.companieshouse.orders.api.validator.CheckoutBasketValidator;
 import uk.gov.companieshouse.orders.api.validator.DeliveryDetailsValidator;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.springframework.http.HttpStatus.ACCEPTED;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.NO_CONTENT;
-import static org.springframework.http.HttpStatus.OK;
-import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-
 @RestController
 public class BasketController {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
@@ -80,6 +79,8 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.checkouts}";
     public static final String PATCH_PAYMENT_DETAILS_URI =
             "${uk.gov.companieshouse.orders.api.basket.checkouts}/{id}/payment";
+    public static final String REMOVE_ITEM_URI =
+            "${uk.gov.companieshouse.orders.api.basket.items}/remove";
 
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
     @Value("${uk.gov.companieshouse.payments.api.payments}")
@@ -142,13 +143,13 @@ public class BasketController {
     }
 
     @PostMapping(ADD_ITEM_URI)
-    public ResponseEntity<?> addItemToBasket(final @Valid @RequestBody AddToBasketRequestDTO addToBasketRequestDTO,
+    public ResponseEntity<?> addItemToBasket(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
                                              HttpServletRequest request,
                                              final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LOGGER.infoRequest(request, "Adding item to basket", logMap);
 
-        String itemUri = addToBasketRequestDTO.getItemUri();
+        String itemUri = basketRequestDTO.getItemUri();
         logMap.put(LoggingUtils.ITEM_URI, itemUri);
         Item item;
         try {
@@ -168,7 +169,7 @@ public class BasketController {
 
         final Optional<Basket> retrievedBasket = basketService.getBasketById(EricHeaderHelper.getIdentity(request));
 
-        Basket mappedBasket = basketMapper.addToBasketRequestDTOToBasket(addToBasketRequestDTO);
+        Basket mappedBasket = basketMapper.addToBasketRequestDTOToBasket(basketRequestDTO);
 
         if (retrievedBasket.isPresent()) {
             retrievedBasket.get().getData().setItems(mappedBasket.getData().getItems());
@@ -432,6 +433,31 @@ public class BasketController {
         LOGGER.infoRequest(request, "Basket payment details updated", logMap);
 
         return ResponseEntity.status(NO_CONTENT).body(null);
+    }
+
+    @PostMapping(REMOVE_ITEM_URI)
+    public ResponseEntity<Object> removeBasketItem(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
+                                                HttpServletRequest request,
+                                                final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        LOGGER.infoRequest(request, "Removing item from basket", logMap);
+
+        String itemUri = basketRequestDTO.getItemUri();
+        logMap.put(LoggingUtils.ITEM_URI, itemUri);
+
+        String id = EricHeaderHelper.getIdentity(request);
+        final Optional<Basket> retrievedBasket = basketService.getBasketById(id);
+
+        if (retrievedBasket.isPresent()) {
+            Basket basket = basketService.removeBasketDataItemByUri(id, basketRequestDTO.getItemUri());
+            logMap.put(LoggingUtils.BASKET_ID, id);
+            logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
+            LOGGER.infoRequest(request, "Removed item from basket", logMap);
+            return ResponseEntity.status(HttpStatus.OK).body(basket);
+        } else {
+            LOGGER.error("Basket not found for id: " + id, new ResourceNotFoundException("Basket not found"), logMap);
+            return ResponseEntity.status(NOT_FOUND).body(null);
+        }
     }
 
     /**

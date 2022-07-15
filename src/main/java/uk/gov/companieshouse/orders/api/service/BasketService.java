@@ -35,4 +35,8 @@ public class BasketService {
     public Basket clearBasket(String id) {
         return repository.clearBasketDataById(id);
     }
+
+    public Basket removeBasketDataItemByUri(String id, String uri) {
+        return repository.removeBasketDataItemByUri(id, uri);
+    }
 }

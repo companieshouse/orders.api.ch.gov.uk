@@ -25,7 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 
 @DirtiesContext
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -48,8 +48,8 @@ class OrdersApiAuthorisationTests {
     void authenticationPrecedesAuthorisation() {
 
         // Given
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(ITEM_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(ITEM_URI);
         when(authenticator
                 .preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any(Object.class)))
                 .thenReturn(true);
@@ -60,7 +60,7 @@ class OrdersApiAuthorisationTests {
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .body(fromObject(addToBasketRequestDTO))
+                .body(fromObject(basketRequestDTO))
                 .exchange()
                 .expectStatus().isOk();
 
@@ -76,8 +76,8 @@ class OrdersApiAuthorisationTests {
     void failedAuthenticationShortCircuitsAuthorisation() {
 
         // Given
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(ITEM_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(ITEM_URI);
         when(authenticator
                 .preHandle(any(HttpServletRequest.class), any(HttpServletResponse.class), any(Object.class)))
                 .thenReturn(false);
@@ -88,7 +88,7 @@ class OrdersApiAuthorisationTests {
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .body(fromObject(addToBasketRequestDTO))
+                .body(fromObject(basketRequestDTO))
                 .exchange()
                 .expectStatus().isOk();
 

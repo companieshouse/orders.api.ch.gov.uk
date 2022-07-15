@@ -1,75 +1,5 @@
 package uk.gov.companieshouse.orders.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.http.MediaType;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import uk.gov.companieshouse.api.error.ApiErrorResponseException;
-import uk.gov.companieshouse.api.model.payment.PaymentApi;
-import uk.gov.companieshouse.api.util.security.Permission;
-import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
-import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.DeliveryDetailsDTO;
-import uk.gov.companieshouse.orders.api.dto.ItemDTO;
-import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
-import uk.gov.companieshouse.orders.api.dto.PaymentLinksDTO;
-import uk.gov.companieshouse.orders.api.exception.ErrorType;
-import uk.gov.companieshouse.orders.api.model.ApiError;
-import uk.gov.companieshouse.orders.api.model.Basket;
-import uk.gov.companieshouse.orders.api.model.BasketData;
-import uk.gov.companieshouse.orders.api.model.Certificate;
-import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
-import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
-import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
-import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.CheckoutData;
-import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
-import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.ItemCosts;
-import uk.gov.companieshouse.orders.api.model.ItemType;
-import uk.gov.companieshouse.orders.api.model.MissingImageDelivery;
-import uk.gov.companieshouse.orders.api.model.MissingImageDeliveryItemOptions;
-import uk.gov.companieshouse.orders.api.model.Order;
-import uk.gov.companieshouse.orders.api.model.PaymentStatus;
-import uk.gov.companieshouse.orders.api.repository.BasketRepository;
-import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
-import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-import uk.gov.companieshouse.orders.api.service.ApiClientService;
-import uk.gov.companieshouse.orders.api.service.CheckoutService;
-import uk.gov.companieshouse.orders.api.service.EtagGeneratorService;
-import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
-import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
@@ -100,7 +30,95 @@ import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_SAM
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_INCORPORATION_SAME_DAY;
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_SAME_DAY;
 import static uk.gov.companieshouse.orders.api.model.ProductType.MISSING_IMAGE_DELIVERY_ACCOUNTS;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.*;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_ACCESS_TOKEN;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISED_USER_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISED_USER_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_API_KEY_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_DELIVERY_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.SAME_DAY_CERTIFIED_COPY_COST;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.SAME_DAY_CERTIFIED_COPY_NEW_INCORPORATION_COST;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSION_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFICATE_URI;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFIED_COPY_URI;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_MISSING_IMAGE_DELIVERY_URI;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.MediaType;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import uk.gov.companieshouse.api.error.ApiErrorResponseException;
+import uk.gov.companieshouse.api.model.payment.PaymentApi;
+import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.DeliveryDetailsDTO;
+import uk.gov.companieshouse.orders.api.dto.ItemDTO;
+import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
+import uk.gov.companieshouse.orders.api.dto.PaymentLinksDTO;
+import uk.gov.companieshouse.orders.api.exception.ErrorType;
+import uk.gov.companieshouse.orders.api.model.ApiError;
+import uk.gov.companieshouse.orders.api.model.Basket;
+import uk.gov.companieshouse.orders.api.model.BasketData;
+import uk.gov.companieshouse.orders.api.model.Certificate;
+import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
+import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
+import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.model.ItemType;
+import uk.gov.companieshouse.orders.api.model.MissingImageDelivery;
+import uk.gov.companieshouse.orders.api.model.MissingImageDeliveryItemOptions;
+import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
+import uk.gov.companieshouse.orders.api.repository.BasketRepository;
+import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
+import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+import uk.gov.companieshouse.orders.api.service.ApiClientService;
+import uk.gov.companieshouse.orders.api.service.CheckoutService;
+import uk.gov.companieshouse.orders.api.service.EtagGeneratorService;
+import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
+import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 @DirtiesContext
 @AutoConfigureMockMvc
@@ -253,8 +271,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add Item successfully adds an item to the basket and returns item if the basket does not exist")
     void addItemSuccessfullyAddsItemToBasketIfBasketDoesNotExist() throws Exception {
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         Certificate certificate = new Certificate();
         certificate.setCompanyNumber(COMPANY_NUMBER);
@@ -269,7 +287,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
 
         MvcResult result = resultActions.andReturn();
@@ -293,8 +311,8 @@ class BasketControllerIntegrationTest {
         Basket basket = new Basket();
         basketRepository.save(basket);
 
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         Certificate certificate = new Certificate();
         certificate.setCompanyNumber(COMPANY_NUMBER);
@@ -309,7 +327,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
 
         MvcResult result = resultActions.andReturn();
@@ -329,8 +347,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add certificate to basket responds with correctly populated certificate item options")
     void addCertificateReturnsCorrectlyPopulatedOptions() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         final Certificate certificate = new Certificate();
         final CertificateItemOptions options = new CertificateItemOptions();
@@ -345,7 +363,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_options.certificate_type",
                         is(INCORPORATION_WITH_ALL_NAME_CHANGES.getJsonName())));
@@ -357,8 +375,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add certified copy to basket responds with correctly populated certified copy item options")
     void addCertifiedCopyReturnsCorrectlyPopulatedOptions() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
 
         final CertifiedCopy copy = new CertifiedCopy();
         final CertifiedCopyItemOptions options = new CertifiedCopyItemOptions();
@@ -373,7 +391,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_options.filing_history_documents[0].filing_history_date",
                         is(DOCUMENT.getFilingHistoryDate())))
@@ -392,8 +410,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add certified copy to basket responds with correctly populated certified copy item costs")
     void addCertifiedCopyReturnsCorrectlyPopulatedCosts() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
 
         final CertifiedCopy copy = new CertifiedCopy();
         copy.setItemCosts(CERTIFIED_COPY_ITEM_COSTS);
@@ -406,7 +424,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_costs[0].discount_applied",
                         is(SAME_DAY_COPY_COST.getDiscountApplied())))
@@ -427,8 +445,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add missing image delivery to basket responds with correctly populated missing image delivery options")
     void addMissingImageDeliveryCorrectlyPopulatedOptions() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
 
         final MissingImageDelivery missingImageDelivery = new MissingImageDelivery();
         final MissingImageDeliveryItemOptions options = new MissingImageDeliveryItemOptions();
@@ -446,7 +464,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_options.filing_history_date",
                         is(DOCUMENT.getFilingHistoryDate())))
@@ -472,8 +490,8 @@ class BasketControllerIntegrationTest {
         basket.getData().setItems(Collections.singletonList(basketItem));
         basketRepository.save(basket);
 
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(INVALID_ITEM_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(INVALID_ITEM_URI);
         when(apiClientService.getItem(anyString(), anyString())).thenThrow(apiErrorResponseException);
 
         final ApiError expectedValidationError =
@@ -487,7 +505,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().json(mapper.writeValueAsString(expectedValidationError)))
                 .andDo(MockMvcResultHandlers.print());
@@ -504,8 +522,8 @@ class BasketControllerIntegrationTest {
         basket.setData(basketData);
         basketRepository.save(basket);
 
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         mockMvc.perform(post("/basket/items")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
@@ -513,7 +531,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
@@ -1805,6 +1823,58 @@ class BasketControllerIntegrationTest {
 
     }
 
+    @Test
+    @DisplayName("Test remove basket item removes item from basket successfully")
+    void removeBasketItem() throws Exception {
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        final Item item = new Item();
+        item.setItemUri(VALID_CERTIFICATE_URI);
+        basket.setItems(Collections.singletonList(item));
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        ResultActions resultActions = mockMvc.perform(post("/basket/items/remove")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isOk());
+
+        MvcResult result = resultActions.andReturn();
+        MockHttpServletResponse response = result.getResponse();
+        String contentAsString = response.getContentAsString();
+        Basket actualBasket = mapper.readValue(contentAsString, Basket.class);
+
+        final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
+
+        assertEquals(actualBasket.getId(), retrievedBasket.get().getId());
+        assertFalse(actualBasket.getData().getItems().contains(item));
+        assertFalse(retrievedBasket.get().getData().getItems().contains(item));
+    }
+
+    @Test
+    @DisplayName("Test remove basket item returns not found if basket does not exist")
+    void removeBasketItemNotFound() throws Exception {
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        ResultActions resultActions = mockMvc.perform(post("/basket/items/remove")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isNotFound());
+    }
+
     /**
      * Verifies that the certificate item's options are of the right type and have the expected field
      * correctly populated.
@@ -1945,7 +2015,7 @@ class BasketControllerIntegrationTest {
     /**
      * Creates a basket containing an item with just its item URI member populated, and some delivery details.
      * In this way, it creates a basket in the database that is similar to what results when
-     * {@link BasketController#addItemToBasket(AddToBasketRequestDTO, HttpServletRequest, String)} and
+     * {@link BasketController#addItemToBasket(BasketRequestDTO, HttpServletRequest, String)} and
      * {@link BasketController#addDeliveryDetailsToBasket(AddDeliveryDetailsRequestDTO, HttpServletRequest, String)}
      * have been called.
      * @param start the creation/update time of the basket
@@ -1958,7 +2028,7 @@ class BasketControllerIntegrationTest {
     /**
      * Creates a basket containing an item with just its item URI member populated, and some delivery details.
      * In this way, it creates a basket in the database that is similar to what results when
-     * {@link BasketController#addItemToBasket(AddToBasketRequestDTO, HttpServletRequest, String)} and
+     * {@link BasketController#addItemToBasket(BasketRequestDTO, HttpServletRequest, String)} and
      * {@link BasketController#addDeliveryDetailsToBasket(AddDeliveryDetailsRequestDTO, HttpServletRequest, String)}
      * have been called.
      * @param start the creation/update time of the basket
