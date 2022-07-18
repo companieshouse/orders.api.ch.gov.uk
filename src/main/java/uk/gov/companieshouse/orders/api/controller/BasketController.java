@@ -80,7 +80,7 @@ public class BasketController {
     public static final String PATCH_PAYMENT_DETAILS_URI =
             "${uk.gov.companieshouse.orders.api.basket.checkouts}/{id}/payment";
     public static final String REMOVE_ITEM_URI =
-            "${uk.gov.companieshouse.orders.api.basket.items}/remove";
+            "${uk.gov.companieshouse.orders.api.basket.items}/remove"; // should /remove be in app props?
 
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
     @Value("${uk.gov.companieshouse.payments.api.payments}")
@@ -456,6 +456,26 @@ public class BasketController {
             return ResponseEntity.status(HttpStatus.OK).body(basket);
         } else {
             LOGGER.error("Basket not found for id: " + id, new ResourceNotFoundException("Basket not found"), logMap);
+            return ResponseEntity.status(NOT_FOUND).body(null);
+        }
+    }
+
+    @GetMapping
+    public ResponseEntity<Object> getBasketLinks(HttpServletRequest request,
+                                                    final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+
+        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        LOGGER.infoRequest(request, "Getting basket links", logMap);
+
+        String id = EricHeaderHelper.getIdentity(request);
+        final Optional<Basket> retrievedBasket = basketService.getBasketById(id);
+
+        if (retrievedBasket.isPresent()) {
+            LOGGER.infoRequest(request, "Basket present", logMap);
+            return ResponseEntity.status(OK).body(retrievedBasket.get());
+        } else {
+            logMap.put(LoggingUtils.STATUS, NOT_FOUND);
+            LOGGER.infoRequest(request, "No basket present with id: " + id, logMap);
             return ResponseEntity.status(NOT_FOUND).body(null);
         }
     }
