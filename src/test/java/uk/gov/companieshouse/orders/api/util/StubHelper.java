@@ -90,7 +90,7 @@ public final class StubHelper {
         item1.setItemUri("/orderable/certificate/123");
 
         Item item2 = new Item();
-        item2.setId("/orderable/certificate/456");
+        item2.setItemUri("/orderable/certificate/456");
 
         data.setItems(Arrays.asList(item1, item2));
         basket.setData(data);

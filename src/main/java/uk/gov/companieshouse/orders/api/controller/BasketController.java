@@ -29,9 +29,9 @@ import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
 import uk.gov.companieshouse.orders.api.exception.ConflictException;
 import uk.gov.companieshouse.orders.api.exception.ErrorType;
@@ -450,21 +450,23 @@ public class BasketController {
         final Optional<Basket> retrievedBasket = basketService.getBasketById(id);
 
         if (retrievedBasket.isPresent()) {
-            Basket basket = basketService.removeBasketDataItemByUri(id, basketRequestDTO.getItemUri());
+            if (!basketService.removeBasketDataItemByUri(id, basketRequestDTO.getItemUri())) {
+                LOGGER.error("Item not found for item_uri: " + basketRequestDTO.getItemUri(), new ResourceNotFoundException("Item uri not found"), logMap);
+                return ResponseEntity.status(NOT_FOUND).body(null); // failure
+            }
             logMap.put(LoggingUtils.BASKET_ID, id);
             logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
             LOGGER.infoRequest(request, "Removed item from basket", logMap);
-            return ResponseEntity.status(HttpStatus.OK).body(basket);
+            return ResponseEntity.status(HttpStatus.OK).body(null); // success
         } else {
             LOGGER.error("Basket not found for id: " + id, new ResourceNotFoundException("Basket not found"), logMap);
-            return ResponseEntity.status(NOT_FOUND).body(null);
+            return ResponseEntity.status(NOT_FOUND).body(null); // failure
         }
     }
 
     @GetMapping(GET_BASKET_LINKS_URI)
     public ResponseEntity<Object> getBasketLinks(HttpServletRequest request,
                                                     final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
-
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LOGGER.infoRequest(request, "Getting basket links", logMap);
 

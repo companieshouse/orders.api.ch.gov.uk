@@ -3,7 +3,6 @@ package uk.gov.companieshouse.orders.api.repository;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import java.time.LocalDateTime;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -45,7 +44,8 @@ public class BasketRepositoryImpl implements BasketRepositoryCustom {
         query.addCriteria(Criteria.where("_id").is(id));
         Update update = new Update();
         update.pull("data.items", Query.query(Criteria.where("item_uri").is(uri)));
+        update.set("updated_at", LocalDateTime.now());
 
-        return mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Basket.class);
+        return mongoTemplate.findAndModify(query, update, Basket.class);
     }
 }

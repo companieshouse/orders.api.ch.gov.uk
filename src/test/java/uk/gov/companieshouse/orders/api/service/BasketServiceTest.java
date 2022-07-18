@@ -2,8 +2,11 @@ package uk.gov.companieshouse.orders.api.service;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.time.LocalDateTime;
@@ -15,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.orders.api.model.Basket;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.repository.BasketRepository;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
 
@@ -78,9 +82,27 @@ public class BasketServiceTest {
     @Test
     void removeBasketDataItemByUri() {
         // given
+        Basket basket = new Basket();
+        Item item = new Item();
+        item.setItemUri("123");
+        basket.getItems().add(item);
+        when(repository.removeBasketDataItemByUri("123","123")).thenReturn(basket);
+
         // when
-        service.removeBasketDataItemByUri("123", "123");
+        boolean result = service.removeBasketDataItemByUri("123", "123");
         // then
-        verify(repository).removeBasketDataItemByUri("123", "123");
+        assertTrue(result);
+    }
+
+    @DisplayName("test remove basket data item by basket id and item uri throws exception when uri not found")
+    @Test
+    void removeBasketDataItemByUriNotFound() {
+        // given
+        when(repository.removeBasketDataItemByUri("123","123")).thenReturn(new Basket());
+
+        // when
+        boolean result = service.removeBasketDataItemByUri("123", "123");
+        // then
+        assertFalse(result);
     }
 }

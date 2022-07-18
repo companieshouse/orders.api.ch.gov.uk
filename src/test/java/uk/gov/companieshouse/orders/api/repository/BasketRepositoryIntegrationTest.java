@@ -37,7 +37,7 @@ class BasketRepositoryIntegrationTest {
 
         // then
         assertEquals(basket.getId(), actual.getId());
-        assertEquals(1, actual.getData().getItems().size());
+        assertEquals(2, actual.getData().getItems().size());
         assertFalse(actual.getData().getItems().contains(basket.getItems().get(0)));
     }
 }

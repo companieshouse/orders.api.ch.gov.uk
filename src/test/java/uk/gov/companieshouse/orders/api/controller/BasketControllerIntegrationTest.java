@@ -1836,7 +1836,7 @@ class BasketControllerIntegrationTest {
         BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
         basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
-        ResultActions resultActions = mockMvc.perform(post("/basket/items/remove")
+        mockMvc.perform(post("/basket/items/remove")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -1845,22 +1845,32 @@ class BasketControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
+    }
 
-        MvcResult result = resultActions.andReturn();
-        MockHttpServletResponse response = result.getResponse();
-        String contentAsString = response.getContentAsString();
-        Basket actualBasket = mapper.readValue(contentAsString, Basket.class);
+    @Test
+    @DisplayName("Test remove basket item returns HTTP not found when item_uri not found")
+    void removeBasketItemItemNotFound() throws Exception {
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basketRepository.save(basket);
 
-        final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
-        assertEquals(actualBasket.getId(), retrievedBasket.get().getId());
-        assertFalse(actualBasket.getData().getItems().contains(item));
-        assertFalse(retrievedBasket.get().getData().getItems().contains(item));
+        mockMvc.perform(post("/basket/items/remove")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("Test remove basket item returns not found if basket does not exist")
-    void removeBasketItemNotFound() throws Exception {
+    void removeBasketItemBasketNotFound() throws Exception {
         BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
         basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
