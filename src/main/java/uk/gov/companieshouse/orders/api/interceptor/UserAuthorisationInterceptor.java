@@ -7,11 +7,13 @@ import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_BASKET_LINKS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.POST_REPROCESS_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.REMOVE_BASKET_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
@@ -72,7 +74,10 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
     private boolean checkAuthorised(HttpServletRequest request, HttpServletResponse response, String name) {
         switch (name) {
             case ADD_ITEM:
-            case CHECKOUT_BASKET: case BASKET:
+            case CHECKOUT_BASKET:
+            case BASKET:
+            case GET_BASKET_LINKS:
+            case REMOVE_BASKET_ITEM:
                 return true; // no authorisation required
             case GET_PAYMENT_DETAILS:
                 return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);

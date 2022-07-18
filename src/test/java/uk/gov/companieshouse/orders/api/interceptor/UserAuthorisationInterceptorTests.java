@@ -339,6 +339,26 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
+    @Test
+    @DisplayName("preHandle accepts get basket links request that has ")
+    void getBasketLinks() {
+        // given
+        givenRequest(GET, "/basket/links");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get basket links request that has ")
+    void removeBasketItem() {
+        // given
+        givenRequest(POST, "/basket/items/remove");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
     /**
      * Sets up request givens.
      * @param method the HTTP request method
