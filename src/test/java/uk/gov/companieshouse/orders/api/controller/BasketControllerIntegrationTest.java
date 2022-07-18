@@ -1875,6 +1875,37 @@ class BasketControllerIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    @DisplayName("Test get basket links returns basket successfully")
+    void getBasketLinks() throws Exception {
+        final LocalDateTime start = timestamps.start();
+        Basket basket = createBasket(start);
+
+        final String jsonResponse = mockMvc.perform(get("/basket/links")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        final Basket response = mapper.readValue(jsonResponse, Basket.class);
+
+        final DeliveryDetails getDeliveryDetails = response.getData().getDeliveryDetails();
+        assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
+        assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
+        assertEquals(COUNTRY, getDeliveryDetails.getCountry());
+        assertEquals(FORENAME, getDeliveryDetails.getForename());
+        assertEquals(LOCALITY, getDeliveryDetails.getLocality());
+        assertEquals(SURNAME, getDeliveryDetails.getSurname());
+        assertEquals(VALID_CERTIFICATE_URI, response.getItems().get(0).getItemUri());
+        assertEquals(ERIC_IDENTITY_VALUE, response.getId());
+        assertEquals(start, response.getCreatedAt());
+        assertEquals(start, response.getUpdatedAt());
+    }
+
     /**
      * Verifies that the certificate item's options are of the right type and have the expected field
      * correctly populated.

@@ -81,7 +81,8 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.checkouts}/{id}/payment";
     public static final String REMOVE_ITEM_URI =
             "${uk.gov.companieshouse.orders.api.basket.items}/remove"; // should /remove be in app props?
-
+    public static final String GET_BASKET_LINKS_URI =
+            "${uk.gov.companieshouse.orders.api.basket}/links";
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
     @Value("${uk.gov.companieshouse.payments.api.payments}")
     private String costsLink;
@@ -435,7 +436,7 @@ public class BasketController {
         return ResponseEntity.status(NO_CONTENT).body(null);
     }
 
-    @PostMapping(REMOVE_ITEM_URI)
+    @PostMapping(REMOVE_ITEM_URI) // Change to PUT?
     public ResponseEntity<Object> removeBasketItem(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
                                                 HttpServletRequest request,
                                                 final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
@@ -460,7 +461,7 @@ public class BasketController {
         }
     }
 
-    @GetMapping
+    @GetMapping(GET_BASKET_LINKS_URI)
     public ResponseEntity<Object> getBasketLinks(HttpServletRequest request,
                                                     final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
 

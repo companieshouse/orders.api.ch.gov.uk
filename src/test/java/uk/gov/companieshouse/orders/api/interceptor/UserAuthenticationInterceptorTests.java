@@ -324,6 +324,29 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsAccepted();
     }
 
+    @Test
+    @DisplayName("preHandle accepts get basket links request from a user with OAuth2 authentication")
+    void preHandleAcceptsGetBasketLinks() {
+
+        // Given
+        givenRequest(GET, "/basket/links");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts remove basket item request from a user with OAuth2 authentication")
+    void preHandleAcceptsRemoveBasketItem() {
+        // Given
+        givenRequest(POST, "/basket/items/remove");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
     /**
      * Sets up a POST request to the URI provided, expects the request to be rejected
      * @param uri the request URI
@@ -422,6 +445,7 @@ class UserAuthenticationInterceptorTests {
     private static Stream<Arguments> unauthenticatedRequestFixtures() {
         return Stream.of(arguments("preHandle rejects get payment details request that lacks required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
-                arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"));
+                arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
+                arguments("preHandle rejects get basket links request that lacks requires headers", "/basket/links"));
     }
 }

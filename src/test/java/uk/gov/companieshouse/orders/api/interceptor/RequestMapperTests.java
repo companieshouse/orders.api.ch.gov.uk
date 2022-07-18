@@ -16,6 +16,8 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_BASKET_LINKS;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.REMOVE_BASKET_ITEM;
 
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -150,6 +152,33 @@ class RequestMapperTests {
 
         // When and then
         assertThat(requestMapperUnderTest.getRequestMapping(request), is(nullValue()));
+    }
+
+    @Test
+    @DisplayName("getRequestMappingInfo returns the get basket links mapping")
+    void getBasketLinks() {
+        // Given
+        givenRequest(GET, "/basket/links");
+
+        // When
+        String actual = requestMapperUnderTest.getRequestMapping(request).getName();
+
+        // Then
+        assertThat(actual, is(GET_BASKET_LINKS));
+    }
+
+    @Test
+    @DisplayName("getRequestMappingInfo returns the remove basket item mapping")
+    void removeBasketItem() {
+
+        // Given
+        givenRequest(POST, "/basket/items/remove");
+
+        // When
+        String actual = requestMapperUnderTest.getRequestMapping(request).getName();
+
+        // Then
+        assertThat(actual, is(REMOVE_BASKET_ITEM));
     }
 
     /**

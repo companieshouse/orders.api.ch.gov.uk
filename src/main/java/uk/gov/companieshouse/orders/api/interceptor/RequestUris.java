@@ -1,10 +1,6 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
-import static uk.gov.companieshouse.orders.api.controller.BasketController.ADD_ITEM_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.BASKET_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_BASKET_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.GET_PAYMENT_DETAILS_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.*;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.CHECKOUTS_SEARCH_URI;
@@ -31,6 +27,8 @@ class RequestUris {
     static final String SEARCH = "searchCheckouts";
     static final String GET_CHECKOUT = "getCheckout";
     static final String POST_REPROCESS_ORDER = "postReprocessOrder";
+    static final String GET_BASKET_LINKS = "getBasketLinks";
+    static final String REMOVE_BASKET_ITEM = "postRemoveBasketItem";
 
     @Value(ADD_ITEM_URI)
     private String addItemUri;
@@ -50,6 +48,11 @@ class RequestUris {
     private String patchPaymentDetailsUri;
     @Value(POST_REPROCESS_ORDER_URI)
     private String postReprocessOrderUri;
+    @Value(GET_BASKET_LINKS_URI)
+    private String getBasketLinksUri;
+
+    @Value(REMOVE_ITEM_URI)
+    private String postRemoveBasketItemUri;
 
     @Bean
     List<RequestMappingInfo> requestMappingInfoList() {
@@ -115,6 +118,18 @@ class RequestUris {
                 .paths(postReprocessOrderUri)
                 .methods(RequestMethod.POST)
                 .mappingName(POST_REPROCESS_ORDER)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(getBasketLinksUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_BASKET_LINKS)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(postRemoveBasketItemUri)
+                .methods(RequestMethod.POST)
+                .mappingName(REMOVE_BASKET_ITEM)
                 .build());
 
         return Collections.unmodifiableList(knownRequests);
