@@ -144,7 +144,7 @@ public class BasketController {
     }
 
     @PostMapping(ADD_ITEM_URI)
-    public ResponseEntity<?> addItemToBasket(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
+    public ResponseEntity<Object> addItemToBasket(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
                                              HttpServletRequest request,
                                              final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);

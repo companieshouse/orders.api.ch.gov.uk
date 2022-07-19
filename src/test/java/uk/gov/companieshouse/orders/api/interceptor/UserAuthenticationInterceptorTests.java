@@ -115,24 +115,11 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
-    @Test
-    @DisplayName("preHandle accepts add item request that has the required headers")
-    void preHandleAcceptsAuthenticatedAddItemRequest() {
-
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("signedInPostRequestFixtures")
+    void preHandleAcceptsPostRequestForSignedInUsers(String displayName, String uri) {
         // Given
-        givenRequest(POST, "/basket/items");
-        givenRequestHasSignedInUser();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
-    @DisplayName("preHandle accepts checkout basket request that has the required headers")
-    void preHandleAcceptsAuthenticatedCheckoutBasketRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/checkouts");
+        givenRequest(POST, uri);
         givenRequestHasSignedInUser();
 
         // When and then
@@ -336,17 +323,6 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    @Test
-    @DisplayName("preHandle accepts remove basket item request from a user with OAuth2 authentication")
-    void preHandleAcceptsRemoveBasketItem() {
-        // Given
-        givenRequest(POST, "/basket/items/remove");
-        givenRequestHasSignedInUser();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
     /**
      * Sets up a POST request to the URI provided, expects the request to be rejected
      * @param uri the request URI
@@ -447,5 +423,11 @@ class UserAuthenticationInterceptorTests {
                 arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
                 arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
                 arguments("preHandle rejects get basket links request that lacks requires headers", "/basket/links"));
+    }
+
+    private static Stream<Arguments> signedInPostRequestFixtures() {
+        return Stream.of(arguments("preHandle accepts add item request that has the required headers", "/basket/items"),
+                arguments("preHandle accepts checkout basket request that has the required headers", "/basket/checkouts"),
+                arguments("preHandle accepts remove basket item request from a user with OAuth2 authentication", "/basket/items/remove"));
     }
 }
