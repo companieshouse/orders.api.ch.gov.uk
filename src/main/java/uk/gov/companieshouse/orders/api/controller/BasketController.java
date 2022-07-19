@@ -453,15 +453,15 @@ public class BasketController {
         if (retrievedBasket.isPresent()) {
             if (!basketService.removeBasketDataItemByUri(id, basketRequestDTO.getItemUri())) {
                 LOGGER.error("Item not found for item_uri: " + basketRequestDTO.getItemUri(), new ResourceNotFoundException("Item uri not found"), logMap);
-                return ResponseEntity.status(NOT_FOUND).body(null); // failure
+                return ResponseEntity.notFound().build(); // failure
             }
             logMap.put(LoggingUtils.BASKET_ID, id);
             logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
             LOGGER.infoRequest(request, "Removed item from basket", logMap);
-            return ResponseEntity.status(HttpStatus.OK).body(null); // success
+            return ResponseEntity.ok().build(); // success
         } else {
             LOGGER.error("Basket not found for id: " + id, new ResourceNotFoundException("Basket not found"), logMap);
-            return ResponseEntity.status(NOT_FOUND).body(null); // failure
+            return ResponseEntity.notFound().build(); // failure
         }
     }
 
@@ -480,7 +480,7 @@ public class BasketController {
         } else {
             logMap.put(LoggingUtils.STATUS, NOT_FOUND);
             LOGGER.infoRequest(request, "No basket present with id: " + id, logMap);
-            return ResponseEntity.status(NOT_FOUND).body(null);
+            return ResponseEntity.notFound().build();
         }
     }
 
