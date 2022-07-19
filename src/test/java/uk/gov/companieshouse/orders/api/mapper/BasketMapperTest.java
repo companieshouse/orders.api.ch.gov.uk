@@ -1,5 +1,10 @@
 package uk.gov.companieshouse.orders.api.mapper;
 
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,13 +12,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 import uk.gov.companieshouse.orders.api.model.Basket;
-
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @SpringJUnitConfig(BasketMapperTest.Config.class)
@@ -30,7 +30,7 @@ public class BasketMapperTest {
 
     @Test
     public void testAddToBasketRequestDTOToBasket(){
-        final AddToBasketRequestDTO dto = new AddToBasketRequestDTO();
+        final BasketRequestDTO dto = new BasketRequestDTO();
         dto.setItemUri(ITEM_URI);
 
         Basket item = basketMapper.addToBasketRequestDTOToBasket(dto);

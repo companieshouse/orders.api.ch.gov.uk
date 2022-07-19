@@ -14,6 +14,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
@@ -336,6 +337,26 @@ class UserAuthorisationInterceptorTests {
         givenRequestHasInternalUserRole();
 
         // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get basket links request")
+    void getBasketLinks() {
+        // given
+        givenRequest(GET, "/basket/links");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts put remove basket item request")
+    void removeBasketItem() {
+        // given
+        givenRequest(PUT, "/basket/items/remove");
+
+        // when and then
         thenRequestIsAccepted();
     }
 

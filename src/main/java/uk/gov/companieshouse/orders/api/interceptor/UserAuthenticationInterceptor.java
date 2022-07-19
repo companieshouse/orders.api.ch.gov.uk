@@ -3,15 +3,7 @@ package uk.gov.companieshouse.orders.api.interceptor;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.POST_REPROCESS_ORDER;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.*;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
@@ -53,10 +45,13 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
                 .orElse(true);
     }
 
-    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {switch (name) {
+    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {
+        switch (name) {
             case ADD_ITEM:
             case CHECKOUT_BASKET:
             case BASKET:
+            case GET_BASKET_LINKS:
+            case REMOVE_BASKET_ITEM:
                 return hasSignedInUser(request, response);
             case GET_PAYMENT_DETAILS:
             case GET_ORDER:
