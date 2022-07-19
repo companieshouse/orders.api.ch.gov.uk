@@ -126,12 +126,11 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    @Test
-    @DisplayName("preHandle accepts get payment details request that has signed in user headers")
-    void preHandleAcceptsSignedInUserGetPaymentDetailsRequest() {
-
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("signedInGetRequestFixtures")
+    void preHandleAcceptsGetRequestForSignedInUsers(String displayName, String uri) {
         // Given
-        givenRequest(GET, "/basket/checkouts/1234/payment");
+        givenRequest(GET, uri);
         givenRequestHasSignedInUser();
 
         // When and then
@@ -157,18 +156,6 @@ class UserAuthenticationInterceptorTests {
         // Given
         givenRequest(PATCH, "/basket/checkouts/1234/payment");
         givenRequestHasAuthenticatedApi();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
-    @DisplayName("preHandle accepts get order request that has signed in user headers")
-    void preHandleAcceptsSignedInUserGetOrderRequest() {
-
-        // Given
-        givenRequest(GET, "/orders/1234");
-        givenRequestHasSignedInUser();
 
         // When and then
         thenRequestIsAccepted();
@@ -311,18 +298,6 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    @Test
-    @DisplayName("preHandle accepts get basket links request from a user with OAuth2 authentication")
-    void preHandleAcceptsGetBasketLinks() {
-
-        // Given
-        givenRequest(GET, "/basket/links");
-        givenRequestHasSignedInUser();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
     /**
      * Sets up a POST request to the URI provided, expects the request to be rejected
      * @param uri the request URI
@@ -429,5 +404,11 @@ class UserAuthenticationInterceptorTests {
         return Stream.of(arguments("preHandle accepts add item request that has the required headers", "/basket/items"),
                 arguments("preHandle accepts checkout basket request that has the required headers", "/basket/checkouts"),
                 arguments("preHandle accepts remove basket item request from a user with OAuth2 authentication", "/basket/items/remove"));
+    }
+
+    private static Stream<Arguments> signedInGetRequestFixtures() {
+        return Stream.of(arguments("preHandle accepts get payment details request that has signed in user headers", "/basket/checkouts/1234/payment"),
+                arguments("preHandle accepts get order request that has signed in user headers", "/orders/1234"),
+                arguments("preHandle accepts get basket links request from a user with OAuth2 authentication", "/basket/links"));
     }
 }
