@@ -18,6 +18,7 @@ import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -1836,11 +1837,11 @@ class BasketControllerIntegrationTest {
         BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
         basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
-        mockMvc.perform(post("/basket/items/remove")
+        mockMvc.perform(put("/basket/items/remove")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basketRequestDTO)))
@@ -1857,11 +1858,11 @@ class BasketControllerIntegrationTest {
         BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
         basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
-        mockMvc.perform(post("/basket/items/remove")
+        mockMvc.perform(put("/basket/items/remove")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basketRequestDTO)))
@@ -1874,11 +1875,11 @@ class BasketControllerIntegrationTest {
         BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
         basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
-        ResultActions resultActions = mockMvc.perform(post("/basket/items/remove")
+        mockMvc.perform(put("/basket/items/remove")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basketRequestDTO)))
@@ -1889,7 +1890,7 @@ class BasketControllerIntegrationTest {
     @DisplayName("Test get basket links returns basket successfully")
     void getBasketLinks() throws Exception {
         final LocalDateTime start = timestamps.start();
-        Basket basket = createBasket(start);
+        createBasket(start);
 
         final String jsonResponse = mockMvc.perform(get("/basket/links")
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)

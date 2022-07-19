@@ -8,6 +8,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
@@ -172,7 +173,7 @@ class RequestMapperTests {
     void removeBasketItem() {
 
         // Given
-        givenRequest(POST, "/basket/items/remove");
+        givenRequest(PUT, "/basket/items/remove");
 
         // When
         String actual = requestMapperUnderTest.getRequestMapping(request).getName();

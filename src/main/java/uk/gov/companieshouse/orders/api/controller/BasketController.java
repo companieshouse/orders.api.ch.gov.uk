@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
@@ -80,7 +81,7 @@ public class BasketController {
     public static final String PATCH_PAYMENT_DETAILS_URI =
             "${uk.gov.companieshouse.orders.api.basket.checkouts}/{id}/payment";
     public static final String REMOVE_ITEM_URI =
-            "${uk.gov.companieshouse.orders.api.basket.items}/remove"; // should /remove be in app props?
+            "${uk.gov.companieshouse.orders.api.basket.items}/remove";
     public static final String GET_BASKET_LINKS_URI =
             "${uk.gov.companieshouse.orders.api.basket}/links";
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
@@ -436,7 +437,7 @@ public class BasketController {
         return ResponseEntity.status(NO_CONTENT).body(null);
     }
 
-    @PostMapping(REMOVE_ITEM_URI) // Change to PUT?
+    @PutMapping(REMOVE_ITEM_URI)
     public ResponseEntity<Object> removeBasketItem(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
                                                 HttpServletRequest request,
                                                 final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {

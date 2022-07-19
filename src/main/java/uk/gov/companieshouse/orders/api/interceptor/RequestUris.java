@@ -28,7 +28,7 @@ class RequestUris {
     static final String GET_CHECKOUT = "getCheckout";
     static final String POST_REPROCESS_ORDER = "postReprocessOrder";
     static final String GET_BASKET_LINKS = "getBasketLinks";
-    static final String REMOVE_BASKET_ITEM = "postRemoveBasketItem";
+    static final String REMOVE_BASKET_ITEM = "putRemoveBasketItem";
 
     @Value(ADD_ITEM_URI)
     private String addItemUri;
@@ -52,7 +52,7 @@ class RequestUris {
     private String getBasketLinksUri;
 
     @Value(REMOVE_ITEM_URI)
-    private String postRemoveBasketItemUri;
+    private String putRemoveBasketItemUri;
 
     @Bean
     List<RequestMappingInfo> requestMappingInfoList() {
@@ -127,8 +127,8 @@ class RequestUris {
                 .build());
 
         knownRequests.add(RequestMappingInfo
-                .paths(postRemoveBasketItemUri)
-                .methods(RequestMethod.POST)
+                .paths(putRemoveBasketItemUri)
+                .methods(RequestMethod.PUT)
                 .mappingName(REMOVE_BASKET_ITEM)
                 .build());
 

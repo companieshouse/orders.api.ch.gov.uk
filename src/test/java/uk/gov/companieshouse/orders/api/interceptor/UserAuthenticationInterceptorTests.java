@@ -11,6 +11,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
@@ -120,6 +121,17 @@ class UserAuthenticationInterceptorTests {
     void preHandleAcceptsPostRequestForSignedInUsers(String displayName, String uri) {
         // Given
         givenRequest(POST, uri);
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts remove basket item request from a user with OAuth2 authentication")
+    void preHandleAcceptsPostRequestForSignedInUsers() {
+        // Given
+        givenRequest(PUT, "/basket/items/remove");
         givenRequestHasSignedInUser();
 
         // When and then
@@ -402,8 +414,7 @@ class UserAuthenticationInterceptorTests {
 
     private static Stream<Arguments> signedInPostRequestFixtures() {
         return Stream.of(arguments("preHandle accepts add item request that has the required headers", "/basket/items"),
-                arguments("preHandle accepts checkout basket request that has the required headers", "/basket/checkouts"),
-                arguments("preHandle accepts remove basket item request from a user with OAuth2 authentication", "/basket/items/remove"));
+                arguments("preHandle accepts checkout basket request that has the required headers", "/basket/checkouts"));
     }
 
     private static Stream<Arguments> signedInGetRequestFixtures() {
