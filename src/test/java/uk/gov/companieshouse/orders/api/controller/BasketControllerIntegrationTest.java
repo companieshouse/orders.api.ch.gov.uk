@@ -1831,7 +1831,7 @@ class BasketControllerIntegrationTest {
         basket.setId(ERIC_IDENTITY_VALUE);
         final Item item = new Item();
         item.setItemUri(VALID_CERTIFICATE_URI);
-        basket.setItems(Collections.singletonList(item));
+        basket.getData().setItems(Collections.singletonList(item));
         basketRepository.save(basket);
 
         BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
@@ -1911,7 +1911,7 @@ class BasketControllerIntegrationTest {
         assertEquals(FORENAME, getDeliveryDetails.getForename());
         assertEquals(LOCALITY, getDeliveryDetails.getLocality());
         assertEquals(SURNAME, getDeliveryDetails.getSurname());
-        assertEquals(VALID_CERTIFICATE_URI, response.getItems().get(0).getItemUri());
+        assertEquals(VALID_CERTIFICATE_URI, response.getData().getItems().get(0).getItemUri());
         assertEquals(ERIC_IDENTITY_VALUE, response.getId());
         assertEquals(start, response.getCreatedAt());
         assertEquals(start, response.getUpdatedAt());
@@ -2048,8 +2048,8 @@ class BasketControllerIntegrationTest {
         assertThat(basket.getCreatedAt(), is(basketCreationTime));
         assertThat(basket.getUpdatedAt(), is(basketCreationTime));
         assertThat(basket.getId(), is(ERIC_IDENTITY_VALUE));
-        assertThat(basket.getItems().size(), is(1));
-        assertThat(basket.getItems().get(0).getItemUri(), is(itemUri));
+        assertThat(basket.getData().getItems().size(), is(1));
+        assertThat(basket.getData().getItems().get(0).getItemUri(), is(itemUri));
         org.assertj.core.api.Assertions.assertThat(basket.getData().getDeliveryDetails())
                 .isEqualToComparingFieldByField(deliveryDetailsAdded);
     }

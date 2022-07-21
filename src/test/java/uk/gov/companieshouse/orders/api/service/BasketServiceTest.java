@@ -85,7 +85,7 @@ public class BasketServiceTest {
         Basket basket = new Basket();
         Item item = new Item();
         item.setItemUri("123");
-        basket.getItems().add(item);
+        basket.getData().getItems().add(item);
         when(repository.removeBasketDataItemByUri("123","123")).thenReturn(basket);
 
         // when

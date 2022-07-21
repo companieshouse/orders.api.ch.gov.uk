@@ -44,6 +44,6 @@ public class BasketService {
      */
     public boolean removeBasketDataItemByUri(String id, String uri) {
         Basket retrievedBasket = repository.removeBasketDataItemByUri(id, uri);
-        return (retrievedBasket.getItems().stream().anyMatch(item -> uri.equals(item.getItemUri())));
+        return (retrievedBasket.getData().getItems().stream().anyMatch(item -> uri.equals(item.getItemUri())));
     }
 }
