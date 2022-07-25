@@ -1849,7 +1849,7 @@ class BasketControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Test remove basket item returns HTTP not found when item_uri not found")
+    @DisplayName("Test remove basket item returns HTTP conflict when item_uri not found")
     void removeBasketItemItemNotFound() throws Exception {
         Basket basket = new Basket();
         basket.setId(ERIC_IDENTITY_VALUE);
@@ -1866,7 +1866,7 @@ class BasketControllerIntegrationTest {
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(basketRequestDTO)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isConflict());
     }
 
     @Test
