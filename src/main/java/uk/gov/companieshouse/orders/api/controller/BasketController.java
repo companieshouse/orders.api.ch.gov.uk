@@ -8,10 +8,13 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.ITEM_ID;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,6 +77,8 @@ public class BasketController {
                     + CHECKOUT_ID_PATH_VARIABLE + "}/payment";
     public static final String ADD_ITEM_URI =
             "${uk.gov.companieshouse.orders.api.basket.items}";
+    public static final String APPEND_ITEM_URI =
+            "${uk.gov.companieshouse.orders.api.basket.items.append}";
     public static final String BASKET_URI =
             "${uk.gov.companieshouse.orders.api.basket}";
     public static final String CHECKOUT_BASKET_URI =
@@ -146,8 +151,40 @@ public class BasketController {
 
     @PostMapping(ADD_ITEM_URI)
     public ResponseEntity<Object> addItemToBasket(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
+            HttpServletRequest request,
+            final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        return this.addItemImplementation(basketRequestDTO, request, requestId, (retrievedBasket,
+                mappedBasket) -> {
+            retrievedBasket.getData().setItems(mappedBasket.getData().getItems());
+            return AppendItemUpdateStatus.UPDATED;
+        });
+    }
+
+    @PostMapping(APPEND_ITEM_URI)
+    public ResponseEntity<Object> appendItemToBasket(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
+            HttpServletRequest request,
+            final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        return this.addItemImplementation(basketRequestDTO, request, requestId, (retrievedBasket,
+                mappedBasket) -> {
+            Item mappedItem = mappedBasket.getData().getItems().get(0);
+            if (!retrievedBasket.getData().getItems().contains(mappedItem)) {
+                retrievedBasket.getData().getItems().add(mappedItem);
+                return AppendItemUpdateStatus.UPDATED;
+            } else {
+                LOGGER.debug("Item already exists in basket; skipping...");
+                return AppendItemUpdateStatus.DUPLICATE;
+            }
+        });
+    }
+
+    enum AppendItemUpdateStatus {
+        UPDATED, DUPLICATE;
+    }
+
+    private ResponseEntity<Object> addItemImplementation(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
                                              HttpServletRequest request,
-                                             final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+                                             final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId,
+                                             BiFunction<Basket, Basket, AppendItemUpdateStatus> itemMapping) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LOGGER.infoRequest(request, "Adding item to basket", logMap);
 
@@ -165,7 +202,7 @@ public class BasketController {
             LOGGER.errorRequest(request, "Failed to get item from API", logMap);
             return ResponseEntity.status(BAD_REQUEST).body(new ApiError(BAD_REQUEST, ErrorType.BASKET_ITEM_INVALID.getValue()));
         }
-        if (item != null) {
+        if (item != null) { // TODO: why would item be null at this point?
             LoggingUtils.logIfNotNull(logMap, LoggingUtils.COMPANY_NUMBER, item.getCompanyNumber());
         }
 
@@ -174,8 +211,10 @@ public class BasketController {
         Basket mappedBasket = basketMapper.addToBasketRequestDTOToBasket(basketRequestDTO);
 
         if (retrievedBasket.isPresent()) {
-            retrievedBasket.get().getData().setItems(mappedBasket.getData().getItems());
-            basketService.saveBasket(retrievedBasket.get());
+            AppendItemUpdateStatus status = itemMapping.apply(retrievedBasket.get(), mappedBasket);
+            if (status == AppendItemUpdateStatus.UPDATED) {
+                basketService.saveBasket(retrievedBasket.get());
+            }
         } else {
             mappedBasket.setId(EricHeaderHelper.getIdentity(request));
             basketService.saveBasket(mappedBasket);
