@@ -1,7 +1,25 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.HashMap;
+import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
-import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
@@ -36,26 +53,6 @@ import uk.gov.companieshouse.orders.api.service.OrderService;
 import uk.gov.companieshouse.orders.api.util.EricHeaderHelper;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
 
 /**
  * Partially unit tests the {@link BasketController} class.
@@ -99,10 +96,10 @@ class BasketControllerTest {
     private ItemEnricher enricher;
 
     @Mock
-    private Basket basket, retrievedBasket;
+    private Basket basket, mappedBasket;
 
     @Mock
-    private BasketData basketData, retrievedBasketData;
+    private BasketData basketData, mappedBasketData;
 
     @Mock
     private BasketMapper basketMapper;
@@ -210,9 +207,9 @@ class BasketControllerTest {
         when(apiClientService.getItem(any(), any())).thenReturn(certificate);
         when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
         when(basket.getData()).thenReturn(basketData);
-        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(retrievedBasket);
-        when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
-        when(retrievedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
+        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
+        when(mappedBasket.getData()).thenReturn(mappedBasketData);
+        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
         when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
         when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
         when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
@@ -239,7 +236,7 @@ class BasketControllerTest {
         basketRequest.setItemUri("/path/to/item");
         when(apiClientService.getItem(any(), any())).thenReturn(certificate);
         when(basketService.getBasketById(any())).thenReturn(Optional.empty());
-        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(retrievedBasket);
+        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
         when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
         when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
         when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
@@ -254,8 +251,8 @@ class BasketControllerTest {
         assertEquals(basketResponse, actual.getBody());
         verify(apiClientService).getItem("passthrough", "/path/to/item");
         verify(basketService).getBasketById("id");
-        verify(retrievedBasket).setId("id");
-        verify(basketService).saveBasket(retrievedBasket);
+        verify(mappedBasket).setId("id");
+        verify(basketService).saveBasket(mappedBasket);
     }
 
     @Test
@@ -277,6 +274,65 @@ class BasketControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, actual.getStatusCode());
         assertEquals(new ApiError(BAD_REQUEST, ErrorType.BASKET_ITEM_INVALID.getValue()), actual.getBody());
         verify(apiClientService).getItem("passthrough", "/path/to/item");
+        verifyNoInteractions(basketService);
+    }
+
+    @Test
+    @DisplayName("Append item to basket returns 200 OK")
+    void appendItemToBasketWhenBasketResourceIsEmpty() throws IOException {
+        // given
+        BasketRequestDTO basketRequest = new BasketRequestDTO();
+        basketRequest.setItemUri("/path/to/item");
+        when(apiClientService.getItem(any(), any())).thenReturn(certificate);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(basket.getData()).thenReturn(basketData);
+        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
+        when(mappedBasket.getData()).thenReturn(mappedBasketData);
+        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
+        when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
+        when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
+        when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
+        when(httpServletRequest.getHeader("ERIC-Access-Token")).thenReturn("passthrough");
+
+        // when
+        ResponseEntity<Object> actual = controllerUnderTest.appendItemToBasket(basketRequest,
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(HttpStatus.OK, actual.getStatusCode());
+        assertEquals(basketResponse, actual.getBody());
+        verify(apiClientService).getItem("passthrough", "/path/to/item");
+        verify(basketService).getBasketById("id");
+        verify(basketService).saveBasket(basket);
+    }
+
+    @Test
+    @DisplayName("Append item to basket returns 200 OK with duplicate item in basket")
+    void appendItemToBasketWhenBasketResourceContainsItem() throws IOException {
+        // given
+        BasketRequestDTO basketRequest = new BasketRequestDTO();
+        basketRequest.setItemUri("/path/to/item");
+        when(apiClientService.getItem(any(), any())).thenReturn(certificate);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(basket.getData()).thenReturn(basketData);
+        when(basketData.getItems()).thenReturn(Collections.singletonList(certificate));
+        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
+        when(mappedBasket.getData()).thenReturn(mappedBasketData);
+        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
+        when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
+        when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
+        when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
+        when(httpServletRequest.getHeader("ERIC-Access-Token")).thenReturn("passthrough");
+
+        // when
+        ResponseEntity<Object> actual = controllerUnderTest.appendItemToBasket(basketRequest,
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(HttpStatus.OK, actual.getStatusCode());
+        assertEquals(basketResponse, actual.getBody());
+        verify(apiClientService).getItem("passthrough", "/path/to/item");
+        verify(basketService).getBasketById("id");
         verifyNoInteractions(basketService);
     }
 
