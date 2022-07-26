@@ -453,7 +453,7 @@ public class BasketController {
         if (retrievedBasket.isPresent()) {
             if (!basketService.removeBasketDataItemByUri(id, basketRequestDTO.getItemUri())) {
                 LOGGER.error("Item not found for item_uri: " + basketRequestDTO.getItemUri(), new ResourceNotFoundException("Item uri not found"), logMap);
-                return ResponseEntity.notFound().build(); // failure
+                return ResponseEntity.status(CONFLICT).build(); // failure
             }
             logMap.put(LoggingUtils.BASKET_ID, id);
             logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
