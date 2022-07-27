@@ -360,6 +360,26 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
+    @Test
+    @DisplayName("preHandle accepts add item to basket request")
+    void addBasketItem() {
+        // given
+        givenRequest(POST, "/basket/items");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts append item to basket request")
+    void appendBasketItem() {
+        // given
+        givenRequest(POST, "/basket/items/append");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
     /**
      * Sets up request givens.
      * @param method the HTTP request method

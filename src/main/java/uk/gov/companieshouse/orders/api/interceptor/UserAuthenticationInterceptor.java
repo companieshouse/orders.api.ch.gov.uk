@@ -52,6 +52,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
             case BASKET:
             case GET_BASKET_LINKS:
             case REMOVE_BASKET_ITEM:
+            case APPEND_BASKET_ITEM:
                 return hasSignedInUser(request, response);
             case GET_PAYMENT_DETAILS:
             case GET_ORDER:

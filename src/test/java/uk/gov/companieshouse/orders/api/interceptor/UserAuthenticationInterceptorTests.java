@@ -414,7 +414,10 @@ class UserAuthenticationInterceptorTests {
 
     private static Stream<Arguments> signedInPostRequestFixtures() {
         return Stream.of(arguments("preHandle accepts add item request that has the required headers", "/basket/items"),
-                arguments("preHandle accepts checkout basket request that has the required headers", "/basket/checkouts"));
+                arguments("preHandle accepts checkout basket request that has the required "
+                        + "headers", "/basket/checkouts"),
+                arguments("preHandle accepts append item request that has the required headers",
+                        "/basket/items/append"));
     }
 
     private static Stream<Arguments> signedInGetRequestFixtures() {

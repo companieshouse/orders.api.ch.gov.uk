@@ -10,6 +10,7 @@ import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.APPEND_BASKET_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
@@ -180,6 +181,19 @@ class RequestMapperTests {
 
         // Then
         assertThat(actual, is(REMOVE_BASKET_ITEM));
+    }
+
+    @Test
+    @DisplayName("getRequestMappingInfo returns the append item to basket mapping")
+    void appendItemToBasket() {
+        // Given
+        givenRequest(POST, "/basket/items/append");
+
+        // When
+        String actual = requestMapperUnderTest.getRequestMapping(request).getName();
+
+        // Then
+        assertThat(actual, is(APPEND_BASKET_ITEM));
     }
 
     /**

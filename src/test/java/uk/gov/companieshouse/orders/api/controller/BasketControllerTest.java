@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -90,16 +92,16 @@ class BasketControllerTest {
     private EricHeaderHelper ericHeaderHelper;
 
     @Mock
-    private Item certificate, document, missingImage;
+    private Item certificateResource, certificate, document, missingImage;
 
     @Mock
     private ItemEnricher enricher;
 
     @Mock
-    private Basket basket, mappedBasket;
+    private Basket retrievedBasket, mappedBasket;
 
     @Mock
-    private BasketData basketData, mappedBasketData;
+    private BasketData retrievedBasketData, mappedBasketData;
 
     @Mock
     private BasketMapper basketMapper;
@@ -204,9 +206,9 @@ class BasketControllerTest {
         // given
         BasketRequestDTO basketRequest = new BasketRequestDTO();
         basketRequest.setItemUri("/path/to/item");
-        when(apiClientService.getItem(any(), any())).thenReturn(certificate);
-        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
-        when(basket.getData()).thenReturn(basketData);
+        when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(retrievedBasket));
+        when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
         when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
         when(mappedBasket.getData()).thenReturn(mappedBasketData);
         when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
@@ -224,7 +226,8 @@ class BasketControllerTest {
         assertEquals(basketResponse, actual.getBody());
         verify(apiClientService).getItem("passthrough", "/path/to/item");
         verify(basketService).getBasketById("id");
-        verify(basketService).saveBasket(basket);
+        verify(basketService).saveBasket(retrievedBasket);
+        verify(itemMapper).itemToBasketItemDTO(certificateResource);
     }
 
     @Test
@@ -234,7 +237,7 @@ class BasketControllerTest {
         // given
         BasketRequestDTO basketRequest = new BasketRequestDTO();
         basketRequest.setItemUri("/path/to/item");
-        when(apiClientService.getItem(any(), any())).thenReturn(certificate);
+        when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
         when(basketService.getBasketById(any())).thenReturn(Optional.empty());
         when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
         when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
@@ -253,6 +256,7 @@ class BasketControllerTest {
         verify(basketService).getBasketById("id");
         verify(mappedBasket).setId("id");
         verify(basketService).saveBasket(mappedBasket);
+        verify(itemMapper).itemToBasketItemDTO(certificateResource);
     }
 
     @Test
@@ -283,9 +287,9 @@ class BasketControllerTest {
         // given
         BasketRequestDTO basketRequest = new BasketRequestDTO();
         basketRequest.setItemUri("/path/to/item");
-        when(apiClientService.getItem(any(), any())).thenReturn(certificate);
-        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
-        when(basket.getData()).thenReturn(basketData);
+        when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(retrievedBasket));
+        when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
         when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
         when(mappedBasket.getData()).thenReturn(mappedBasketData);
         when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
@@ -303,7 +307,8 @@ class BasketControllerTest {
         assertEquals(basketResponse, actual.getBody());
         verify(apiClientService).getItem("passthrough", "/path/to/item");
         verify(basketService).getBasketById("id");
-        verify(basketService).saveBasket(basket);
+        verify(basketService).saveBasket(retrievedBasket);
+        verify(itemMapper).itemToBasketItemDTO(certificateResource);
     }
 
     @Test
@@ -312,13 +317,17 @@ class BasketControllerTest {
         // given
         BasketRequestDTO basketRequest = new BasketRequestDTO();
         basketRequest.setItemUri("/path/to/item");
-        when(apiClientService.getItem(any(), any())).thenReturn(certificate);
-        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
-        when(basket.getData()).thenReturn(basketData);
-        when(basketData.getItems()).thenReturn(Collections.singletonList(certificate));
+        Item savedCertificateItem = new Item();
+        savedCertificateItem.setItemUri("/path/to/item");
+        Item newCertificateItem = new Item();
+        newCertificateItem.setItemUri("/path/to/item");
+        when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(retrievedBasket));
+        when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
+        when(retrievedBasketData.getItems()).thenReturn(Collections.singletonList(savedCertificateItem));
         when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
         when(mappedBasket.getData()).thenReturn(mappedBasketData);
-        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(certificate));
+        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(newCertificateItem));
         when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
         when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
         when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
@@ -333,7 +342,41 @@ class BasketControllerTest {
         assertEquals(basketResponse, actual.getBody());
         verify(apiClientService).getItem("passthrough", "/path/to/item");
         verify(basketService).getBasketById("id");
-        verifyNoInteractions(basketService);
+        verify(itemMapper).itemToBasketItemDTO(certificateResource);
+        verify(basketService, times(0)).saveBasket(retrievedBasket);
+    }
+
+    @Test
+    @DisplayName("Append item to list of basket items if no duplicate found")
+    void appendItemToBasketWhenBasketResourceDoesNotContainsDuplicateItem() throws IOException {
+        // given
+        List<Item> persistedBasketItems = new ArrayList<>();
+        persistedBasketItems.add(certificate);
+        BasketRequestDTO basketRequest = new BasketRequestDTO();
+        basketRequest.setItemUri("/path/to/item");
+        when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(retrievedBasket));
+        when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
+        when(retrievedBasketData.getItems()).thenReturn(persistedBasketItems);
+        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
+        when(mappedBasket.getData()).thenReturn(mappedBasketData);
+        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(document));
+        when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
+        when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
+        when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
+        when(httpServletRequest.getHeader("ERIC-Access-Token")).thenReturn("passthrough");
+
+        // when
+        ResponseEntity<Object> actual = controllerUnderTest.appendItemToBasket(basketRequest,
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(HttpStatus.OK, actual.getStatusCode());
+        assertEquals(basketResponse, actual.getBody());
+        assertEquals(Arrays.asList(certificate, document), persistedBasketItems);
+        verify(apiClientService).getItem("passthrough", "/path/to/item");
+        verify(basketService).getBasketById("id");
+        verify(itemMapper).itemToBasketItemDTO(certificateResource);
     }
 
     /**

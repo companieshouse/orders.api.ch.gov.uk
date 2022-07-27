@@ -8,13 +8,13 @@ import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.ITEM_ID;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -156,7 +156,7 @@ public class BasketController {
         return this.addItemImplementation(basketRequestDTO, request, requestId, (retrievedBasket,
                 mappedBasket) -> {
             retrievedBasket.getData().setItems(mappedBasket.getData().getItems());
-            return AppendItemUpdateStatus.UPDATED;
+            return ItemUpdateStatus.UPDATED;
         });
     }
 
@@ -166,25 +166,29 @@ public class BasketController {
             final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         return this.addItemImplementation(basketRequestDTO, request, requestId, (retrievedBasket,
                 mappedBasket) -> {
+            Set<String> basketItemUris = retrievedBasket.getData().getItems()
+                    .stream()
+                    .map(Item::getItemUri)
+                    .collect(Collectors.toSet());
             Item mappedItem = mappedBasket.getData().getItems().get(0);
-            if (!retrievedBasket.getData().getItems().contains(mappedItem)) {
+            if (!basketItemUris.contains(mappedItem.getItemUri())) {
                 retrievedBasket.getData().getItems().add(mappedItem);
-                return AppendItemUpdateStatus.UPDATED;
+                return ItemUpdateStatus.UPDATED;
             } else {
                 LOGGER.debug("Item already exists in basket; skipping...");
-                return AppendItemUpdateStatus.DUPLICATE;
+                return ItemUpdateStatus.DUPLICATE;
             }
         });
     }
 
-    enum AppendItemUpdateStatus {
+    enum ItemUpdateStatus {
         UPDATED, DUPLICATE;
     }
 
     private ResponseEntity<Object> addItemImplementation(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
                                              HttpServletRequest request,
                                              final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId,
-                                             BiFunction<Basket, Basket, AppendItemUpdateStatus> itemMapping) {
+                                             BiFunction<Basket, Basket, ItemUpdateStatus> itemMapping) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LOGGER.infoRequest(request, "Adding item to basket", logMap);
 
@@ -211,8 +215,8 @@ public class BasketController {
         Basket mappedBasket = basketMapper.addToBasketRequestDTOToBasket(basketRequestDTO);
 
         if (retrievedBasket.isPresent()) {
-            AppendItemUpdateStatus status = itemMapping.apply(retrievedBasket.get(), mappedBasket);
-            if (status == AppendItemUpdateStatus.UPDATED) {
+            ItemUpdateStatus status = itemMapping.apply(retrievedBasket.get(), mappedBasket);
+            if (status == ItemUpdateStatus.UPDATED) {
                 basketService.saveBasket(retrievedBasket.get());
             }
         } else {
