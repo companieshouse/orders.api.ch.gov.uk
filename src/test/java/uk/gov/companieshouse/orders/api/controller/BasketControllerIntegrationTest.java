@@ -563,6 +563,7 @@ class BasketControllerIntegrationTest {
         item.setItemUri(OLD_CERTIFICATE_URI);
         BasketData basketData = new BasketData();
         basketData.setItems(Arrays.asList(item));
+        basketData.setEnrolled(true);
         Basket basket = new Basket();
         basket.setId(ERIC_IDENTITY_VALUE);
         basket.setData(basketData);
@@ -595,6 +596,7 @@ class BasketControllerIntegrationTest {
         item.setItemUri(OLD_CERTIFICATE_URI);
         BasketData basketData = new BasketData();
         basketData.setItems(Arrays.asList(item));
+        basketData.setEnrolled(true);
         Basket basket = new Basket();
         basket.setId(ERIC_IDENTITY_VALUE);
         basket.setData(basketData);
@@ -616,6 +618,31 @@ class BasketControllerIntegrationTest {
         assertEquals(1, retrievedBasket.get().getData().getItems().size());
         assertEquals(OLD_CERTIFICATE_URI,
                 retrievedBasket.get().getData().getItems().get(0).getItemUri());
+    }
+
+    @Test
+    @DisplayName("Append item endpoint returns HTTP 404 when the user is disenrolled")
+    void appendItemShouldReturn404IfUserDisenrolled() throws Exception {
+        Item item = new Item();
+        item.setItemUri(OLD_CERTIFICATE_URI);
+        BasketData basketData = new BasketData();
+        basketData.setItems(Arrays.asList(item));
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basket.setData(basketData);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(post("/basket/items/append")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test

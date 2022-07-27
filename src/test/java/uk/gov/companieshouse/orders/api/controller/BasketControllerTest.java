@@ -355,12 +355,14 @@ class BasketControllerTest {
         BasketRequestDTO basketRequest = new BasketRequestDTO();
         basketRequest.setItemUri("/path/to/item");
         when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
+        when(certificate.getItemUri()).thenReturn("/path/to/item");
         when(basketService.getBasketById(any())).thenReturn(Optional.of(retrievedBasket));
         when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
         when(retrievedBasketData.getItems()).thenReturn(persistedBasketItems);
         when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
         when(mappedBasket.getData()).thenReturn(mappedBasketData);
         when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(document));
+        when(document.getItemUri()).thenReturn("/path/to/document");
         when(itemMapper.itemToBasketItemDTO(any())).thenReturn(basketResponse);
         when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
         when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
