@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.orders.api.config;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,10 +16,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistration
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import uk.gov.companieshouse.api.interceptor.CRUDAuthenticationInterceptor;
-import uk.gov.companieshouse.orders.api.interceptor.OrdersSearchEndpointFeatureToggle;
-import uk.gov.companieshouse.orders.api.interceptor.LoggingInterceptor;
-import uk.gov.companieshouse.orders.api.interceptor.UserAuthenticationInterceptor;
-import uk.gov.companieshouse.orders.api.interceptor.UserAuthorisationInterceptor;
+import uk.gov.companieshouse.orders.api.interceptor.*;
 
 @ExtendWith(MockitoExtension.class)
 class ApplicationConfigTest {
@@ -33,14 +31,18 @@ class ApplicationConfigTest {
     private UserAuthorisationInterceptor authorisationInterceptor;
     @Mock
     private OrdersSearchEndpointFeatureToggle featureToggleInterceptor;
+    @Mock
+    private BasketEnrollmentFeatureToggle basketEnrollmentInterceptor;
+
     private final String healthcheckUri = "healthcheck";
     private final String paymentDetailsUri = "payment-details";
     private final String ordersSearchUri = "orders-search-uri";
+    private final String appendItemToBasketUri = "append-basket-item-uri";
 
     @BeforeEach
     void setup() {
         config = Mockito.spy(new ApplicationConfig(loggingInterceptor, authenticationInterceptor,
-                authorisationInterceptor, featureToggleInterceptor, healthcheckUri, paymentDetailsUri, ordersSearchUri));
+                authorisationInterceptor, featureToggleInterceptor, basketEnrollmentInterceptor, healthcheckUri, paymentDetailsUri, ordersSearchUri, appendItemToBasketUri));
     }
 
     @Test
@@ -67,6 +69,9 @@ class ApplicationConfigTest {
         InterceptorRegistration authorisationInterceptorRegistration = Mockito.mock(InterceptorRegistration.class);
         doReturn(authorisationInterceptorRegistration).when(registry).addInterceptor(authorisationInterceptor);
 
+        InterceptorRegistration basketEnrollmentInterceptorRegistration = Mockito.mock(InterceptorRegistration.class);
+        doReturn(basketEnrollmentInterceptorRegistration).when(registry).addInterceptor(basketEnrollmentInterceptor);
+
         InterceptorRegistration crudPermissionInterceptorRegistration = Mockito.mock(InterceptorRegistration.class);
         doReturn(crudPermissionInterceptorRegistration).when(registry).addInterceptor(crudPermissionInterceptor);
 
@@ -80,11 +85,13 @@ class ApplicationConfigTest {
         verify(authenticationInterceptorRegistration).excludePathPatterns(healthcheckUri);
         verify(authorisationInterceptorRegistration).excludePathPatterns(healthcheckUri);
         verify(featureToggleInterceptorRegistration).addPathPatterns(ordersSearchUri);
+        verify(basketEnrollmentInterceptorRegistration).addPathPatterns(appendItemToBasketUri);
         verify(crudPermissionInterceptorRegistration).excludePathPatterns(paymentDetailsUri, healthcheckUri);
         verify(crudPermissionInterceptorPaymentDetailsRegistration).addPathPatterns(paymentDetailsUri);
 
         InOrder inOrder = Mockito.inOrder(registry);
         inOrder.verify(registry).addInterceptor(loggingInterceptor);
+        inOrder.verify(registry).addInterceptor(basketEnrollmentInterceptor);
         inOrder.verify(registry).addInterceptor(featureToggleInterceptor);
         inOrder.verify(registry).addInterceptor(authenticationInterceptor);
         inOrder.verify(registry).addInterceptor(authorisationInterceptor);
