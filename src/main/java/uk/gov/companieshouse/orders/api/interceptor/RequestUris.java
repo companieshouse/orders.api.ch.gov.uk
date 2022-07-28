@@ -29,6 +29,7 @@ class RequestUris {
     static final String POST_REPROCESS_ORDER = "postReprocessOrder";
     static final String GET_BASKET_LINKS = "getBasketLinks";
     static final String REMOVE_BASKET_ITEM = "putRemoveBasketItem";
+    static final String APPEND_BASKET_ITEM = "postAppendBasketItem";
 
     @Value(ADD_ITEM_URI)
     private String addItemUri;
@@ -50,9 +51,10 @@ class RequestUris {
     private String postReprocessOrderUri;
     @Value(GET_BASKET_LINKS_URI)
     private String getBasketLinksUri;
-
     @Value(REMOVE_ITEM_URI)
     private String putRemoveBasketItemUri;
+    @Value(APPEND_ITEM_URI)
+    private String postAppendBasketItemUri;
 
     @Bean
     List<RequestMappingInfo> requestMappingInfoList() {
@@ -130,6 +132,12 @@ class RequestUris {
                 .paths(putRemoveBasketItemUri)
                 .methods(RequestMethod.PUT)
                 .mappingName(REMOVE_BASKET_ITEM)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(postAppendBasketItemUri)
+                .methods(RequestMethod.POST)
+                .mappingName(APPEND_BASKET_ITEM)
                 .build());
 
         return Collections.unmodifiableList(knownRequests);

@@ -5,6 +5,7 @@ import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIAB
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.APPEND_BASKET_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_BASKET_LINKS;
@@ -78,6 +79,7 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
             case BASKET:
             case GET_BASKET_LINKS:
             case REMOVE_BASKET_ITEM:
+            case APPEND_BASKET_ITEM:
                 return true; // no authorisation required
             case GET_PAYMENT_DETAILS:
                 return getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
