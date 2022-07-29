@@ -126,7 +126,8 @@ public class CheckoutServiceTest {
 
         timestamps.start();
 
-        serviceUnderTest.createCheckout(new Certificate(), ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(new Certificate()),
+                ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
@@ -141,7 +142,7 @@ public class CheckoutServiceTest {
         certificate.setCompanyNumber(COMPANY_NUMBER);
         when(checkoutRepository.save(any(Checkout.class))).thenReturn(new Checkout());
 
-        serviceUnderTest.createCheckout(certificate, ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(certificate), ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
@@ -156,7 +157,8 @@ public class CheckoutServiceTest {
     void createCheckoutPopulatesAndSavesCheckedOutBy() {
         when(checkoutRepository.save(any(Checkout.class))).thenReturn(new Checkout());
 
-        serviceUnderTest.createCheckout(new Certificate(), ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(new Certificate()),
+                ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
@@ -178,7 +180,8 @@ public class CheckoutServiceTest {
         deliveryDetails.setRegion(REGION);
         deliveryDetails.setSurname(SURNAME);
 
-        serviceUnderTest.createCheckout(new Certificate(), ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(new Certificate()),
+                ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, deliveryDetails);
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
@@ -204,7 +207,8 @@ public class CheckoutServiceTest {
         when(etagGeneratorService.generateEtag()).thenReturn(ETAG);
         when(linksGeneratorService.generateCheckoutLinks(any(String.class))).thenReturn(checkoutLinks);
 
-        serviceUnderTest.createCheckout(new Certificate(), ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(new Certificate()),
+                ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
@@ -220,7 +224,8 @@ public class CheckoutServiceTest {
     void createCheckoutPopulatesTotalOrderCost() {
         Item certificateItem = createCertificateItem();
         doCallRealMethod().when(checkoutHelper).calculateTotalOrderCostForCheckout(any());
-        serviceUnderTest.createCheckout(certificateItem, ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(certificateItem),
+                ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
@@ -231,7 +236,8 @@ public class CheckoutServiceTest {
     @DisplayName("createCheckout populates `id` in the format ORD-######-######")
     void createCheckoutPopulatesIdCorrectly() {
         Item certificateItem = createCertificateItem();
-        serviceUnderTest.createCheckout(certificateItem, ERIC_IDENTITY_VALUE,
+        serviceUnderTest.createCheckout(Collections.singletonList(certificateItem),
+                ERIC_IDENTITY_VALUE,
                 ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
         verify(checkoutRepository).save(checkoutCaptor.capture());
         assertTrue(checkout().getId().matches("^ORD-\\d{6}-\\d{6}$")); ;

@@ -2091,7 +2091,8 @@ class BasketControllerIntegrationTest {
         copy.setItemOptions(options);
 
         return checkoutService.createCheckout(
-                copy, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(copy), ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE,
+                new DeliveryDetails());
     }
 
     private Checkout createCertificateCheckout() {
@@ -2106,7 +2107,9 @@ class BasketControllerIntegrationTest {
         certificate.setItemOptions(options);
 
         return checkoutService.createCheckout(
-                certificate, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(certificate), ERIC_IDENTITY_VALUE,
+                ERIC_AUTHORISED_USER_VALUE,
+                new DeliveryDetails());
     }
 
     private Checkout createMissingImageCheckout() {
@@ -2119,7 +2122,8 @@ class BasketControllerIntegrationTest {
         missingImageDelivery.setItemOptions(MISSING_IMAGE_DELIVERY_ITEM_OPTIONS);
 
         return checkoutService.createCheckout(
-                missingImageDelivery, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(missingImageDelivery), ERIC_IDENTITY_VALUE,
+                ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
     }
 
     /**

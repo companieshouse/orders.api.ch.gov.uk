@@ -20,6 +20,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEA
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSION_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -193,7 +194,9 @@ class OrdersApiAuthenticationTests {
 
 		when(basketService.getBasketById(anyString())).thenReturn(Optional.of(basket));
 		when(checkoutService.createCheckout(
-				any(Certificate.class), any(String.class), any(String.class), any(DeliveryDetails.class)))
+				any(List.class), any(String.class),
+				any(String.class),
+				any(DeliveryDetails.class)))
 				.thenReturn(checkout);
 
 		CheckoutData checkoutDataResp = new CheckoutData();
