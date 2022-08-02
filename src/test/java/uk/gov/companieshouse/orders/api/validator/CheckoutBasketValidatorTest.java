@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.orders.api.validator;
 
+import java.io.IOException;
+import java.util.Arrays;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -73,6 +75,23 @@ public class CheckoutBasketValidatorTest {
     }
 
     @Test
+    @DisplayName("getValidation does not error when multiple basket "
+            + "contains items with one item invalid")
+    public void multipleItemBasketInvalidItem () throws IOException {
+        // Given
+        Basket basket = setUpBasketWithOneInvalidItem();
+        when(apiClientService.getItem(PASS_THROUGH_HEADER,
+                INVALID_ITEM_URI)).thenThrow(IOException.class);
+
+        // When
+        List<String> errors = validatorUnderTest.getValidationErrors(PASS_THROUGH_HEADER, basket);
+
+        // Then
+        assertThat(errors.isEmpty(), is(true));
+        assertThat(errors.size(), is(0));
+    }
+
+    @Test
     @DisplayName("getValidationErrors returns error for missing delivery details for postal delivery")
     public void getValidationErrorsReportsMissingDeliveryDetails() throws Exception {
         // Given
@@ -127,6 +146,26 @@ public class CheckoutBasketValidatorTest {
         basketItem.setItemUri(INVALID_ITEM_URI);
         basketItem.setPostalDelivery(false);
         basketData.setItems(Collections.singletonList(basketItem));
+        basket.setData(basketData);
+
+        return basket;
+    }
+
+    private Basket setUpBasketWithOneInvalidItem() {
+        Basket basket = new Basket();
+        BasketData basketData = new BasketData();
+        Item basketItem = new Item();
+        basketItem.setItemUri(INVALID_ITEM_URI);
+        basketItem.setPostalDelivery(false);
+
+        Certificate certificate = new Certificate();
+        certificate.setCompanyNumber(COMPANY_NUMBER);
+        certificate.setItemCosts(ITEM_COSTS);
+        certificate.setPostageCost(POSTAGE_COST);
+        certificate.setTotalItemCost(TOTAL_ITEM_COST);
+        certificate.setPostalDelivery(true);
+
+        basketData.setItems(Arrays.asList(basketItem, certificate));
         basket.setData(basketData);
 
         return basket;

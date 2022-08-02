@@ -10,8 +10,10 @@ import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_H
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -367,20 +369,28 @@ public class BasketController {
                     return itemUri;
                 }).collect(Collectors.toList());
 
-        List<Item> itemsList = itemUriList.stream()
-                .map(uri -> {
+        List<Item> itemsList = new ArrayList<>();
+        if (itemUriList.size() == 1) {
+            String itemUri = itemUriList.get(0);
+            try {
+                itemsList.add(getItemFromApiClient(itemUri, passthroughHeader, logMap));
+            } catch (Exception exception) {
+                logItemError(request, logMap, itemUri, exception);
+                return ResponseEntity.status(BAD_REQUEST).body(new ApiError(BAD_REQUEST,
+                        "Failed to retrieve item"));
+            }
+        } else {
+            itemsList.addAll(itemUriList.stream()
+                .map(itemUri -> {
                     Item item = null;
                     try {
-                        item = getItemFromApiClient(uri, passthroughHeader, logMap);
+                        item = getItemFromApiClient(itemUri, passthroughHeader, logMap);
                     } catch (IOException exception) {
-                        logMap.put(LoggingUtils.STATUS, BAD_REQUEST);
-                        logMap.put(LoggingUtils.EXCEPTION, exception);
-                        LOGGER.errorRequest(
-                                request, String.format("Failed to retrieve item from api client "
-                                                + "for item uri: %s", uri), logMap);
+                        logItemError(request, logMap, itemUri, exception);
                     }
                     return item;
-                }).collect(Collectors.toList());
+                }).filter(Objects::nonNull).collect(Collectors.toList()));
+        }
 
         Checkout checkout = checkoutService.createCheckout(itemsList,
                 EricHeaderHelper.getIdentity(request),
@@ -592,5 +602,13 @@ public class BasketController {
             LoggingUtils.logIfNotNull(logMap, LoggingUtils.COMPANY_NUMBER, item.getCompanyNumber());
         }
         return item;
+    }
+
+    private void logItemError(HttpServletRequest request, Map<String, Object> logMap,
+            String itemUri, Exception exception) {
+        logMap.put(LoggingUtils.STATUS, BAD_REQUEST);
+        logMap.put(LoggingUtils.EXCEPTION, exception);
+        LOGGER.errorRequest(request, String.format("Failed to retrieve item "
+                + "from api client for item uri: %s", itemUri, logMap));
     }
 }
