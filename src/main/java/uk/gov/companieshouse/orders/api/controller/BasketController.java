@@ -373,21 +373,29 @@ public class BasketController {
         if (itemUriList.size() == 1) {
             String itemUri = itemUriList.get(0);
             try {
+                LOGGER.info(String.format("Attempting to retrieve item with uri: %s "
+                        + "from api client", itemUri), logMap);
                 itemsList.add(getItemFromApiClient(itemUri, passthroughHeader, logMap));
             } catch (Exception exception) {
                 logItemError(request, logMap, itemUri, exception);
                 return ResponseEntity.status(BAD_REQUEST).body(new ApiError(BAD_REQUEST,
                         "Failed to retrieve item"));
             }
+            LOGGER.info(String.format("Retrieved item with uri: %s "
+                    + "from api client", itemUri), logMap);
         } else {
             itemsList.addAll(itemUriList.stream()
                 .map(itemUri -> {
                     Item item = null;
                     try {
+                        LOGGER.info(String.format("Attempting to retrieve item with uri: %s "
+                                + "from api client", itemUri), logMap);
                         item = getItemFromApiClient(itemUri, passthroughHeader, logMap);
                     } catch (IOException exception) {
                         logItemError(request, logMap, itemUri, exception);
                     }
+                    LOGGER.info(String.format("Retrieved item with uri: %s "
+                            + "from api client", itemUri), logMap);
                     return item;
                 }).filter(Objects::nonNull).collect(Collectors.toList()));
         }
@@ -609,6 +617,6 @@ public class BasketController {
         logMap.put(LoggingUtils.STATUS, BAD_REQUEST);
         logMap.put(LoggingUtils.EXCEPTION, exception);
         LOGGER.errorRequest(request, String.format("Failed to retrieve item "
-                + "from api client for item uri: %s", itemUri, logMap));
+                + "from api client for item uri: %s", itemUri), logMap);
     }
 }
