@@ -25,34 +25,30 @@ public interface CheckoutToPaymentDetailsMapper {
 
     default void updateDTOWithPaymentDetails(CheckoutData checkoutData, PaymentDetailsDTO paymentDetailsDTO) {
         List<ItemDTO> itemDTOs = new ArrayList<>();
-        List<Item> itemsList = checkoutData.getItems();
-        itemsList.stream().forEach(
-            item -> {
-                for (ItemCosts itemCosts : item.getItemCosts()) {
-                        ItemDTO itemDTO = new ItemDTO();
-                        List<String> classOfPayment = new ArrayList<>();
-                        classOfPayment.add("orderable-item");
-                        itemDTO.setClassOfPayment(classOfPayment);
+        for (Item item : checkoutData.getItems()) {
+            for (ItemCosts itemCosts : item.getItemCosts()) {
+                ItemDTO itemDTO = new ItemDTO();
+                List<String> classOfPayment = new ArrayList<>();
+                classOfPayment.add("orderable-item");
+                itemDTO.setClassOfPayment(classOfPayment);
 
-                        List<String> availablePaymentMethods = new ArrayList<>();
-                        availablePaymentMethods.add("credit-card");
-                        itemDTO.setAvailablePaymentMethods(availablePaymentMethods);
+                List<String> availablePaymentMethods = new ArrayList<>();
+                availablePaymentMethods.add("credit-card");
+                itemDTO.setAvailablePaymentMethods(availablePaymentMethods);
 
-                        itemDTO.setResourceKind(item.getKind());
-                        itemDTO.setKind("cost#cost");
+                itemDTO.setResourceKind(item.getKind());
+                itemDTO.setKind("cost#cost");
 
-                        itemDTO.setProductType(itemCosts.getProductType().getJsonName());
-                        itemDTO.setAmount(itemCosts.getCalculatedCost());
+                itemDTO.setProductType(itemCosts.getProductType().getJsonName());
+                itemDTO.setAmount(itemCosts.getCalculatedCost());
 
-                        itemDTO.setDescriptionIdentifier(item.getDescriptionIdentifier());
-                        itemDTO.setDescriptionValues(item.getDescriptionValues());
+                itemDTO.setDescriptionIdentifier(item.getDescriptionIdentifier());
+                itemDTO.setDescriptionValues(item.getDescriptionValues());
 
-                        itemDTO.setDescription(item.getDescription());
-                        itemDTOs.add(itemDTO);
-                }
+                itemDTO.setDescription(item.getDescription());
+                itemDTOs.add(itemDTO);
             }
-        );
-
+        }
         paymentDetailsDTO.setItems(itemDTOs);
         paymentDetailsDTO.setKind("payment-details#payment-details");
     }

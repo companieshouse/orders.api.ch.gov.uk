@@ -3,6 +3,7 @@ package uk.gov.companieshouse.orders.api.controller;
 import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
+import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -92,10 +94,15 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.items}/remove";
     public static final String GET_BASKET_LINKS_URI =
             "${uk.gov.companieshouse.orders.api.basket}/links";
+    private static final String ATTEMPT_RETRIEVE_ITEM_MESSAGE =
+            "Attempting to retrieve item with uri: %s from api client";
+    private static final String RETRIEVED_ITEM_MESSAGE =
+            "Retrieved item with uri: %s from api client";
+    private static final String FAILED_RETRIEVE_ITEM_MESSAGE =
+            "Failed to retrieve item from api client for item uri: %s";
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
     @Value("${uk.gov.companieshouse.payments.api.payments}")
     private String costsLink;
-
     private final ItemMapper itemMapper;
     private final BasketMapper basketMapper;
     private final DeliveryDetailsMapper deliveryDetailsMapper;
@@ -370,34 +377,24 @@ public class BasketController {
                 }).collect(Collectors.toList());
 
         List<Item> itemsList = new ArrayList<>();
-        if (itemUriList.size() == 1) {
-            String itemUri = itemUriList.get(0);
+        for (String itemUri : itemUriList) {
             try {
-                LOGGER.info(String.format("Attempting to retrieve item with uri: %s "
-                        + "from api client", itemUri), logMap);
-                itemsList.add(getItemFromApiClient(itemUri, passthroughHeader, logMap));
-            } catch (Exception exception) {
-                logItemError(request, logMap, itemUri, exception);
-                return ResponseEntity.status(BAD_REQUEST).body(new ApiError(BAD_REQUEST,
-                        "Failed to retrieve item"));
+                LOGGER.info(String.format(ATTEMPT_RETRIEVE_ITEM_MESSAGE, itemUri), logMap);
+                Item item = apiClientService.getItem(passthroughHeader, itemUri);
+                if (item != null) {
+                    LoggingUtils.logIfNotNull(logMap, LoggingUtils.COMPANY_NUMBER,
+                            item.getCompanyNumber());
+                    LOGGER.info(String.format(RETRIEVED_ITEM_MESSAGE, itemUri), logMap);
+                    itemsList.add(item);
+                }
+            } catch (IOException exception) {
+                logMap.put(LoggingUtils.STATUS, INTERNAL_SERVER_ERROR);
+                logMap.put(LoggingUtils.EXCEPTION, exception);
+                LOGGER.errorRequest(request, String.format(FAILED_RETRIEVE_ITEM_MESSAGE, itemUri),
+                        logMap);
+                return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiError(INTERNAL_SERVER_ERROR,
+                        String.format(FAILED_RETRIEVE_ITEM_MESSAGE, itemUri)));
             }
-            LOGGER.info(String.format("Retrieved item with uri: %s "
-                    + "from api client", itemUri), logMap);
-        } else {
-            itemsList.addAll(itemUriList.stream()
-                .map(itemUri -> {
-                    Item item = null;
-                    try {
-                        LOGGER.info(String.format("Attempting to retrieve item with uri: %s "
-                                + "from api client", itemUri), logMap);
-                        item = getItemFromApiClient(itemUri, passthroughHeader, logMap);
-                    } catch (IOException exception) {
-                        logItemError(request, logMap, itemUri, exception);
-                    }
-                    LOGGER.info(String.format("Retrieved item with uri: %s "
-                            + "from api client", itemUri), logMap);
-                    return item;
-                }).filter(Objects::nonNull).collect(Collectors.toList()));
         }
 
         Checkout checkout = checkoutService.createCheckout(itemsList,

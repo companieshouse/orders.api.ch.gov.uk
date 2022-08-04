@@ -769,7 +769,7 @@ class BasketControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Checkout basket creates checkout when one item errors")
+    @DisplayName("Checkout basket returns bad request error when unable to retrieve MID item")
     void checkoutBasketWithErrorOnMultipleItems () throws Exception {
         final LocalDateTime start = timestamps.start();
         final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
@@ -811,22 +811,9 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_USER_HEADER_NAME, ERIC_AUTHORISED_USER_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isBadRequest());
 
-        MvcResult result = resultActions.andReturn();
-        MockHttpServletResponse response = result.getResponse();
-        assertThat(response.getHeader(PAYMENT_REQUIRED_HEADER), is(COSTS_LINK));
-        String contentAsString = response.getContentAsString();
-        CheckoutData responseCheckoutData = mapper.readValue(contentAsString, CheckoutData.class);
-
-        final Optional<Checkout> retrievedCheckout = checkoutRepository.findById(responseCheckoutData.getReference());
-        assertTrue(retrievedCheckout.isPresent());
-        assertEquals(ERIC_IDENTITY_VALUE, retrievedCheckout.get().getUserId());
-        final CheckoutData checkoutData = retrievedCheckout.get().getData();
-        assertEquals(EXPECTED_TOTAL_ORDER_COST_MULTIPLE_NO_MID, checkoutData.getTotalOrderCost());
-        assertEquals(CERTIFIED_COPY_KIND, checkoutData.getItems().get(0).getKind());
-        assertEquals(CERTIFICATE_KIND, checkoutData.getItems().get(1).getKind());
-        assertEquals(EXPECTED_CHECKOUT_ITEMS_SIZE_NO_MID, checkoutData.getItems().size());
+        assertEquals(0, checkoutRepository.count());
     }
 
     @Test

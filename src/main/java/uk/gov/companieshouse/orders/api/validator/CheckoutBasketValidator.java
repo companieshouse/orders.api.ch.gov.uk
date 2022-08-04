@@ -35,32 +35,27 @@ public class CheckoutBasketValidator {
             errors.add(ErrorType.BASKET_ITEMS_MISSING.getValue());
         }
         else {
-            int basketCount = basketItems.size();
-            basketItems.stream().forEach(
-                item -> {
-                    try {
-                        String itemUri = item.getItemUri();
-                        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_URI, itemUri);
-                        Item retrievedItem = apiClientService.getItem(passthroughHeader, itemUri);
+            for (Item item : basketItems) {
+                try {
+                    String itemUri = item.getItemUri();
+                    LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_URI, itemUri);
+                    Item retrievedItem = apiClientService.getItem(passthroughHeader, itemUri);
 
-                        if (retrievedItem.isPostalDelivery() && !deliveryDetailsValidator
-                                .isValid(basket.getData().getDeliveryDetails())) {
-                            logMap.put(LoggingUtils.ERROR_TYPE,
-                                    ErrorType.DELIVERY_DETAILS_MISSING.getValue());
-                            LOGGER.error(ErrorType.DELIVERY_DETAILS_MISSING.getValue(), logMap);
-                            errors.add(ErrorType.DELIVERY_DETAILS_MISSING.getValue());
-                        }
-                    } catch (Exception exception) {
-                        logMap.put(LoggingUtils.EXCEPTION, exception);
+                    if (retrievedItem.isPostalDelivery() && !deliveryDetailsValidator
+                            .isValid(basket.getData().getDeliveryDetails())) {
                         logMap.put(LoggingUtils.ERROR_TYPE,
-                                ErrorType.BASKET_ITEM_INVALID.getValue());
-                        LOGGER.error("Failed to get item for item uri: %s", logMap);
-                        if (basketCount == 1) {
-                            errors.add(ErrorType.BASKET_ITEM_INVALID.getValue());
-                        }
+                                ErrorType.DELIVERY_DETAILS_MISSING.getValue());
+                        LOGGER.error(ErrorType.DELIVERY_DETAILS_MISSING.getValue(), logMap);
+                        errors.add(ErrorType.DELIVERY_DETAILS_MISSING.getValue());
                     }
+                } catch (Exception exception) {
+                    logMap.put(LoggingUtils.EXCEPTION, exception);
+                    logMap.put(LoggingUtils.ERROR_TYPE,
+                            ErrorType.BASKET_ITEM_INVALID.getValue());
+                    LOGGER.error(ErrorType.BASKET_ITEM_INVALID.getValue(), logMap);
+                    errors.add(ErrorType.BASKET_ITEM_INVALID.getValue());
                 }
-            );
+            }
         }
         return errors;
     }
