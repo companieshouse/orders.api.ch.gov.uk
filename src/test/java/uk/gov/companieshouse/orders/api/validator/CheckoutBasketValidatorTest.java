@@ -75,7 +75,7 @@ public class CheckoutBasketValidatorTest {
 
     @Test
     @DisplayName("getValidation does error when multiple items in basket and one fails validation")
-    public void multipleItemBasketInvalidItem () throws IOException {
+    void multipleItemBasketInvalidItem () throws IOException {
         // Given
         Basket basket = setUpBasketWithOneInvalidItem();
         Certificate certificate = new Certificate();

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -33,7 +32,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
-import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
@@ -598,22 +596,5 @@ public class BasketController {
         }
 
         return total;
-    }
-
-    private Item getItemFromApiClient(String itemUri, String passthroughHeader, Map<String,
-            Object> logMap) throws IOException {
-        Item item = apiClientService.getItem(passthroughHeader, itemUri);
-        if (item != null) {
-            LoggingUtils.logIfNotNull(logMap, LoggingUtils.COMPANY_NUMBER, item.getCompanyNumber());
-        }
-        return item;
-    }
-
-    private void logItemError(HttpServletRequest request, Map<String, Object> logMap,
-            String itemUri, Exception exception) {
-        logMap.put(LoggingUtils.STATUS, BAD_REQUEST);
-        logMap.put(LoggingUtils.EXCEPTION, exception);
-        LOGGER.errorRequest(request, String.format("Failed to retrieve item "
-                + "from api client for item uri: %s", itemUri), logMap);
     }
 }
