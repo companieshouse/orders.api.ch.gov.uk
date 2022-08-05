@@ -473,7 +473,7 @@ class BasketControllerTest {
 
     @Test
     @DisplayName("Conflict error if errors contains missing delivery details error type")
-    void placeholder4() {
+    void validatorErrorDeliveryDetailsMissing() {
         // given
         Basket basket = createBasket();
         basket.getData().setItems(Arrays.asList(certificate, document, missingImage));
