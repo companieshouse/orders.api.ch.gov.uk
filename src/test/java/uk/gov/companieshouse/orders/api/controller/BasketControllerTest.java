@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.orders.api.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -8,12 +9,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
+import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
 
 import java.io.IOException;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -35,12 +42,14 @@ import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
+import uk.gov.companieshouse.orders.api.exception.ConflictException;
 import uk.gov.companieshouse.orders.api.exception.ErrorType;
 import uk.gov.companieshouse.orders.api.mapper.BasketMapper;
 import uk.gov.companieshouse.orders.api.mapper.ItemMapper;
 import uk.gov.companieshouse.orders.api.model.ApiError;
 import uk.gov.companieshouse.orders.api.model.Basket;
 import uk.gov.companieshouse.orders.api.model.BasketData;
+import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Item;
@@ -54,6 +63,7 @@ import uk.gov.companieshouse.orders.api.service.ItemEnrichmentException;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 import uk.gov.companieshouse.orders.api.util.EricHeaderHelper;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
+import uk.gov.companieshouse.orders.api.validator.CheckoutBasketValidator;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 /**
@@ -111,6 +121,12 @@ class BasketControllerTest {
 
     @Mock
     private BasketItemDTO basketResponse;
+
+    @Mock
+    private CheckoutBasketValidator checkoutBasketValidator;
+
+    private static final String CERTIFICATE_ITEM_URI = "/orderable/certificates/CRT-123123-123123";
+    private static final String DOCUMENT_ITEM_URI = "/orderable/certified-copies/CCD-123123-123123";
 
     @Test
     @DisplayName("Fetch basket containing multiple items")
@@ -379,6 +395,229 @@ class BasketControllerTest {
         verify(apiClientService).getItem("passthrough", "/path/to/item");
         verify(basketService).getBasketById("id");
         verify(itemMapper).itemToBasketItemDTO(certificateResource);
+    }
+
+    @Test
+    @DisplayName("Controller throws an error when request isn't valid")
+    void controllerErrorsWhenRequestJsonNotEmpty() {
+        // given
+        String requestJson = "nonemptytext";
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(requestJson,
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(HttpStatus.BAD_REQUEST, actual.getStatusCode());
+        assertEquals(new ApiError(BAD_REQUEST, "The body must be empty"), actual.getBody());
+    }
+
+    @Test
+    @DisplayName("Basket throws a conflict exception if unable to locate id")
+    void conflictErrorThrownByBasketService() {
+        // given
+        when(basketService.getBasketById(any())).thenThrow(ConflictException.class);
+
+        // when
+        Executable executable = () -> controllerUnderTest.checkoutBasket(any(), httpServletRequest,
+                "123");
+
+        // then
+       assertThrows(ConflictException.class, executable);
+    }
+
+    @Test
+    @DisplayName("Conflict error if errors contains basket items missing error type")
+    void validatorErrorBasketItemMissing() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate, document, missingImage));
+
+        List<String> missingBasketErrors =
+                Arrays.asList(ErrorType.BASKET_ITEMS_MISSING.getValue());
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(missingBasketErrors);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(HttpStatus.CONFLICT, actual.getStatusCode());
+        assertEquals(new ApiError(CONFLICT, "Basket is empty"), actual.getBody());
+    }
+
+    @Test
+    @DisplayName("Bad request error if errors contains basket item invalid error type")
+    void validatorErrorBasketItemInvalid() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate, document, missingImage));
+
+        List<String> invalidItemErrors =
+                Arrays.asList(ErrorType.BASKET_ITEM_INVALID.getValue());
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(invalidItemErrors);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(BAD_REQUEST, actual.getStatusCode());
+        assertEquals(new ApiError(BAD_REQUEST, "Failed to retrieve item"), actual.getBody());
+    }
+
+    @Test
+    @DisplayName("Conflict error if errors contains missing delivery details error type")
+    void validatorErrorDeliveryDetailsMissing() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate, document, missingImage));
+
+        List<String> deliveryDetailsErrors =
+                Arrays.asList(ErrorType.DELIVERY_DETAILS_MISSING.getValue());
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(deliveryDetailsErrors);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(CONFLICT, actual.getStatusCode());
+        assertEquals(new ApiError(CONFLICT, "Delivery details missing for postal delivery"), actual.getBody());
+    }
+
+    @Test
+    @DisplayName("Internal server exception thrown when api client unable to retrieve item")
+    void apiClientThrowsBadRequest() throws IOException {
+        // given
+        Basket basket = createBasket();
+        Certificate certificate = new Certificate();
+        certificate.setItemUri("/orderable/certificates/CRT-123123-123123");
+        basket.getData().setItems(Arrays.asList(certificate));
+        List<String> emptyErrorsList = Collections.EMPTY_LIST;
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(emptyErrorsList);
+        when(apiClientService.getItem(any(), any())).thenThrow(IOException.class);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(INTERNAL_SERVER_ERROR, actual.getStatusCode());
+        assertEquals(new ApiError(INTERNAL_SERVER_ERROR, "Failed to retrieve item from "
+                        + "api client for item uri: /orderable/certificates/CRT-123123-123123"),
+                actual.getBody());
+    }
+
+    @Test
+    @DisplayName("Accepted status code when no errors or exceptions are thrown")
+    void controllerSuccessfullyCreatesCheckout() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate));
+        List<String> emptyErrorsList = Collections.EMPTY_LIST;
+
+        Checkout checkout = new Checkout();
+        CheckoutData checkoutData = new CheckoutData();
+        checkoutData.setTotalOrderCost("35");
+        checkout.setData(checkoutData);
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(emptyErrorsList);
+        when(checkoutService.createCheckout(any(), any(), any(), any())).thenReturn(checkout);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(ACCEPTED, actual.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("OK status when no errors and total costs is 0")
+    void controllerCreatesCheckoutWhenTotalCostIsFree() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate));
+        List<String> emptyErrorsList = Collections.EMPTY_LIST;
+
+        Checkout checkout = new Checkout();
+        CheckoutData checkoutData = new CheckoutData();
+        checkoutData.setTotalOrderCost("0");
+        checkout.setData(checkoutData);
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(emptyErrorsList);
+        when(checkoutService.createCheckout(any(), any(), any(), any())).thenReturn(checkout);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(OK, actual.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Accepted status code when checkout created for multiple items")
+    void createsCheckoutSuccessfullyForMultipleItems() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate, document));
+        List<String> emptyErrorsList = Collections.EMPTY_LIST;
+
+        Checkout checkout = new Checkout();
+        CheckoutData checkoutData = new CheckoutData();
+        checkoutData.setTotalOrderCost("35");
+        checkout.setData(checkoutData);
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(emptyErrorsList);
+        when(checkoutService.createCheckout(any(), any(), any(), any())).thenReturn(checkout);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(ACCEPTED, actual.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Internal server error thrown when unable to retrieve second item")
+    void apiClientErrorForMultipleItems() throws IOException {
+        // given
+        Basket basket = createBasket();
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(CERTIFICATE_ITEM_URI);
+        Item documentItem = new Item();
+        documentItem.setItemUri(DOCUMENT_ITEM_URI);
+        basket.getData().setItems(Arrays.asList(certificateItem, documentItem));
+        List<String> emptyErrorsList = Collections.EMPTY_LIST;
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(emptyErrorsList);
+        when(apiClientService.getItem(any(), eq(CERTIFICATE_ITEM_URI))).thenReturn(certificate);
+        when(apiClientService.getItem(any(), eq(DOCUMENT_ITEM_URI))).thenThrow(IOException.class);
+
+        // when
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(INTERNAL_SERVER_ERROR, actual.getStatusCode());
+        assertEquals(new ApiError(INTERNAL_SERVER_ERROR, "Failed to retrieve item from "
+                        + "api client for item uri: /orderable/certified-copies/CCD-123123-123123"),
+                actual.getBody());
     }
 
     /**

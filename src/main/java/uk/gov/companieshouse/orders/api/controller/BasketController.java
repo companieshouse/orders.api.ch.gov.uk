@@ -3,12 +3,15 @@ package uk.gov.companieshouse.orders.api.controller;
 import static org.springframework.http.HttpStatus.ACCEPTED;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,10 +92,15 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.items}/remove";
     public static final String GET_BASKET_LINKS_URI =
             "${uk.gov.companieshouse.orders.api.basket}/links";
+    private static final String ATTEMPT_RETRIEVE_ITEM_MESSAGE =
+            "Attempting to retrieve item with uri: %s from api client";
+    private static final String RETRIEVED_ITEM_MESSAGE =
+            "Retrieved item with uri: %s from api client";
+    private static final String FAILED_RETRIEVE_ITEM_MESSAGE =
+            "Failed to retrieve item from api client for item uri: %s";
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
     @Value("${uk.gov.companieshouse.payments.api.payments}")
     private String costsLink;
-
     private final ItemMapper itemMapper;
     private final BasketMapper basketMapper;
     private final DeliveryDetailsMapper deliveryDetailsMapper;
@@ -359,23 +367,31 @@ public class BasketController {
             }
         }
 
-        Item item;
-        String itemUri = null;
-        try {
-            itemUri = retrievedBasket.getData().getItems().get(0).getItemUri();
-            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_URI, itemUri);
-            item = apiClientService.getItem(passthroughHeader, itemUri);
-            if (item != null) {
-                LoggingUtils.logIfNotNull(logMap, LoggingUtils.COMPANY_NUMBER, item.getCompanyNumber());
+        List<String> itemUriList = retrievedBasket.getData().getItems().stream()
+                .map(Item::getItemUri).collect(Collectors.toList());
+
+        List<Item> itemsList = new ArrayList<>();
+        for (String itemUri : itemUriList) {
+            try {
+                LOGGER.info(String.format(ATTEMPT_RETRIEVE_ITEM_MESSAGE, itemUri), logMap);
+                Item item = apiClientService.getItem(passthroughHeader, itemUri);
+                if (item != null) {
+                    LoggingUtils.logIfNotNull(logMap, LoggingUtils.COMPANY_NUMBER,
+                            item.getCompanyNumber());
+                    LOGGER.info(String.format(RETRIEVED_ITEM_MESSAGE, itemUri), logMap);
+                    itemsList.add(item);
+                }
+            } catch (IOException exception) {
+                logMap.put(LoggingUtils.STATUS, INTERNAL_SERVER_ERROR);
+                logMap.put(LoggingUtils.EXCEPTION, exception);
+                LOGGER.errorRequest(request, String.format(FAILED_RETRIEVE_ITEM_MESSAGE, itemUri),
+                        logMap);
+                return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiError(INTERNAL_SERVER_ERROR,
+                        String.format(FAILED_RETRIEVE_ITEM_MESSAGE, itemUri)));
             }
-        } catch (Exception exception) {
-            logMap.put(LoggingUtils.STATUS, BAD_REQUEST);
-            logMap.put(LoggingUtils.EXCEPTION, exception);
-            LOGGER.errorRequest(request, "Failed to retrieve item from api client", logMap);
-            return ResponseEntity.status(BAD_REQUEST).body(new ApiError(BAD_REQUEST, "Failed to retrieve item"));
         }
 
-        Checkout checkout = checkoutService.createCheckout(item,
+        Checkout checkout = checkoutService.createCheckout(itemsList,
                 EricHeaderHelper.getIdentity(request),
                 EricHeaderHelper.getAuthorisedUser(request),
                 retrievedBasket.getData().getDeliveryDetails());

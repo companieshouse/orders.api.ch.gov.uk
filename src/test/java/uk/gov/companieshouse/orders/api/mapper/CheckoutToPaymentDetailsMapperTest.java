@@ -49,7 +49,7 @@ class CheckoutToPaymentDetailsMapperTest {
     static final ActionedBy CHECKED_OUT_BY = new ActionedBy();
     static final String ITEM_ID = "CHS00000000000000001";
     static final String COMPANY_NAME = "Dummies Ltd";
-    static final String COMPANY_NUMBER = "000000001";
+    static final String COMPANY_NUMBER = "00000001";
     static final String DESC_VALUE_KEY = "company_number";
     static final String DESC_IDENTIFIER = "certificate";
     static final String DESCRIPTION = "certificate for company 00006400";
@@ -110,7 +110,6 @@ class CheckoutToPaymentDetailsMapperTest {
         ITEM.setTotalItemCost(TOTAL_ITEM_COST);
         ITEM.setPostalDelivery(POSTAL_DELIVERY);
         ITEMS.add(ITEM);
-
         CHECKED_OUT_BY.setEmail(USER_EMAIL);
         CHECKED_OUT_BY.setId(USER_ID);
 
@@ -153,9 +152,7 @@ class CheckoutToPaymentDetailsMapperTest {
         assertThat(target.getKind(), is(EXPECTED_KIND));
         assertThat(target.getStatus(), is(source.getData().getStatus()));
         assertThat(target.getPaymentReference(), is(source.getData().getReference()));
-        assertThat(target.getCompanyNumber(), is(COMPANY_NUMBER));
         assertThat(target.getPaidAt(), is(PAID_AT_DATE));
-
         testLinks(source, target);
         testItems(source, target);
     }

@@ -47,7 +47,8 @@ public class CheckoutService {
         return "ORD-" + String.join("-", tranId);
     }
 
-    public Checkout createCheckout(Item item, String userId, String email, DeliveryDetails deliveryDetails) {
+    public Checkout createCheckout(List<Item> itemsList, String userId, String email,
+            DeliveryDetails deliveryDetails) {
         final LocalDateTime now = LocalDateTime.now();
         String checkoutId = autoGenerateId();
 
@@ -64,7 +65,7 @@ public class CheckoutService {
         checkout.getData().setStatus(PaymentStatus.PENDING);
         checkout.getData().setEtag(etagGeneratorService.generateEtag());
         checkout.getData().setLinks(linksGeneratorService.generateCheckoutLinks(checkoutId));
-        checkout.getData().getItems().add(item);
+        checkout.getData().getItems().addAll(itemsList);
         checkout.getData().setReference(checkoutId);
         checkout.getData().setKind("order");
         checkout.getData().setDeliveryDetails(deliveryDetails);

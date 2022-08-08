@@ -119,6 +119,7 @@ import uk.gov.companieshouse.orders.api.service.ApiClientService;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.EtagGeneratorService;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
+import uk.gov.companieshouse.orders.api.validator.CheckoutBasketValidator;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 @DirtiesContext
@@ -156,7 +157,9 @@ class BasketControllerIntegrationTest {
     private static final LocalDateTime SATISFIED_AT = LocalDateTime.of(2020, Month.JANUARY, 1, 0, 0);
 
     private static final String EXPECTED_TOTAL_ORDER_COST = "15";
-    private static final String DISCOUNT_APPLIED_1 = "0";
+    private static final String EXPECTED_TOTAL_ORDER_COST_MULTIPLE = "33";
+    private static final int EXPECTED_CHECKOUT_ITEMS_SIZE = 3;
+        private static final String DISCOUNT_APPLIED_1 = "0";
     private static final String ITEM_COST_1 = "5";
     private static final String CALCULATED_COST_1 = "5";
     private static final String DISCOUNT_APPLIED_2 = "10";
@@ -256,6 +259,9 @@ class BasketControllerIntegrationTest {
 
     @Mock
     private ApiErrorResponseException apiErrorResponseException;
+
+    @Mock
+    private CheckoutBasketValidator checkoutBasketValidator;
 
     @BeforeEach
     void setUp() {
@@ -687,6 +693,125 @@ class BasketControllerIntegrationTest {
         assertEquals(FORENAME, retrievedOptions.getForename());
         assertEquals(SURNAME, retrievedOptions.getSurname());
         assertEquals(EXPECTED_TOTAL_ORDER_COST, checkoutData.getTotalOrderCost());
+    }
+
+    @Test
+    @DisplayName("Checkout basket creates checkout with correctly with multiple items")
+    void checkoutBasketWithMultipleItems () throws Exception {
+        final LocalDateTime start = timestamps.start();
+        final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().getItems().add(certificateItem);
+        Item missingImageItem = new Item();
+        missingImageItem.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        basket.getData().getItems().add(missingImageItem);
+
+        basketRepository.save(basket);
+
+        final CertifiedCopy copy = new CertifiedCopy();
+        copy.setKind(CERTIFIED_COPY_KIND);
+        final CertifiedCopyItemOptions documentOptions = new CertifiedCopyItemOptions();
+        documentOptions.setFilingHistoryDocuments(singletonList(DOCUMENT));
+        copy.setItemOptions(documentOptions);
+        copy.setItemCosts(createItemCosts());
+        copy.setPostageCost(POSTAGE_COST);
+        copy.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFIED_COPY_URI)).thenReturn(copy);
+
+        final Certificate certificate = new Certificate();
+        certificate.setKind(CERTIFICATE_KIND);
+        final CertificateItemOptions options = new CertificateItemOptions();
+        options.setCertificateType(INCORPORATION_WITH_ALL_NAME_CHANGES);
+        certificate.setItemOptions(options);
+        certificate.setItemCosts(createItemCosts());
+        certificate.setPostageCost(POSTAGE_COST);
+        certificate.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFICATE_URI)).thenReturn(certificate);
+
+        final MissingImageDelivery missingImageDelivery = new MissingImageDelivery();
+        missingImageDelivery.setKind(MISSING_IMAGE_DELIVERY_KIND);
+        missingImageDelivery.setItemOptions(MISSING_IMAGE_DELIVERY_ITEM_OPTIONS);
+        missingImageDelivery.setItemCosts(MISSING_IMAGE_DELIVERY_COSTS);
+        missingImageDelivery.setPostageCost(POSTAGE_COST);
+        missingImageDelivery.setPostalDelivery(false);
+        missingImageDelivery.setTotalItemCost(MID_TOTAL_ITEM_COST);
+        missingImageDelivery.setKind(MISSING_IMAGE_DELIVERY_KIND);
+
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_MISSING_IMAGE_DELIVERY_URI)).thenReturn(missingImageDelivery);
+
+        ResultActions resultActions = mockMvc.perform(post("/basket/checkouts")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_USER_HEADER_NAME, ERIC_AUTHORISED_USER_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN))
+                .andExpect(status().isAccepted());
+
+        MvcResult result = resultActions.andReturn();
+        MockHttpServletResponse response = result.getResponse();
+        assertThat(response.getHeader(PAYMENT_REQUIRED_HEADER), is(COSTS_LINK));
+        String contentAsString = response.getContentAsString();
+        CheckoutData responseCheckoutData = mapper.readValue(contentAsString, CheckoutData.class);
+
+        final Optional<Checkout> retrievedCheckout = checkoutRepository.findById(responseCheckoutData.getReference());
+        assertTrue(retrievedCheckout.isPresent());
+        assertEquals(ERIC_IDENTITY_VALUE, retrievedCheckout.get().getUserId());
+        final CheckoutData checkoutData = retrievedCheckout.get().getData();
+        assertEquals(EXPECTED_TOTAL_ORDER_COST_MULTIPLE, checkoutData.getTotalOrderCost());
+        assertEquals(CERTIFIED_COPY_KIND, checkoutData.getItems().get(0).getKind());
+        assertEquals(CERTIFICATE_KIND, checkoutData.getItems().get(1).getKind());
+        assertEquals(MISSING_IMAGE_DELIVERY_KIND, checkoutData.getItems().get(2).getKind());
+        assertEquals(EXPECTED_CHECKOUT_ITEMS_SIZE, checkoutData.getItems().size());
+    }
+
+    @Test
+    @DisplayName("Checkout basket returns bad request error when unable to retrieve MID item")
+    void checkoutBasketWithErrorOnMultipleItems () throws Exception {
+        final LocalDateTime start = timestamps.start();
+        final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().getItems().add(certificateItem);
+        Item missingImageItem = new Item();
+        missingImageItem.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        basket.getData().getItems().add(missingImageItem);
+
+        basketRepository.save(basket);
+
+        final CertifiedCopy copy = new CertifiedCopy();
+        copy.setKind(CERTIFIED_COPY_KIND);
+        final CertifiedCopyItemOptions documentOptions = new CertifiedCopyItemOptions();
+        documentOptions.setFilingHistoryDocuments(singletonList(DOCUMENT));
+        copy.setItemOptions(documentOptions);
+        copy.setItemCosts(createItemCosts());
+        copy.setPostageCost(POSTAGE_COST);
+        copy.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFIED_COPY_URI)).thenReturn(copy);
+
+        final Certificate certificate = new Certificate();
+        certificate.setKind(CERTIFICATE_KIND);
+        final CertificateItemOptions options = new CertificateItemOptions();
+        options.setCertificateType(INCORPORATION_WITH_ALL_NAME_CHANGES);
+        certificate.setItemOptions(options);
+        certificate.setItemCosts(createItemCosts());
+        certificate.setPostageCost(POSTAGE_COST);
+        certificate.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFICATE_URI)).thenReturn(certificate);
+
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_MISSING_IMAGE_DELIVERY_URI)).thenThrow(apiErrorResponseException);
+
+        ResultActions resultActions = mockMvc.perform(post("/basket/checkouts")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_USER_HEADER_NAME, ERIC_AUTHORISED_USER_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, checkoutRepository.count());
     }
 
     @Test
@@ -1905,7 +2030,6 @@ class BasketControllerIntegrationTest {
                 .andExpect(jsonPath("$.payment_reference", is(checkout.getId())))
                 .andExpect(jsonPath("$.kind", is("payment-details#payment-details")))
                 .andExpect(jsonPath("$.status", is("paid")))
-                .andExpect(jsonPath("$.company_number", is(COMPANY_NUMBER)))
                 .andExpect(jsonPath("$.paid_at", is(paymentsApiParsableDateTime(PAID_AT_DATE))))
                 .andExpect(jsonPath("$.links.self", is(mapper.convertValue(paymentLinksDTO.getSelf(), String.class))))
                 .andExpect(jsonPath("$.links.resource", is(mapper.convertValue(paymentLinksDTO.getResource(), String.class))))
@@ -2091,7 +2215,8 @@ class BasketControllerIntegrationTest {
         copy.setItemOptions(options);
 
         return checkoutService.createCheckout(
-                copy, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(copy), ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE,
+                new DeliveryDetails());
     }
 
     private Checkout createCertificateCheckout() {
@@ -2106,7 +2231,9 @@ class BasketControllerIntegrationTest {
         certificate.setItemOptions(options);
 
         return checkoutService.createCheckout(
-                certificate, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(certificate), ERIC_IDENTITY_VALUE,
+                ERIC_AUTHORISED_USER_VALUE,
+                new DeliveryDetails());
     }
 
     private Checkout createMissingImageCheckout() {
@@ -2119,7 +2246,8 @@ class BasketControllerIntegrationTest {
         missingImageDelivery.setItemOptions(MISSING_IMAGE_DELIVERY_ITEM_OPTIONS);
 
         return checkoutService.createCheckout(
-                missingImageDelivery, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(missingImageDelivery), ERIC_IDENTITY_VALUE,
+                ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
     }
 
     /**
@@ -2273,8 +2401,6 @@ class BasketControllerIntegrationTest {
         itemDTO3.setProductType("certificate-additional-copy");
         itemDTOs.add(itemDTO3);
         paymentDetailsDTO.setItems(itemDTOs);
-
-        paymentDetailsDTO.setCompanyNumber(COMPANY_NUMBER);
 
         return paymentDetailsDTO;
     }

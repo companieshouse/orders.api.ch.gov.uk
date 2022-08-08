@@ -1,5 +1,7 @@
 package uk.gov.companieshouse.orders.api.validator;
 
+import java.io.IOException;
+import java.util.Arrays;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +23,6 @@ import java.util.List;
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_ADDITIONAL_COPY;
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_SAME_DAY;
@@ -66,6 +67,32 @@ public class CheckoutBasketValidatorTest {
         Basket basket = setupBasketWithInvalidItem();
         // When
         List<String> errors = validatorUnderTest.getValidationErrors(PASS_THROUGH_HEADER, basket);
+        // Then
+        assertThat(errors.isEmpty(), is(false));
+        assertThat(errors.size(), is(1));
+        assertThat(errors.get(0), is(ErrorType.BASKET_ITEM_INVALID.getValue()));
+    }
+
+    @Test
+    @DisplayName("getValidation does error when multiple items in basket and one fails validation")
+    void multipleItemBasketInvalidItem () throws IOException {
+        // Given
+        Basket basket = setUpBasketWithOneInvalidItem();
+        Certificate certificate = new Certificate();
+        certificate.setCompanyNumber(COMPANY_NUMBER);
+        certificate.setItemCosts(ITEM_COSTS);
+        certificate.setPostageCost(POSTAGE_COST);
+        certificate.setTotalItemCost(TOTAL_ITEM_COST);
+        certificate.setItemUri(ITEM_URI);
+        certificate.setPostalDelivery(false);
+        when(apiClientService.getItem(PASS_THROUGH_HEADER, ITEM_URI)).thenReturn(certificate);
+
+        when(apiClientService.getItem(PASS_THROUGH_HEADER,
+                INVALID_ITEM_URI)).thenThrow(IOException.class);
+
+        // When
+        List<String> errors = validatorUnderTest.getValidationErrors(PASS_THROUGH_HEADER, basket);
+
         // Then
         assertThat(errors.isEmpty(), is(false));
         assertThat(errors.size(), is(1));
@@ -127,6 +154,22 @@ public class CheckoutBasketValidatorTest {
         basketItem.setItemUri(INVALID_ITEM_URI);
         basketItem.setPostalDelivery(false);
         basketData.setItems(Collections.singletonList(basketItem));
+        basket.setData(basketData);
+
+        return basket;
+    }
+
+    private Basket setUpBasketWithOneInvalidItem() {
+        Basket basket = new Basket();
+        BasketData basketData = new BasketData();
+
+        Certificate certificate = new Certificate();
+        certificate.setItemUri(ITEM_URI);
+
+        Item invalidItem = new Item();
+        invalidItem.setItemUri(INVALID_ITEM_URI);
+
+        basketData.setItems(Arrays.asList(certificate, invalidItem));
         basket.setData(basketData);
 
         return basket;
