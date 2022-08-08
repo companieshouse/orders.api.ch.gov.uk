@@ -368,11 +368,7 @@ public class BasketController {
         }
 
         List<String> itemUriList = retrievedBasket.getData().getItems().stream()
-                .map(i -> {
-                    String itemUri = i.getItemUri();
-                    LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_URI, itemUri);
-                    return itemUri;
-                }).collect(Collectors.toList());
+                .map(Item::getItemUri).collect(Collectors.toList());
 
         List<Item> itemsList = new ArrayList<>();
         for (String itemUri : itemUriList) {

@@ -50,7 +50,6 @@ import uk.gov.companieshouse.orders.api.model.ApiError;
 import uk.gov.companieshouse.orders.api.model.Basket;
 import uk.gov.companieshouse.orders.api.model.BasketData;
 import uk.gov.companieshouse.orders.api.model.Certificate;
-import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.Item;

@@ -158,10 +158,8 @@ class BasketControllerIntegrationTest {
 
     private static final String EXPECTED_TOTAL_ORDER_COST = "15";
     private static final String EXPECTED_TOTAL_ORDER_COST_MULTIPLE = "33";
-    private static final String EXPECTED_TOTAL_ORDER_COST_MULTIPLE_NO_MID = "30";
     private static final int EXPECTED_CHECKOUT_ITEMS_SIZE = 3;
-    private static final int EXPECTED_CHECKOUT_ITEMS_SIZE_NO_MID = 2;
-    private static final String DISCOUNT_APPLIED_1 = "0";
+        private static final String DISCOUNT_APPLIED_1 = "0";
     private static final String ITEM_COST_1 = "5";
     private static final String CALCULATED_COST_1 = "5";
     private static final String DISCOUNT_APPLIED_2 = "10";

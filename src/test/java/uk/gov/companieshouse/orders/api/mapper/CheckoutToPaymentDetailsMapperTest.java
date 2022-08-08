@@ -49,7 +49,7 @@ class CheckoutToPaymentDetailsMapperTest {
     static final ActionedBy CHECKED_OUT_BY = new ActionedBy();
     static final String ITEM_ID = "CHS00000000000000001";
     static final String COMPANY_NAME = "Dummies Ltd";
-    static final String COMPANY_NUMBER = "00000000";
+    static final String COMPANY_NUMBER = "00000001";
     static final String DESC_VALUE_KEY = "company_number";
     static final String DESC_IDENTIFIER = "certificate";
     static final String DESCRIPTION = "certificate for company 00006400";
