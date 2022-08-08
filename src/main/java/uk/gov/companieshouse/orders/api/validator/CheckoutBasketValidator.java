@@ -41,8 +41,9 @@ public class CheckoutBasketValidator {
                     LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_URI, itemUri);
                     Item retrievedItem = apiClientService.getItem(passthroughHeader, itemUri);
 
-                    if (retrievedItem.isPostalDelivery() && !deliveryDetailsValidator
-                            .isValid(basket.getData().getDeliveryDetails())) {
+                    if (Boolean.TRUE.equals(retrievedItem.isPostalDelivery())
+                            && !deliveryDetailsValidator.isValid(
+                                    basket.getData().getDeliveryDetails())) {
                         logMap.put(LoggingUtils.ERROR_TYPE,
                                 ErrorType.DELIVERY_DETAILS_MISSING.getValue());
                         LOGGER.error(ErrorType.DELIVERY_DETAILS_MISSING.getValue(), logMap);
