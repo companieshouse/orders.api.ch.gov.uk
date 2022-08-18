@@ -15,6 +15,7 @@ import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.CheckoutCriteria;
 import uk.gov.companieshouse.orders.api.model.OrderData;
@@ -51,6 +52,8 @@ public class OrderController {
     public static final String GET_ORDER_URI =
             "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}";
 
+    public static final String GET_ORDER_ITEM_URI = "/orders/{orderId}/items/{itemId}";
+
     /** <code>${uk.gov.companieshouse.orders.api.checkouts}/{id}</code> */
     public static final String GET_CHECKOUT_URI =
         "${uk.gov.companieshouse.orders.api.checkouts}/{" + CHECKOUT_ID_PATH_VARIABLE + "}";
@@ -81,6 +84,21 @@ public class OrderController {
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info("Order found and returned", logMap);
         return ResponseEntity.ok().body(orderRetrieved.getData());
+    }
+
+    @GetMapping(GET_ORDER_ITEM_URI)
+    public ResponseEntity<Item> getOrderItem(final @PathVariable("orderId") String orderId,
+                                             final @PathVariable("itemId") String itemId,
+                                             final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        Map<String, Object> logMap = createLogMapWithRequestId(requestId);
+        logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+        logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
+        LOGGER.info("Retrieving order item", logMap);
+        final Item item = orderService.getOrderItem(orderId, itemId)
+                                                 .orElseThrow(ResourceNotFoundException::new);
+        logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
+        LOGGER.info("Order item found and returned", logMap);
+        return ResponseEntity.ok().body(item);
     }
 
     @GetMapping(GET_CHECKOUT_URI)

@@ -18,6 +18,7 @@ import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
@@ -90,6 +91,16 @@ public class OrderService {
 
     public Optional<Order> getOrder(String id) {
         return orderRepository.findById(id);
+    }
+
+    public Optional<Item> getOrderItem(String orderId, String itemId) {
+        Optional<Order> order = getOrder(orderId);
+        return order.flatMap(o -> o.getData()
+                                   .getItems()
+                                   .stream()
+                                   .filter(item -> item.getId().equals(itemId))
+                                   .findFirst());
+
     }
 
     public Optional<Checkout> getCheckout(String id) {

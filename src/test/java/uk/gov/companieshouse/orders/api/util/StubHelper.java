@@ -4,9 +4,11 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import java.util.List;
 import uk.gov.companieshouse.orders.api.model.*;
 
 public final class StubHelper {
@@ -49,7 +51,8 @@ public final class StubHelper {
         return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay(), paymentStatus);
     }
 
-    public static Order getOrder(String orderId, String email, String companyNumber, LocalDateTime creationDate) {
+    public static Order getOrder(String orderId, List<Item> items, String email,
+            LocalDateTime creationDate) {
         final Order order = new Order();
         order.setId(orderId);
         order.setUserId(ERIC_IDENTITY_VALUE);
@@ -61,10 +64,7 @@ public final class StubHelper {
         orderData.setTotalOrderCost("100");
         orderData.setOrderedBy(new ActionedBy());
         orderData.getOrderedBy().setEmail(email);
-        orderData.setItems(Collections.singletonList(new Item()));
-        orderData.getItems().get(0).setId("item-id-123");
-        orderData.getItems().get(0).setKind("item#certificate");
-        orderData.getItems().get(0).setCompanyNumber(companyNumber);
+        orderData.setItems(items);
         orderData.setLinks(new OrderLinks());
         orderData.getLinks().setSelf("http");
 
@@ -73,8 +73,23 @@ public final class StubHelper {
         return order;
     }
 
+    public static Order getOrder(String orderId, String email, String companyNumber, LocalDateTime creationDate) {
+        return getOrder(orderId, Collections.singletonList(
+                getOrderItem("item-id-123", "item#certificate", companyNumber)),
+                email,
+                creationDate);
+    }
+
     public static Order getOrder(String orderId, String email, String companyNumber) {
         return getOrder(orderId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay());
+    }
+
+    public static Item getOrderItem(String id, String kind, String companyNumber) {
+        Item orderItem = new Item();
+        orderItem.setId(id);
+        orderItem.setKind(kind);
+        orderItem.setCompanyNumber(companyNumber);
+        return orderItem;
     }
 
     public static Basket getBasket(String id) {
