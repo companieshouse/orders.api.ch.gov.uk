@@ -402,6 +402,7 @@ class UserAuthenticationInterceptorTests {
     private static Stream<Arguments> authenticatedRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get checkout request that has authenticated API headers", "/checkouts/1234"),
                 arguments("preHandle accepts get order request that has authenticated API headers", "/orders/1234"),
+                arguments("preHandle accepts get order item request that has authenticated API headers", "/orders/1234/items/5678"),
                 arguments("preHandle accepts get payment details request that has authenticated API headers", "/basket/checkouts/1234/payment"));
     }
 
@@ -409,6 +410,7 @@ class UserAuthenticationInterceptorTests {
         return Stream.of(arguments("preHandle rejects get payment details request that lacks required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
                 arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
+                arguments("preHandle rejects get order item request that lacks required headers", "/orders/1234/items/5678"),
                 arguments("preHandle rejects get basket links request that lacks requires headers", "/basket/links"));
     }
 
@@ -423,6 +425,7 @@ class UserAuthenticationInterceptorTests {
     private static Stream<Arguments> signedInGetRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get payment details request that has signed in user headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle accepts get order request that has signed in user headers", "/orders/1234"),
+                arguments("preHandle accepts get order item request that has signed in user headers", "/orders/1234/items/5678"),
                 arguments("preHandle accepts get basket links request from a user with OAuth2 authentication", "/basket/links"));
     }
 }

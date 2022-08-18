@@ -15,6 +15,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
@@ -121,6 +122,17 @@ class RequestMapperTests {
 
         // When and then
         assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(GET_ORDER));
+    }
+
+    @Test
+    @DisplayName("getRequestMappingInfo gets the get order item request mapping")
+    void getRequestMappingInfoGetsGetOrderItem() {
+
+        // Given
+        givenRequest(GET, "/orders/{orderId}/items/{itemId}");
+
+        // When and then
+        assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(GET_ORDER_ITEM));
     }
 
     @Test

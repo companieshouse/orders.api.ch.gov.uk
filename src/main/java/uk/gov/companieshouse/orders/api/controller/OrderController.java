@@ -52,7 +52,7 @@ public class OrderController {
     public static final String GET_ORDER_URI =
             "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}";
 
-    public static final String GET_ORDER_ITEM_URI = "/orders/{orderId}/items/{itemId}";
+    public static final String GET_ORDER_ITEM_URI = "/orders/{id}/items/{itemId}";
 
     /** <code>${uk.gov.companieshouse.orders.api.checkouts}/{id}</code> */
     public static final String GET_CHECKOUT_URI =
@@ -87,7 +87,7 @@ public class OrderController {
     }
 
     @GetMapping(GET_ORDER_ITEM_URI)
-    public ResponseEntity<Item> getOrderItem(final @PathVariable("orderId") String orderId,
+    public ResponseEntity<Item> getOrderItem(final @PathVariable("id") String orderId,
                                              final @PathVariable("itemId") String itemId,
                                              final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = createLogMapWithRequestId(requestId);
