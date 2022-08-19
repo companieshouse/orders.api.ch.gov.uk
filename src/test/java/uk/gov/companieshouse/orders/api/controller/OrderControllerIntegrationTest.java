@@ -33,6 +33,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDE
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Stream;
 
@@ -60,6 +61,7 @@ import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
@@ -505,6 +507,65 @@ class OrderControllerIntegrationTest {
         mockMvc.perform(reprocessOrderWithRequiredCredentials())
                 .andExpect(status().isConflict())
                 .andExpect(content().string(new StringContains("No order number 0001 found. Payment status was FAILED. ***")));
+    }
+
+    @DisplayName("Get an order item")
+    @Test
+    void getOrderItem() throws Exception {
+        final Order preexistingOrder = new Order();
+        preexistingOrder.setId(ORDER_ID);
+        preexistingOrder.setUserId(ERIC_IDENTITY_VALUE);
+        final OrderData orderData = new OrderData();
+        preexistingOrder.setData(orderData);
+        orderData.setReference(ORDER_REFERENCE);
+        orderData.setTotalOrderCost("100");
+        Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
+                "12345678");
+        orderData.setItems(Arrays.asList(
+                StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                        "12345678"),
+                expectedItem,
+                StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                        "12345678")));
+        orderRepository.save(preexistingOrder);
+
+        mockMvc.perform(get("/orders/"+ORDER_ID+"/items/CCD-123456-123456")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                       .contentType(MediaType.APPLICATION_JSON))
+               .andExpect(status().isOk())
+               .andExpect(content().json(mapper.writeValueAsString(expectedItem)));
+    }
+
+    @DisplayName("Get order item returns HTTP 404 Not Found if no matching item ID")
+    @Test
+    void getOrderItemReturnsNotFoundIfNoMatchingItemID() throws Exception {
+        final Order preexistingOrder = new Order();
+        preexistingOrder.setId(ORDER_ID);
+        preexistingOrder.setUserId(ERIC_IDENTITY_VALUE);
+        final OrderData orderData = new OrderData();
+        preexistingOrder.setData(orderData);
+        orderData.setReference(ORDER_REFERENCE);
+        orderData.setTotalOrderCost("100");
+        Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
+                "12345678");
+        orderData.setItems(Arrays.asList(
+                StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                        "12345678"),
+                expectedItem,
+                StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                        "12345678")));
+        orderRepository.save(preexistingOrder);
+
+        mockMvc.perform(get("/orders/"+ORDER_ID+"/items/NONEXISTENT")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                       .contentType(MediaType.APPLICATION_JSON))
+               .andExpect(status().isNotFound());
     }
 
     private MockHttpServletRequestBuilder reprocessOrderWithRequiredCredentials() {

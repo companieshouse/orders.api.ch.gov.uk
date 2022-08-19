@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,9 @@ import uk.gov.companieshouse.orders.OrderReceived;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
@@ -47,6 +50,16 @@ class OrderServiceTest {
     private CheckoutRepository checkoutRepository;
     @Mock
     private LinksGeneratorService linksGeneratorService;
+    @Mock
+    private Order order;
+    @Mock
+    private OrderData orderData;
+    @Mock
+    private Item midItem;
+    @Mock
+    private Item certifiedCopyItem;
+    @Mock
+    private Item certificateItem;
 
     @BeforeEach
     void setup() {
@@ -94,5 +107,53 @@ class OrderServiceTest {
 
         assertNotNull(returnedOrder);
         assertEquals(ORDER_ID, returnedOrder.get().getId());
+    }
+
+    @Test
+    @DisplayName("Fetch order item")
+    void getOrderItem() {
+        // given
+        when(order.getData()).thenReturn(orderData);
+        when(orderData.getItems()).thenReturn(Arrays.asList(midItem, certifiedCopyItem, certificateItem));
+        when(midItem.getId()).thenReturn("MID-123456-123456");
+        when(certifiedCopyItem.getId()).thenReturn("CCD-123456-123456");
+        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
+
+        // when
+        Optional<Item> actual = serviceUnderTest.getOrderItem(ORDER_ID, "CCD-123456-123456");
+
+        // then
+        assertEquals(certifiedCopyItem, actual.get());
+    }
+
+    @Test
+    @DisplayName("Fetch order item returns Optional.empty if no matching item found")
+    void getOrderItemReturnsEmptyOptionalIfNoMatchingItemFound() {
+        // given
+        when(order.getData()).thenReturn(orderData);
+        when(orderData.getItems()).thenReturn(Arrays.asList(midItem, certifiedCopyItem, certificateItem));
+        when(midItem.getId()).thenReturn("MID-123456-123456");
+        when(certifiedCopyItem.getId()).thenReturn("CCD-123456-123456");
+        when(certificateItem.getId()).thenReturn("CRT-123456-123456");
+        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
+
+        // when
+        Optional<Item> actual = serviceUnderTest.getOrderItem(ORDER_ID, "UNKNOWN");
+
+        // then
+        assertEquals(Optional.empty(), actual);
+    }
+
+    @Test
+    @DisplayName("Fetch order item returns Optional.empty if no matching order found")
+    void getOrderItemReturnsEmptyOptionalIfNoMatchingOrderFound() {
+        // given
+        when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.empty());
+
+        // when
+        Optional<Item> actual = serviceUnderTest.getOrderItem(ORDER_ID, "UNKNOWN");
+
+        // then
+        assertEquals(Optional.empty(), actual);
     }
 }

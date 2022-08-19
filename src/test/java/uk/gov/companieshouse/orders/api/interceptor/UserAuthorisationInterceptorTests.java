@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -42,6 +43,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.web.util.UrlPathHelper;
+import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
@@ -180,8 +182,49 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
     @Test
+    @DisplayName("preHandle accepts get order item request if they own the order resource")
+    void preHandleAcceptsRequestsIfUserOwnsResource() {
+
+        // Given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get order item request if user does not own the order resource")
+    void preHandleRejectsRequestIfUserDoesNotOwnResource() {
+
+        // Given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get order item request if order non existent")
+    void preHandleRejectsIfOrderNonExistent() {
+
+        // Given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+
+        Executable actual = () -> interceptorUnderTest.preHandle(request, response, handler);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, actual);
+        assertEquals("Resource not found!", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
     void ordersSearchValidAuthorisation() {
         when(securityManager.checkPermission()).thenReturn(true);
         givenRequest(GET, "/checkouts/search");
@@ -467,6 +510,7 @@ class UserAuthorisationInterceptorTests {
     private static Stream<Arguments> apiGetRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get payment details internal API request that has the required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle accepts get order internal API request that has the required headers", "/orders/1234"),
+                arguments("preHandle accepts get order item internal API request that has the required headers", "/orders/1234/items/5678"),
                 arguments("preHandle accepts get checkout internal API request that has the required headers", "/checkouts/1234"));
     }
 }

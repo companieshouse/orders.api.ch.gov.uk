@@ -11,6 +11,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_BASKET_LINKS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.POST_REPROCESS_ORDER;
@@ -86,6 +87,7 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
             case GET_CHECKOUT:
                 return securityManager.checkPermission() || getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
             case GET_ORDER:
+            case GET_ORDER_ITEM:
                 return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
             case SEARCH:
                 return securityManager.checkPermission();
