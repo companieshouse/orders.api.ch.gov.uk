@@ -3,6 +3,7 @@ package uk.gov.companieshouse.orders.api.controller;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
@@ -651,7 +652,9 @@ class BasketControllerIntegrationTest {
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                        .contentType(MediaType.APPLICATION_JSON)
                        .content(mapper.writeValueAsString(basketRequestDTO)))
-               .andExpect(status().isBadRequest());
+               .andExpect(status().isBadRequest())
+               .andExpect(jsonPath("$.status", is(equalTo("BAD_REQUEST"))))
+               .andExpect(jsonPath("$.errors[0]", is(equalTo("Basket is full"))));
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
         assertEquals(2, retrievedBasket.get().getData().getItems().size());

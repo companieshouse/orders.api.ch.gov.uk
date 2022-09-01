@@ -232,7 +232,8 @@ public class BasketController {
             if (status == ItemUpdateStatus.UPDATED) {
                 basketService.saveBasket(retrievedBasket.get());
             } else if (status == ItemUpdateStatus.BASKET_FULL) {
-                return ResponseEntity.badRequest().body("Basket full");
+                return ResponseEntity.badRequest().body(new ApiError(BAD_REQUEST,
+                        ErrorType.BASKET_FULL.getValue()));
             }
         } else {
             mappedBasket.setId(EricHeaderHelper.getIdentity(request));
