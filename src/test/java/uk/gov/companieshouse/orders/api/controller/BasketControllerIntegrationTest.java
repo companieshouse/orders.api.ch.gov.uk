@@ -3,6 +3,7 @@ package uk.gov.companieshouse.orders.api.controller;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
@@ -624,6 +625,39 @@ class BasketControllerIntegrationTest {
         assertEquals(1, retrievedBasket.get().getData().getItems().size());
         assertEquals(OLD_CERTIFICATE_URI,
                 retrievedBasket.get().getData().getItems().get(0).getItemUri());
+    }
+
+    @Test
+    @DisplayName("Append item endpoint returns HTTP 400 Bad Request if basket full")
+    void appendItemReturnsBadRequestIfBasketFull() throws Exception {
+        Item firstItem = new Item();
+        firstItem.setItemUri(OLD_CERTIFICATE_URI);
+        Item secondItem = new Item();
+        secondItem.setItemUri("/orderable/certificates/11111112");
+        BasketData basketData = new BasketData();
+        basketData.setItems(Arrays.asList(firstItem, secondItem));
+        basketData.setEnrolled(true);
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basket.setData(basketData);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(post("/basket/items/append")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                       .contentType(MediaType.APPLICATION_JSON)
+                       .content(mapper.writeValueAsString(basketRequestDTO)))
+               .andExpect(status().isBadRequest())
+               .andExpect(jsonPath("$.status", is(equalTo("BAD_REQUEST"))))
+               .andExpect(jsonPath("$.errors[0]", is(equalTo("Basket is full"))));
+
+        final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
+        assertEquals(2, retrievedBasket.get().getData().getItems().size());
     }
 
     @Test

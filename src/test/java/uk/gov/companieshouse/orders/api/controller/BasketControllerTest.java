@@ -125,6 +125,12 @@ class BasketControllerTest {
     @Mock
     private CheckoutBasketValidator checkoutBasketValidator;
 
+    @Mock
+    private List<Item> mockItemList;
+
+    @Mock
+    private Item savedCertificateItem, newCertificateItem;
+
     private static final String CERTIFICATE_ITEM_URI = "/orderable/certificates/CRT-123123-123123";
     private static final String DOCUMENT_ITEM_URI = "/orderable/certified-copies/CCD-123123-123123";
 
@@ -313,6 +319,7 @@ class BasketControllerTest {
         when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
         when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
         when(httpServletRequest.getHeader("ERIC-Access-Token")).thenReturn("passthrough");
+        controllerUnderTest.setLimit(1);
 
         // when
         ResponseEntity<Object> actual = controllerUnderTest.appendItemToBasket(basketRequest,
@@ -383,6 +390,7 @@ class BasketControllerTest {
         when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
         when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
         when(httpServletRequest.getHeader("ERIC-Access-Token")).thenReturn("passthrough");
+        controllerUnderTest.setLimit(2);
 
         // when
         ResponseEntity<Object> actual = controllerUnderTest.appendItemToBasket(basketRequest,
@@ -395,6 +403,40 @@ class BasketControllerTest {
         verify(apiClientService).getItem("passthrough", "/path/to/item");
         verify(basketService).getBasketById("id");
         verify(itemMapper).itemToBasketItemDTO(certificateResource);
+    }
+
+    @Test
+    @DisplayName("Append item to basket returns HTTP 400 Bad Request if basket full")
+    void appendItemToBasketWhenBasketFull() throws IOException {
+        // given
+        List<Item> persistedBasketItems = new ArrayList<>();
+        persistedBasketItems.add(certificate);
+        BasketRequestDTO basketRequest = new BasketRequestDTO();
+        basketRequest.setItemUri("/path/to/item");
+        when(apiClientService.getItem(any(), any())).thenReturn(certificateResource);
+        when(certificate.getItemUri()).thenReturn("/path/to/item");
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(retrievedBasket));
+        when(retrievedBasket.getData()).thenReturn(retrievedBasketData);
+        when(retrievedBasketData.getItems()).thenReturn(persistedBasketItems);
+        when(basketMapper.addToBasketRequestDTOToBasket(any())).thenReturn(mappedBasket);
+        when(mappedBasket.getData()).thenReturn(mappedBasketData);
+        when(mappedBasketData.getItems()).thenReturn(Collections.singletonList(document));
+        when(document.getItemUri()).thenReturn("/path/to/document");
+        when(httpServletRequest.getHeader(ERIC_IDENTITY_HEADER_NAME)).thenReturn("id");
+        when(httpServletRequest.getHeader(REQUEST_ID_HEADER_NAME)).thenReturn("request_id");
+        when(httpServletRequest.getHeader("ERIC-Access-Token")).thenReturn("passthrough");
+        controllerUnderTest.setLimit(1);
+
+        // when
+        ResponseEntity<Object> actual = controllerUnderTest.appendItemToBasket(basketRequest,
+                httpServletRequest, "123");
+
+        // then
+        assertEquals(BAD_REQUEST, actual.getStatusCode());
+        verify(apiClientService).getItem("passthrough", "/path/to/item");
+        verify(basketService).getBasketById("id");
+        verifyNoInteractions(itemMapper);
+        verify(basketService, times(0)).saveBasket(retrievedBasket);
     }
 
     @Test

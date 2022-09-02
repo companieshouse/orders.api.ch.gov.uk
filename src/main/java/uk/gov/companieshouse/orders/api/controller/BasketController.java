@@ -112,6 +112,8 @@ public class BasketController {
     private final ApiClientService apiClientService;
     private final OrderService orderService;
     private final ItemEnricher itemEnricher;
+    @Value("${basket.item.limit}")
+    private int limit;
 
     public BasketController(final ItemMapper itemMapper,
                             final BasketMapper basketMapper,
@@ -179,18 +181,21 @@ public class BasketController {
                     .map(Item::getItemUri)
                     .collect(Collectors.toSet());
             Item mappedItem = mappedBasket.getData().getItems().get(0);
-            if (!basketItemUris.contains(mappedItem.getItemUri())) {
-                retrievedBasket.getData().getItems().add(mappedItem);
-                return ItemUpdateStatus.UPDATED;
-            } else {
+            if (basketItemUris.contains(mappedItem.getItemUri())) {
                 LOGGER.debug("Item already exists in basket; skipping...");
                 return ItemUpdateStatus.DUPLICATE;
+            } else if (basketItemUris.size() >= limit) {
+                LOGGER.info(String.format("Basket capacity (%d) reached", limit));
+                return ItemUpdateStatus.BASKET_FULL;
+            } else {
+                retrievedBasket.getData().getItems().add(mappedItem);
+                return ItemUpdateStatus.UPDATED;
             }
         });
     }
 
     enum ItemUpdateStatus {
-        UPDATED, DUPLICATE;
+        UPDATED, DUPLICATE, BASKET_FULL;
     }
 
     private ResponseEntity<Object> addItemImplementation(final @Valid @RequestBody BasketRequestDTO basketRequestDTO,
@@ -226,6 +231,9 @@ public class BasketController {
             ItemUpdateStatus status = itemMapping.apply(retrievedBasket.get(), mappedBasket);
             if (status == ItemUpdateStatus.UPDATED) {
                 basketService.saveBasket(retrievedBasket.get());
+            } else if (status == ItemUpdateStatus.BASKET_FULL) {
+                return ResponseEntity.badRequest().body(new ApiError(BAD_REQUEST,
+                        ErrorType.BASKET_FULL.getValue()));
             }
         } else {
             mappedBasket.setId(EricHeaderHelper.getIdentity(request));
@@ -592,5 +600,9 @@ public class BasketController {
         }
 
         return total;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
     }
 }
