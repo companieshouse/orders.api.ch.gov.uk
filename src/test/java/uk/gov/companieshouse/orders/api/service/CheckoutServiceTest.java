@@ -284,9 +284,7 @@ public class CheckoutServiceTest {
         when(checkoutResult.getData()).thenReturn(checkoutData);
         when(checkoutData.getCheckedOutBy()).thenReturn(checkedOutBy);
         when(checkedOutBy.getEmail()).thenReturn("demo@ch.gov.uk");
-        when(checkoutData.getItems()).thenReturn(Collections.singletonList(item));
-        when(item.getKind()).thenReturn("item#certificate");
-        when(checkoutResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 04, 11).atStartOfDay());
+        when(checkoutResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 4, 11).atStartOfDay());
         when(checkoutData.getLinks()).thenReturn(links);
         when(links.getSelf()).thenReturn("http");
         when(searchFieldMapper.exactMatchOrAny("ORD-123-456")).thenReturn("mapped checkout id");
@@ -298,8 +296,7 @@ public class CheckoutServiceTest {
                         CheckoutSummary.newBuilder()
                                 .withId("ORD-123-456")
                                 .withEmail("demo@ch.gov.uk")
-                                .withProductLine("item#certificate")
-                                .withCheckoutDate(LocalDate.of(2022, 04, 11).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 11).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 

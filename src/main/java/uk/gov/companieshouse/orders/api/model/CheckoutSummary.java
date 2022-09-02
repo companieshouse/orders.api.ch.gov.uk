@@ -6,8 +6,6 @@ import java.util.Objects;
 public class CheckoutSummary {
     private final String id;
     private final String email;
-    private final String companyNumber;
-    private final String productLine;
     private final LocalDateTime orderDate;
     private final PaymentStatus paymentStatus;
     private final Links links;
@@ -15,8 +13,6 @@ public class CheckoutSummary {
     private CheckoutSummary(Builder builder) {
         id = builder.id;
         email = builder.email;
-        companyNumber = builder.companyNumber;
-        productLine = builder.productLine;
         orderDate = builder.orderDate;
         paymentStatus = builder.paymentStatus;
         links = builder.links;
@@ -29,8 +25,6 @@ public class CheckoutSummary {
     public static final class Builder {
         private String id;
         private String email;
-        private String companyNumber;
-        private String productLine;
         private LocalDateTime orderDate;
         private PaymentStatus paymentStatus;
         private Links links;
@@ -45,16 +39,6 @@ public class CheckoutSummary {
 
         public Builder withEmail(String email) {
             this.email = email;
-            return this;
-        }
-
-        public Builder withCompanyNumber(String companyNumber) {
-            this.companyNumber = companyNumber;
-            return this;
-        }
-
-        public Builder withProductLine(String productLine) {
-            this.productLine = productLine;
             return this;
         }
 
@@ -86,14 +70,6 @@ public class CheckoutSummary {
         return email;
     }
 
-    public String getCompanyNumber() {
-        return companyNumber;
-    }
-
-    public String getProductLine() {
-        return productLine;
-    }
-
     public LocalDateTime getOrderDate() {
         return orderDate;
     }
@@ -112,9 +88,7 @@ public class CheckoutSummary {
         if (o == null || getClass() != o.getClass()) return false;
         CheckoutSummary that = (CheckoutSummary) o;
         return Objects.equals(id, that.id) && Objects.equals(email,
-                that.email) && Objects.equals(companyNumber,
-                that.companyNumber) && Objects.equals(productLine,
-                that.productLine) && Objects.equals(orderDate,
+                that.email) && Objects.equals(orderDate,
                 that.orderDate) && paymentStatus == that.paymentStatus && Objects.equals(
                 links,
                 that.links);
@@ -124,8 +98,6 @@ public class CheckoutSummary {
     public int hashCode() {
         return Objects.hash(id,
                 email,
-                companyNumber,
-                productLine,
                 orderDate,
                 paymentStatus,
                 links);
