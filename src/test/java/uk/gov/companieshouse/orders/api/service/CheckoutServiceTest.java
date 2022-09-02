@@ -81,6 +81,9 @@ public class CheckoutServiceTest {
     CheckoutHelper checkoutHelper;
 
     @Mock
+    private CheckoutSummaryBuilderFactory builderFactory;
+
+    @Mock
     private CheckoutCriteria checkoutCriteria;
 
     @Mock
@@ -292,6 +295,7 @@ public class CheckoutServiceTest {
         when(searchFieldMapper.exactMatchOrAny("ORD-123-456")).thenReturn("mapped checkout id");
         when(searchFieldMapper.exactMatchOrAny("12345678")).thenReturn("mapped company number");
         when(searchFieldMapper.partialMatchOrAny("demo@ch.gov.uk")).thenReturn("mapped email");
+        when(builderFactory.newCheckoutSummaryBuilder()).thenReturn(CheckoutSummary.newBuilder());
 
         CheckoutSearchResults expected = new CheckoutSearchResults(42L,
                 Collections.singletonList(
@@ -329,6 +333,7 @@ public class CheckoutServiceTest {
         when(pages.toList()).thenReturn(Collections.singletonList(checkoutResult));
         when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
         when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
+        when(builderFactory.newCheckoutSummaryBuilder()).thenReturn(CheckoutSummary.newBuilder());
 
         CheckoutSummary orderSummary = CheckoutSummary.newBuilder().build();
 
@@ -357,6 +362,7 @@ public class CheckoutServiceTest {
         when(pages.toList()).thenReturn(Collections.singletonList(checkoutResult));
         when(searchFieldMapper.exactMatchOrAny(anyString())).thenReturn("mapped string");
         when(searchFieldMapper.partialMatchOrAny(anyString())).thenReturn("mapped string");
+        when(builderFactory.newCheckoutSummaryBuilder()).thenReturn(CheckoutSummary.newBuilder());
 
         //when
         CheckoutSearchResults actual = serviceUnderTest.searchCheckouts(checkoutSearchCriteria);

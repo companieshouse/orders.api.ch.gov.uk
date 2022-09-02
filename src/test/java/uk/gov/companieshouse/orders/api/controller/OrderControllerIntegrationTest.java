@@ -77,7 +77,7 @@ import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 @AutoConfigureMockMvc
 @SpringBootTest
 @EmbeddedKafka
-@ActiveProfiles("orders-search-enabled")
+@ActiveProfiles({"orders-search-enabled", "orders-search-multibasket-enabled"})
 class OrderControllerIntegrationTest {
     private static final String ORDER_ID = "0001";
     private static final String ORDER_REFERENCE = "0001";
@@ -252,8 +252,6 @@ class OrderControllerIntegrationTest {
                         CheckoutSummary.newBuilder()
                                 .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
-                                .withCompanyNumber("12345678")
-                                .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
                                 .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
@@ -269,7 +267,7 @@ class OrderControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(expected)));
+                .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
 
     @DisplayName("Should find a single checkout when searching with a partial email address")
@@ -281,8 +279,6 @@ class OrderControllerIntegrationTest {
                         CheckoutSummary.newBuilder()
                                 .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
-                                .withCompanyNumber("12345678")
-                                .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
                                 .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
@@ -298,7 +294,7 @@ class OrderControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(expected)));
+                .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
 
     @DisplayName("Should find a single checkout when a valid company number is provided")
@@ -312,8 +308,6 @@ class OrderControllerIntegrationTest {
                         CheckoutSummary.newBuilder()
                                 .withId(ORDER_ID)
                                 .withEmail("demo@ch.gov.uk")
-                                .withCompanyNumber("12345678")
-                                .withProductLine("item#certificate")
                                 .withPaymentStatus(PaymentStatus.PAID)
                                 .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
@@ -329,7 +323,7 @@ class OrderControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(expected)));
+                .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -348,7 +342,7 @@ class OrderControllerIntegrationTest {
                         .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().json(mapper.writeValueAsString(expected)));
+                .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
 
     @DisplayName("Should return a page containing a single order when page_size is one")
@@ -578,7 +572,7 @@ class OrderControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON);
     }
 
-    private static Stream<Arguments> noMatchesFixture() {
+    static Stream<Arguments> noMatchesFixture() {
         return Stream.of(Arguments.arguments("Should not find a order when incomplete order id is provided", "id", "00"),
                 Arguments.arguments("Should not find a order when a incorrect email address is provided", "email", "wrong@ch.gov.uk"),
                 Arguments.arguments("Should not find a order when a incomplete company number is provided", "company_number", "345678912"));

@@ -10,8 +10,11 @@ public class FeatureOptionsConfig {
     @Value("${feature.options.ordersSearchEndpointEnabled:false}")
     private boolean ordersSearchEnabled;
 
+    @Value("${feature.options.multiItemBasketSearchEnabled:false}")
+    private boolean multiItemBasketSearchEnabled;
+
     @Bean
     public FeatureOptions featureOptions() {
-        return new FeatureOptions(ordersSearchEnabled);
+        return new FeatureOptions(ordersSearchEnabled, multiItemBasketSearchEnabled);
     }
 }
