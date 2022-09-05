@@ -7,6 +7,9 @@ import javax.validation.constraints.NotBlank;
 
 public class DeliveryDetailsDTO {
 
+    @JsonProperty("company_name")
+    private String companyName;
+
     @NotBlank
     @JsonProperty("address_line_1")
     private String addressLine1;
@@ -38,6 +41,14 @@ public class DeliveryDetailsDTO {
     @NotBlank
     @JsonProperty("surname")
     private String surname;
+
+    public String getCompanyName() {
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName) {
+        this.companyName = companyName;
+    }
 
     public String getAddressLine1() {
         return addressLine1;

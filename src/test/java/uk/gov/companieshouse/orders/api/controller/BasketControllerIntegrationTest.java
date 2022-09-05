@@ -962,6 +962,7 @@ class BasketControllerIntegrationTest {
         BasketData basketData = new BasketData();
         if (isPostalDelivery) {
             DeliveryDetails deliveryDetails = new DeliveryDetails();
+            deliveryDetails.setCompanyName(COMPANY_NAME);
             deliveryDetails.setAddressLine1(ADDRESS_LINE_1);
             deliveryDetails.setForename(FORENAME);
             deliveryDetails.setSurname(SURNAME);
@@ -1208,6 +1209,7 @@ class BasketControllerIntegrationTest {
 
         final DeliveryDetails getDeliveryDetails = response.getDeliveryDetails();
         final Item item = response.getItems().get(0);
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1285,6 +1287,7 @@ class BasketControllerIntegrationTest {
 
         final DeliveryDetails getDeliveryDetails = response.getDeliveryDetails();
         final Item item = response.getItems().get(0);
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1388,6 +1391,7 @@ class BasketControllerIntegrationTest {
 
         AddDeliveryDetailsRequestDTO addDeliveryDetailsRequestDTO = new AddDeliveryDetailsRequestDTO();
         DeliveryDetailsDTO deliveryDetailsDTO = new DeliveryDetailsDTO();
+        deliveryDetailsDTO.setCompanyName(COMPANY_NAME);
         deliveryDetailsDTO.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetailsDTO.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetailsDTO.setCountry(COUNTRY);
@@ -1410,6 +1414,7 @@ class BasketControllerIntegrationTest {
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
         final DeliveryDetails getDeliveryDetails = retrievedBasket.get().getData().getDeliveryDetails();
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1427,6 +1432,7 @@ class BasketControllerIntegrationTest {
 
         AddDeliveryDetailsRequestDTO addDeliveryDetailsRequestDTO = new AddDeliveryDetailsRequestDTO();
         DeliveryDetailsDTO deliveryDetailsDTO = new DeliveryDetailsDTO();
+        deliveryDetailsDTO.setCompanyName(COMPANY_NAME);
         deliveryDetailsDTO.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetailsDTO.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetailsDTO.setCountry(COUNTRY);
@@ -1449,6 +1455,7 @@ class BasketControllerIntegrationTest {
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
         final DeliveryDetails getDeliveryDetails = retrievedBasket.get().getData().getDeliveryDetails();
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -2304,6 +2311,7 @@ class BasketControllerIntegrationTest {
         basket.getData().getItems().add(basketItem);
 
         DeliveryDetails deliveryDetails = new DeliveryDetails();
+        deliveryDetails.setCompanyName(COMPANY_NAME);
         deliveryDetails.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetails.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetails.setCountry(COUNTRY);

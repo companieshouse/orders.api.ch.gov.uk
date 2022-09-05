@@ -43,6 +43,7 @@ public class CheckoutServiceTest {
     private static final String LINKS_PAYMENT = "links/payment";
     private static final String KIND = "order";
 
+    private static final String COMPANY_NAME = "company name";
     private static final String ADDRESS_LINE_1 = "address line 1";
     private static final String ADDRESS_LINE_2 = "address line 2";
     private static final String COUNTRY = "country";
@@ -170,6 +171,7 @@ public class CheckoutServiceTest {
     void createCheckoutPopulatesAndSavesDeliveryDetails() {
         when(checkoutRepository.save(any(Checkout.class))).thenReturn(new Checkout());
         DeliveryDetails deliveryDetails = new DeliveryDetails();
+        deliveryDetails.setCompanyName(COMPANY_NAME);
         deliveryDetails.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetails.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetails.setCountry(COUNTRY);
@@ -186,6 +188,7 @@ public class CheckoutServiceTest {
         verify(checkoutRepository).save(checkoutCaptor.capture());
 
         DeliveryDetails createdDeliveryDetails = checkout().getData().getDeliveryDetails();
+        assertThat(createdDeliveryDetails.getCompanyName(), is(COMPANY_NAME));
         assertThat(createdDeliveryDetails.getAddressLine1(), is(ADDRESS_LINE_1));
         assertThat(createdDeliveryDetails.getAddressLine2(), is(ADDRESS_LINE_2));
         assertThat(createdDeliveryDetails.getCountry(), is(COUNTRY));
