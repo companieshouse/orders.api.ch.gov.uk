@@ -42,7 +42,7 @@ import uk.gov.companieshouse.orders.api.util.TestConstants;
 @SpringBootTest
 @EmbeddedKafka
 @ActiveProfiles({"orders-search-enabled", "orders-search-multibasket-disabled"})
-public class OrdersSearchMultibasketDisabledIntegrationTest {
+class OrdersSearchMultibasketDisabledIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

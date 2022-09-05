@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.api.config.FeatureOptions;
+import uk.gov.companieshouse.orders.api.exception.ServiceException;
 
 public class CheckoutSummaryInvocationHandler implements InvocationHandler {
 
@@ -38,7 +39,7 @@ public class CheckoutSummaryInvocationHandler implements InvocationHandler {
                 return method.invoke(builder, args);
             }
         } catch (InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new ServiceException("Error mapping checkout summary", e);
         }
     }
 }

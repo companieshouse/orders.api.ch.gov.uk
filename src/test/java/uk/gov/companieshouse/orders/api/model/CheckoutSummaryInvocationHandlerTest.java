@@ -15,9 +15,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.companieshouse.orders.api.config.FeatureOptions;
+import uk.gov.companieshouse.orders.api.exception.ServiceException;
 
 @ExtendWith(MockitoExtension.class)
-public class CheckoutSummaryInvocationHandlerTest {
+class CheckoutSummaryInvocationHandlerTest {
 
     @Mock
     private FeatureOptions featureOptions;
@@ -154,8 +155,8 @@ public class CheckoutSummaryInvocationHandlerTest {
     }
 
     @Test
-    @DisplayName("Throw RuntimeException if InvocationTargetException thrown")
-    void testThrowRuntimeExceptionIfInvocationTargetExceptionThrown() {
+    @DisplayName("Throw ServiceException if InvocationTargetException thrown")
+    void testThrowServiceExceptionIfInvocationTargetExceptionThrown() {
         // given
         when(builder.build()).thenThrow(RuntimeException.class);
 
@@ -164,6 +165,7 @@ public class CheckoutSummaryInvocationHandlerTest {
                 "build"), null);
 
         // then
-        assertThrows(RuntimeException.class, actual);
+        ServiceException exception = assertThrows(ServiceException.class, actual);
+        assertEquals("Error mapping checkout summary", exception.getMessage());
     }
 }
