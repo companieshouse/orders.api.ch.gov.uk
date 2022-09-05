@@ -31,11 +31,11 @@ public class CheckoutSummaryInvocationHandler implements InvocationHandler {
                     && featureOptions.isMultiItemBasketSearchEnabled()) {
                 LOGGER.debug("Not mapping product line as multi-item basket search is enabled");
                 return proxy;
-            } else if ("build".equals(method.getName())) {
-                return method.invoke(builder, args);
-            } else {
+            } else if (method.getName().startsWith("with")) {
                 method.invoke(builder, args);
                 return proxy;
+            } else {
+                return method.invoke(builder, args);
             }
         } catch (InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);

@@ -140,6 +140,20 @@ public class CheckoutSummaryInvocationHandlerTest {
     }
 
     @Test
+    @DisplayName("Forward return value if inherited object method invoked")
+    void testForwardReturnValueIfObjectMethodInvoked() throws Throwable {
+        // given
+        when(builder.toString()).thenReturn("builder");
+
+        // when
+        Object actual = invocationHandler.invoke(proxy,
+                builder.getClass().getMethod("toString"), null);
+
+        // then
+        assertEquals("builder", actual);
+    }
+
+    @Test
     @DisplayName("Throw RuntimeException if InvocationTargetException thrown")
     void testThrowRuntimeExceptionIfInvocationTargetExceptionThrown() {
         // given
