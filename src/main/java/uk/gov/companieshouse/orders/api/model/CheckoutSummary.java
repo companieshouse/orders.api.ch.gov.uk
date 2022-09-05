@@ -26,7 +26,7 @@ public class CheckoutSummary {
         return new Builder();
     }
 
-    public static final class Builder {
+    public static final class Builder implements CheckoutSummaryBuildable {
         private String id;
         private String email;
         private String companyNumber;

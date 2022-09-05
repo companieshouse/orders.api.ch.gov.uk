@@ -23,17 +23,20 @@ public class CheckoutService {
     private final LinksGeneratorService linksGeneratorService;
     private final CheckoutHelper checkoutHelper;
     private final SearchFieldMapper searchFieldMapper;
+    private final CheckoutSummaryBuilderFactory summaryBuilderFactory;
 
     public CheckoutService(CheckoutRepository checkoutRepository,
                            EtagGeneratorService etagGeneratorService,
                            LinksGeneratorService linksGeneratorService,
                            CheckoutHelper checkoutHelper,
-                           SearchFieldMapper searchFieldMapper) {
+                           SearchFieldMapper searchFieldMapper,
+                           CheckoutSummaryBuilderFactory summaryBuilderFactory) {
         this.checkoutRepository = checkoutRepository;
         this.etagGeneratorService = etagGeneratorService;
         this.linksGeneratorService = linksGeneratorService;
         this.checkoutHelper = checkoutHelper;
         this.searchFieldMapper = searchFieldMapper;
+        this.summaryBuilderFactory = summaryBuilderFactory;
     }
 
     private String autoGenerateId() {
@@ -97,7 +100,7 @@ public class CheckoutService {
 
         return new CheckoutSearchResults(checkoutPages.getTotalElements(),
                 checkouts.stream().map(
-                        checkout -> CheckoutSummary.newBuilder()
+                        checkout -> summaryBuilderFactory.newCheckoutSummaryBuilder()
                                 .withId(checkout.getId())
                                 .withEmail(
                                         Optional.ofNullable(checkout.getData())
