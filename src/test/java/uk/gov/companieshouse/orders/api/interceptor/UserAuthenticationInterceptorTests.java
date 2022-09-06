@@ -258,48 +258,15 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
-    @DisplayName("Authentication for orders/search endpoint succeeds if caller identity is valid")
-    @Test
-    void ordersSearchValidIdentity() {
-        when(securityManager.checkIdentity()).thenReturn(true);
-        givenRequest(GET, "/checkouts/search");
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("hasAdminAuthenticationFixtures")
+    void ordersSearchValidIdentity(String displayName, String endpoint, boolean isValid) {
+        when(securityManager.checkIdentity()).thenReturn(isValid);
+        givenRequest(GET, endpoint);
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
-        assertThat(actual, is(true));
-    }
-
-    @DisplayName("Authentication for orders/search endpoint false if caller identity is invalid")
-    @Test
-    void ordersSearchInvalidIdentity() {
-        when(securityManager.checkIdentity()).thenReturn(false);
-        givenRequest(GET, "/checkouts/search");
-
-        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
-
-        assertThat(actual, is(false));
-    }
-
-    @DisplayName("Authentication for get order item endpoint succeeds if caller identity is valid")
-    @Test
-    void getOrderItemValidIdentity() {
-        when(securityManager.checkIdentity()).thenReturn(true);
-        givenRequest(GET, "/orders/1234/items/5678");
-
-        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
-
-        assertThat(actual, is(true));
-    }
-
-    @DisplayName("Authentication for orders/search endpoint false if caller identity is invalid")
-    @Test
-    void getOrderItemInvalidIdentity() {
-        when(securityManager.checkIdentity()).thenReturn(false);
-        givenRequest(GET, "/orders/1234/items/5678");
-
-        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
-
-        assertThat(actual, is(false));
+        assertThat(actual, is(isValid));
     }
 
     @Test
@@ -449,5 +416,12 @@ class UserAuthenticationInterceptorTests {
                 arguments("preHandle accepts get order request that has signed in user headers", "/orders/1234"),
                 arguments("preHandle accepts get order item request that has signed in user headers", "/orders/1234/items/5678"),
                 arguments("preHandle accepts get basket links request from a user with OAuth2 authentication", "/basket/links"));
+    }
+
+    private static Stream<Arguments> hasAdminAuthenticationFixtures() {
+        return Stream.of(arguments("Authentication for orders/search endpoint succeeds if caller identity is valid", "/checkouts/search", true),
+                arguments("Authentication for orders/search endpoint fails if caller identity is invalid", "/checkouts/search", false),
+                arguments("Authentication for get order item endpoint succeeds if caller identity is valid", "/orders/1234/items/5678", true),
+                arguments("Authentication for get order item endpoint fails if caller identity is invalid", "/orders/1234/items/5678", false));
     }
 }
