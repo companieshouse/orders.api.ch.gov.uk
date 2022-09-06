@@ -87,8 +87,9 @@ public class UserAuthorisationInterceptor implements HandlerInterceptor {
             case GET_CHECKOUT:
                 return securityManager.checkPermission() || getRequestClientIsAuthorised(request, response, this::getCheckoutUserIsResourceOwner);
             case GET_ORDER:
-            case GET_ORDER_ITEM:
                 return getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
+            case GET_ORDER_ITEM:
+                return securityManager.checkPermission() || getRequestClientIsAuthorised(request, response, this::getOrderUserIsResourceOwner);
             case SEARCH:
                 return securityManager.checkPermission();
             case PATCH_PAYMENT_DETAILS:

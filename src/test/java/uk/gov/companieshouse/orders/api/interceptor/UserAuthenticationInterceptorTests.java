@@ -280,6 +280,28 @@ class UserAuthenticationInterceptorTests {
         assertThat(actual, is(false));
     }
 
+    @DisplayName("Authentication for get order item endpoint succeeds if caller identity is valid")
+    @Test
+    void getOrderItemValidIdentity() {
+        when(securityManager.checkIdentity()).thenReturn(true);
+        givenRequest(GET, "/orders/1234/items/5678");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authentication for orders/search endpoint false if caller identity is invalid")
+    @Test
+    void getOrderItemInvalidIdentity() {
+        when(securityManager.checkIdentity()).thenReturn(false);
+        givenRequest(GET, "/orders/1234/items/5678");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
     @Test
     @DisplayName("preHandle rejects post reprocess order request that is unauthenticated")
     void preHandleRejectsUnauthenticatedPostReprocessOrderRequest() {
