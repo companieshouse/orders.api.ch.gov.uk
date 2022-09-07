@@ -245,6 +245,37 @@ class UserAuthorisationInterceptorTests {
         assertThat(actual, is(false));
     }
 
+    @Test
+    @DisplayName("Authorisation for get order item endpoint succeeds if caller has admin permissions")
+    void getOrderItemValidAuthorisation() {
+        // given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+        when(securityManager.checkPermission()).thenReturn(true);
+
+        // when
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        // then
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authorisation for get order item endpoint false if caller has admin permissions")
+    @Test
+    void getOrderItemSearchInvalidAuthorisation() {
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+        when(securityManager.checkPermission()).thenReturn(false);
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("apiGetRequestFixtures")
     void preHandleAcceptsAuthorisedInternalApiGetRequest(final String displayName, final String uri) {
