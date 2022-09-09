@@ -9,14 +9,18 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CHECKOUT_ID;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISED_USER_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -113,6 +117,9 @@ public class CheckoutServiceTest {
 
     @Mock
     private Page<Checkout> pages;
+
+    @Mock
+    private Item midItem, certifiedCopyItem, certificateItem;
 
     @Captor
     ArgumentCaptor<Checkout> checkoutCaptor;
@@ -373,6 +380,55 @@ public class CheckoutServiceTest {
         //then
         assertThat(actual.getTotalOrders(), is(42L));
         assertThat(actual.getOrderSummaries().size(), is(1));
+    }
+
+    @Test
+    @DisplayName("Fetch order item")
+    void getCheckoutItem() {
+        // given
+        when(checkoutResult.getData()).thenReturn(checkoutData);
+        when(checkoutData.getItems()).thenReturn(
+                Arrays.asList(midItem, certifiedCopyItem, certificateItem));
+        when(midItem.getId()).thenReturn("MID-123456-123456");
+        when(certifiedCopyItem.getId()).thenReturn("CCD-123456-123456");
+        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkoutResult));
+
+        // when
+        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "CCD-123456-123456");
+
+        // then
+        Assertions.assertEquals(certifiedCopyItem, actual.get());
+    }
+
+    @Test
+    @DisplayName("Fetch order item returns Optional.empty if no matching item found")
+    void getCheckoutItemReturnsEmptyOptionalIfNoMatchingItemFound() {
+        // given
+        when(checkoutResult.getData()).thenReturn(checkoutData);
+        when(checkoutData.getItems()).thenReturn(Arrays.asList(midItem, certifiedCopyItem, certificateItem));
+        when(midItem.getId()).thenReturn("MID-123456-123456");
+        when(certifiedCopyItem.getId()).thenReturn("CCD-123456-123456");
+        when(certificateItem.getId()).thenReturn("CRT-123456-123456");
+        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkoutResult));
+
+        // when
+        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
+
+        // then
+        Assertions.assertEquals(Optional.empty(), actual);
+    }
+
+    @Test
+    @DisplayName("Fetch order item returns Optional.empty if no matching order found")
+    void getCheckoutItemReturnsEmptyOptionalIfNoMatchingOrderFound() {
+        // given
+        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.empty());
+
+        // when
+        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
+
+        // then
+        Assertions.assertEquals(Optional.empty(), actual);
     }
 
     /**

@@ -53,6 +53,7 @@ public class OrderController {
             "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}";
 
     public static final String GET_ORDER_ITEM_URI = "/orders/{id}/items/{itemId}";
+    public static final String GET_CHECKOUT_ITEM_URI = "/checkouts/{id}/items/{itemId}";
 
     /** <code>${uk.gov.companieshouse.orders.api.checkouts}/{id}</code> */
     public static final String GET_CHECKOUT_URI =
@@ -98,6 +99,21 @@ public class OrderController {
                                                  .orElseThrow(ResourceNotFoundException::new);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info("Order item found and returned", logMap);
+        return ResponseEntity.ok().body(item);
+    }
+
+    @GetMapping(GET_CHECKOUT_ITEM_URI)
+    public ResponseEntity<Item> getCheckoutItem(final @PathVariable("id") String checkoutId,
+            final @PathVariable("itemId") String itemId,
+            final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        Map<String, Object> logMap = createLogMapWithRequestId(requestId);
+        logIfNotNull(logMap, LoggingUtils.ORDER_ID, checkoutId);
+        logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
+        LOGGER.info("Retrieving checkout item", logMap);
+        final Item item = this.checkoutService.getCheckoutItem(checkoutId, itemId)
+                                 .orElseThrow(ResourceNotFoundException::new);
+        logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
+        LOGGER.info("Checkout item found and returned", logMap);
         return ResponseEntity.ok().body(item);
     }
 

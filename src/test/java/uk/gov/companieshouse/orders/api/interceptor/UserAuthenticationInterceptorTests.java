@@ -392,7 +392,10 @@ class UserAuthenticationInterceptorTests {
         return Stream.of(arguments("preHandle accepts get checkout request that has authenticated API headers", "/checkouts/1234"),
                 arguments("preHandle accepts get order request that has authenticated API headers", "/orders/1234"),
                 arguments("preHandle accepts get order item request that has authenticated API headers", "/orders/1234/items/5678"),
-                arguments("preHandle accepts get payment details request that has authenticated API headers", "/basket/checkouts/1234/payment"));
+                arguments("preHandle accepts get payment details request that has authenticated "
+                        + "API headers", "/basket/checkouts/1234/payment"),
+                arguments("preHandle accespts get checkout item request that has authenticated "
+                        + "API headers", "/checkouts/1234/items/1234"));
     }
 
     private static Stream<Arguments> unauthenticatedRequestFixtures() {
@@ -400,7 +403,10 @@ class UserAuthenticationInterceptorTests {
                 arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
                 arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
                 arguments("preHandle rejects get order item request that lacks required headers", "/orders/1234/items/5678"),
-                arguments("preHandle rejects get basket links request that lacks requires headers", "/basket/links"));
+                arguments("preHandle rejects get basket links request that lacks requires "
+                        + "headers", "/basket/links"),
+                arguments("preHandle rejects get checkout item request that lacks required "
+                        + "headers", "/checkouts/1234/items/1234"));
     }
 
     private static Stream<Arguments> signedInPostRequestFixtures() {
@@ -422,6 +428,11 @@ class UserAuthenticationInterceptorTests {
         return Stream.of(arguments("Authentication for orders/search endpoint succeeds if caller identity is valid", "/checkouts/search", true),
                 arguments("Authentication for orders/search endpoint fails if caller identity is invalid", "/checkouts/search", false),
                 arguments("Authentication for get order item endpoint succeeds if caller identity is valid", "/orders/1234/items/5678", true),
-                arguments("Authentication for get order item endpoint fails if caller identity is invalid", "/orders/1234/items/5678", false));
+                arguments("Authentication for get order item endpoint fails if caller identity is"
+                        + " invalid", "/orders/1234/items/5678", false),
+                arguments("Authentication for get checkout item endpoint succeeds if caller "
+                        + "identity is valid", "/checkouts/1234/items/5678", true),
+                arguments("Authentication for get checkout item endpoint fails if caller identity "
+                        + "is invalid", "/checkouts/1234/items/5678", false));
     }
 }

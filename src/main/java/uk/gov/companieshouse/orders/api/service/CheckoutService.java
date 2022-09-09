@@ -144,4 +144,13 @@ public class CheckoutService {
         updatedCheckout.getData().setEtag(etagGeneratorService.generateEtag());
         return checkoutRepository.save(updatedCheckout);
     }
+
+    public Optional<Item> getCheckoutItem(String orderId, String itemId) {
+        Optional<Checkout> order = getCheckoutById(orderId);
+        return order.flatMap(o -> o.getData()
+                                   .getItems()
+                                   .stream()
+                                   .filter(item -> item.getId().equals(itemId))
+                                   .findFirst());
+    }
 }

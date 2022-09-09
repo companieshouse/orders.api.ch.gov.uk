@@ -14,6 +14,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.APPEND_BA
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
@@ -206,6 +207,19 @@ class RequestMapperTests {
 
         // Then
         assertThat(actual, is(APPEND_BASKET_ITEM));
+    }
+
+    @Test
+    @DisplayName("Return mapping for getCheckoutItem endpoint")
+    void getCheckoutItem() {
+        // given
+        givenRequest(GET, "/checkouts/{checkoutId}/items/{itemId}");
+
+        // when
+        String actual = requestMapperUnderTest.getRequestMapping(request).getName();
+
+        // then
+        assertThat(actual, is(GET_CHECKOUT_ITEM));
     }
 
     /**
