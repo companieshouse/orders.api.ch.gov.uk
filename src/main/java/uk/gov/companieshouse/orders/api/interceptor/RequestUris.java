@@ -1,6 +1,7 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
 import static uk.gov.companieshouse.orders.api.controller.BasketController.*;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
@@ -28,6 +29,7 @@ class RequestUris {
     static final String GET_ORDER_ITEM = "getOrderItem";
     static final String SEARCH = "searchCheckouts";
     static final String GET_CHECKOUT = "getCheckout";
+    static final String GET_CHECKOUT_ITEM = "getCheckoutItem";
     static final String POST_REPROCESS_ORDER = "postReprocessOrder";
     static final String GET_BASKET_LINKS = "getBasketLinks";
     static final String REMOVE_BASKET_ITEM = "putRemoveBasketItem";
@@ -49,6 +51,8 @@ class RequestUris {
     private String searchUri;
     @Value(GET_CHECKOUT_URI)
     private String getCheckoutUri;
+    @Value(GET_CHECKOUT_ITEM_URI)
+    private String getCheckoutItemUri;
     @Value(PATCH_PAYMENT_DETAILS_URI)
     private String patchPaymentDetailsUri;
     @Value(POST_REPROCESS_ORDER_URI)
@@ -118,6 +122,12 @@ class RequestUris {
                 .paths(getOrderItemUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_ORDER_ITEM)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(getCheckoutItemUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_CHECKOUT_ITEM)
                 .build());
 
         knownRequests.add(RequestMappingInfo

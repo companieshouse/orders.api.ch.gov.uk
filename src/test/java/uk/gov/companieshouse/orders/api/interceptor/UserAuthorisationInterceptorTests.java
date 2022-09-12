@@ -454,6 +454,29 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
+    @Test
+    @DisplayName("Authorisation for get checkout item endpoint succeeds if caller is has correct "
+            + "permissions")
+    void getCheckoutItemValidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(true);
+        givenRequest(GET, "/checkouts/1234/items/1234");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authentication for get checkout item endpoint false if caller has incorrect permissions")
+    @Test
+    void getCheckoutItemInvalidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234/items/1234");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
     /**
      * Sets up request givens.
      * @param method the HTTP request method

@@ -562,6 +562,67 @@ class OrderControllerIntegrationTest {
                .andExpect(status().isNotFound());
     }
 
+    @DisplayName("Get a checkout item")
+    @Test
+    void getCheckoutItem() throws Exception {
+        final Checkout preexistingCheckout = new Checkout();
+        preexistingCheckout.setId(CHECKOUT_ID);
+        preexistingCheckout.setUserId(ERIC_IDENTITY_VALUE);
+        final CheckoutData checkoutData = new CheckoutData();
+        preexistingCheckout.setData(checkoutData);
+        checkoutData.setReference(ORDER_REFERENCE);
+        checkoutData.setTotalOrderCost("100");
+        Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
+                "12345678");
+        checkoutData.setItems(Arrays.asList(
+                StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                        "12345678"),
+                expectedItem,
+                StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                        "12345678")));
+        checkoutRepository.save(preexistingCheckout);
+
+        mockMvc.perform(get("/checkouts/"+CHECKOUT_ID+"/items/CCD-123456-123456")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                       .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                       .contentType(MediaType.APPLICATION_JSON))
+               .andExpect(status().isOk())
+               .andExpect(content().json(mapper.writeValueAsString(expectedItem)));
+    }
+
+    @DisplayName("Get checkout item returns HTTP 404 Not Found if no matching item ID")
+    @Test
+    void getCheckoutItemReturnsNotFoundIfNoMatchingItemID() throws Exception {
+        final Checkout preexistingOrder = new Checkout();
+        preexistingOrder.setId(ORDER_ID);
+        preexistingOrder.setUserId(ERIC_IDENTITY_VALUE);
+        final CheckoutData orderData = new CheckoutData();
+        preexistingOrder.setData(orderData);
+        orderData.setReference(ORDER_REFERENCE);
+        orderData.setTotalOrderCost("100");
+        Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
+                "12345678");
+        orderData.setItems(Arrays.asList(
+                StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                        "12345678"),
+                expectedItem,
+                StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                        "12345678")));
+        checkoutRepository.save(preexistingOrder);
+
+        mockMvc.perform(get("/checkouts/"+ORDER_ID+"/items/NONEXISTENT")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                       .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                       .contentType(MediaType.APPLICATION_JSON))
+               .andExpect(status().isNotFound());
+    }
+
     private MockHttpServletRequestBuilder reprocessOrderWithRequiredCredentials() {
         return post("/orders/" + ORDER_ID + "/reprocess")
                         .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
