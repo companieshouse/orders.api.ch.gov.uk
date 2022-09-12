@@ -584,7 +584,8 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get("/checkouts/"+CHECKOUT_ID+"/items/CCD-123456-123456")
                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                       .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                        .contentType(MediaType.APPLICATION_JSON))
@@ -614,7 +615,8 @@ class OrderControllerIntegrationTest {
 
         mockMvc.perform(get("/checkouts/"+ORDER_ID+"/items/NONEXISTENT")
                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                       .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                        .contentType(MediaType.APPLICATION_JSON))

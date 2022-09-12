@@ -393,9 +393,7 @@ class UserAuthenticationInterceptorTests {
                 arguments("preHandle accepts get order request that has authenticated API headers", "/orders/1234"),
                 arguments("preHandle accepts get order item request that has authenticated API headers", "/orders/1234/items/5678"),
                 arguments("preHandle accepts get payment details request that has authenticated "
-                        + "API headers", "/basket/checkouts/1234/payment"),
-                arguments("preHandle accespts get checkout item request that has authenticated "
-                        + "API headers", "/checkouts/1234/items/1234"));
+                        + "API headers", "/basket/checkouts/1234/payment"));
     }
 
     private static Stream<Arguments> unauthenticatedRequestFixtures() {
@@ -404,9 +402,7 @@ class UserAuthenticationInterceptorTests {
                 arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
                 arguments("preHandle rejects get order item request that lacks required headers", "/orders/1234/items/5678"),
                 arguments("preHandle rejects get basket links request that lacks requires "
-                        + "headers", "/basket/links"),
-                arguments("preHandle rejects get checkout item request that lacks required "
-                        + "headers", "/checkouts/1234/items/1234"));
+                        + "headers", "/basket/links"));
     }
 
     private static Stream<Arguments> signedInPostRequestFixtures() {
