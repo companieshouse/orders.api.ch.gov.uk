@@ -385,19 +385,29 @@ public class CheckoutServiceTest {
     @Test
     @DisplayName("Fetch order item")
     void getCheckoutItem() {
+        Checkout checkout = new Checkout();
+        checkout.setId(CHECKOUT_ID);
+        CheckoutData checkoutData = new CheckoutData();
+        Item certCopy = new Item();
+        certCopy.setId("CCD-123456-123456");
+        Item certificate = new Item();
+        certificate.setId("CRT-123456-123456");
+        Item midItem = new Item();
+        midItem.setId("MID-123456-123456");
+        checkoutData.setItems(Arrays.asList(certCopy, certificate, midItem));
+        checkout.setData(checkoutData);
+
+        Checkout expectedCheckout = checkout;
+        expectedCheckout.getData().setItems(Collections.singletonList(certCopy));
+
         // given
-        when(checkoutResult.getData()).thenReturn(checkoutData);
-        when(checkoutData.getItems()).thenReturn(
-                Arrays.asList(midItem, certifiedCopyItem, certificateItem));
-        when(midItem.getId()).thenReturn("MID-123456-123456");
-        when(certifiedCopyItem.getId()).thenReturn("CCD-123456-123456");
-        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkoutResult));
+        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkout));
 
         // when
-        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "CCD-123456-123456");
+        Optional<Checkout> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "CCD-123456-123456");
 
         // then
-        Assertions.assertEquals(certifiedCopyItem, actual.get());
+        Assertions.assertEquals(expectedCheckout, actual.get());
     }
 
     @Test
@@ -412,7 +422,7 @@ public class CheckoutServiceTest {
         when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkoutResult));
 
         // when
-        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
+        Optional<Checkout> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
 
         // then
         Assertions.assertEquals(Optional.empty(), actual);
@@ -425,7 +435,7 @@ public class CheckoutServiceTest {
         when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.empty());
 
         // when
-        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
+        Optional<Checkout> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
 
         // then
         Assertions.assertEquals(Optional.empty(), actual);

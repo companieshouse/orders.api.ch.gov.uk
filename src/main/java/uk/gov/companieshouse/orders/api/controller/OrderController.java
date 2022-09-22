@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.tukaani.xz.check.Check;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
@@ -103,18 +104,18 @@ public class OrderController {
     }
 
     @GetMapping(GET_CHECKOUT_ITEM_URI)
-    public ResponseEntity<Item> getCheckoutItem(final @PathVariable("id") String checkoutId,
+    public ResponseEntity<Checkout> getCheckoutItem(final @PathVariable("id") String checkoutId,
             final @PathVariable("itemId") String itemId,
             final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = createLogMapWithRequestId(requestId);
         logIfNotNull(logMap, LoggingUtils.ORDER_ID, checkoutId);
         logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
         LOGGER.info("Retrieving checkout item", logMap);
-        final Item item = this.checkoutService.getCheckoutItem(checkoutId, itemId)
+        final Checkout checkout = this.checkoutService.getCheckoutItem(checkoutId, itemId)
                                  .orElseThrow(ResourceNotFoundException::new);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info("Checkout item found and returned", logMap);
-        return ResponseEntity.ok().body(item);
+        return ResponseEntity.ok().body(checkout);
     }
 
     @GetMapping(GET_CHECKOUT_URI)
