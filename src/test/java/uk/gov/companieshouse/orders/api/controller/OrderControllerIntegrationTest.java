@@ -582,8 +582,11 @@ class OrderControllerIntegrationTest {
                         "12345678")));
         checkoutRepository.save(preexistingCheckout);
 
-        final Checkout expectedCheckout = preexistingCheckout;
-        expectedCheckout.getData().setItems(Collections.singletonList(expectedItem));
+        final Checkout expectedCheckout = new Checkout();
+        expectedCheckout.setId(CHECKOUT_ID);
+        final CheckoutData expectedCheckoutData = new CheckoutData();
+        expectedCheckoutData.setItems(Collections.singletonList(expectedItem));
+        expectedCheckout.setData(expectedCheckoutData);
 
         mockMvc.perform(get("/checkouts/"+CHECKOUT_ID+"/items/CCD-123456-123456")
                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)

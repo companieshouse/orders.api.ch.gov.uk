@@ -1,5 +1,18 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.REQUEST_ID;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.createLogMapWithRequestId;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.logIfNotNull;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -9,38 +22,23 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.tukaani.xz.check.Check;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.CheckoutData;
-import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.CheckoutCriteria;
-import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.PageCriteria;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.OrderService;
 import uk.gov.companieshouse.orders.api.util.Log;
 import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
-
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.REQUEST_ID;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.createLogMapWithRequestId;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.logIfNotNull;
 
 @Validated
 @RestController
@@ -110,11 +108,11 @@ public class OrderController {
         Map<String, Object> logMap = createLogMapWithRequestId(requestId);
         logIfNotNull(logMap, LoggingUtils.ORDER_ID, checkoutId);
         logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
-        LOGGER.info("Retrieving checkout item", logMap);
+        LOGGER.info("Retrieving checkout with item", logMap);
         final Checkout checkout = this.checkoutService.getCheckoutItem(checkoutId, itemId)
                                  .orElseThrow(ResourceNotFoundException::new);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
-        LOGGER.info("Checkout item found and returned", logMap);
+        LOGGER.info("Checkout with item found and returned", logMap);
         return ResponseEntity.ok().body(checkout);
     }
 
