@@ -582,6 +582,12 @@ class OrderControllerIntegrationTest {
                         "12345678")));
         checkoutRepository.save(preexistingCheckout);
 
+        final Checkout expectedCheckout = new Checkout();
+        expectedCheckout.setId(CHECKOUT_ID);
+        final CheckoutData expectedCheckoutData = new CheckoutData();
+        expectedCheckoutData.setItems(Collections.singletonList(expectedItem));
+        expectedCheckout.setData(expectedCheckoutData);
+
         mockMvc.perform(get("/checkouts/"+CHECKOUT_ID+"/items/CCD-123456-123456")
                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
@@ -590,7 +596,7 @@ class OrderControllerIntegrationTest {
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                        .contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isOk())
-               .andExpect(content().json(mapper.writeValueAsString(expectedItem)));
+               .andExpect(content().json(mapper.writeValueAsString(expectedCheckout)));
     }
 
     @DisplayName("Get checkout item returns HTTP 404 Not Found if no matching item ID")
@@ -621,6 +627,19 @@ class OrderControllerIntegrationTest {
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                        .contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isNotFound());
+    }
+
+    @DisplayName("Get checkout item returns HTTP 404 Not Found if no matching checkout ID")
+    @Test
+    void getCheckoutItemReturnsNotFoundIfNoMatchingCheckoutID() throws Exception {
+        mockMvc.perform(get("/checkouts/"+ORDER_ID+"/items/NONEXISTENT")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     private MockHttpServletRequestBuilder reprocessOrderWithRequiredCredentials() {

@@ -3,15 +3,27 @@ package uk.gov.companieshouse.orders.api.service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import uk.gov.companieshouse.orders.api.model.*;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.CheckoutLinks;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
+import uk.gov.companieshouse.orders.api.model.CheckoutSummaryBuilderFactory;
+import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.Links;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
 
@@ -26,11 +38,11 @@ public class CheckoutService {
     private final CheckoutSummaryBuilderFactory summaryBuilderFactory;
 
     public CheckoutService(CheckoutRepository checkoutRepository,
-                           EtagGeneratorService etagGeneratorService,
-                           LinksGeneratorService linksGeneratorService,
-                           CheckoutHelper checkoutHelper,
-                           SearchFieldMapper searchFieldMapper,
-                           CheckoutSummaryBuilderFactory summaryBuilderFactory) {
+            EtagGeneratorService etagGeneratorService,
+            LinksGeneratorService linksGeneratorService,
+            CheckoutHelper checkoutHelper,
+            SearchFieldMapper searchFieldMapper,
+            CheckoutSummaryBuilderFactory summaryBuilderFactory) {
         this.checkoutRepository = checkoutRepository;
         this.etagGeneratorService = etagGeneratorService;
         this.linksGeneratorService = linksGeneratorService;
@@ -135,6 +147,7 @@ public class CheckoutService {
 
     /**
      * Saves the checkout, assumed to have been updated, to the database.
+     *
      * @param updatedCheckout the certificate item to save
      * @return the latest checkout state resulting from the save
      */
@@ -145,12 +158,18 @@ public class CheckoutService {
         return checkoutRepository.save(updatedCheckout);
     }
 
-    public Optional<Item> getCheckoutItem(String orderId, String itemId) {
-        Optional<Checkout> order = getCheckoutById(orderId);
-        return order.flatMap(o -> o.getData()
-                                   .getItems()
-                                   .stream()
-                                   .filter(item -> item.getId().equals(itemId))
-                                   .findFirst());
+    public Optional<Checkout> getCheckoutItem(String checkoutId, String itemId) {
+        Optional<Checkout> checkout = getCheckoutById(checkoutId);
+        Optional<Item> matchedItem = checkout.flatMap(c -> c.getData()
+                .getItems()
+                .stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst());
+        if (!matchedItem.isPresent()) {
+            return Optional.empty();
+        } else {
+            checkout.ifPresent(c -> c.getData().setItems(Collections.singletonList(matchedItem.get())));
+            return checkout;
+        }
     }
 }

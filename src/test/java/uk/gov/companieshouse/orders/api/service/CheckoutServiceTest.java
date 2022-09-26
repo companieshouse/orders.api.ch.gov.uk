@@ -4,7 +4,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,7 +35,23 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import uk.gov.companieshouse.orders.api.model.*;
+import uk.gov.companieshouse.orders.api.model.ActionedBy;
+import uk.gov.companieshouse.orders.api.model.Certificate;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.CheckoutLinks;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
+import uk.gov.companieshouse.orders.api.model.CheckoutSummary;
+import uk.gov.companieshouse.orders.api.model.CheckoutSummaryBuilderFactory;
+import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.model.Links;
+import uk.gov.companieshouse.orders.api.model.PageCriteria;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
@@ -383,25 +401,39 @@ public class CheckoutServiceTest {
     }
 
     @Test
-    @DisplayName("Fetch order item")
+    @DisplayName("Fetch checkout item successfully")
     void getCheckoutItem() {
+        Checkout checkout = new Checkout();
+        checkout.setId(CHECKOUT_ID);
+        CheckoutData checkoutData = new CheckoutData();
+        Item certCopy = new Item();
+        certCopy.setId("CCD-123456-123456");
+        Item certificate = new Item();
+        certificate.setId("CRT-123456-123456");
+        Item midItem = new Item();
+        midItem.setId("MID-123456-123456");
+        checkoutData.setItems(Arrays.asList(certCopy, certificate, midItem));
+        checkout.setData(checkoutData);
+
+        Checkout expectedCheckout = new Checkout();
+        expectedCheckout.setId(CHECKOUT_ID);
+        CheckoutData expectedCheckoutData = new CheckoutData();
+        expectedCheckoutData.setItems(Collections.singletonList(certCopy));
+        expectedCheckout.setData(expectedCheckoutData);
+
         // given
-        when(checkoutResult.getData()).thenReturn(checkoutData);
-        when(checkoutData.getItems()).thenReturn(
-                Arrays.asList(midItem, certifiedCopyItem, certificateItem));
-        when(midItem.getId()).thenReturn("MID-123456-123456");
-        when(certifiedCopyItem.getId()).thenReturn("CCD-123456-123456");
-        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkoutResult));
+        when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkout));
 
         // when
-        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "CCD-123456-123456");
+        Optional<Checkout> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "CCD-123456-123456");
 
         // then
-        Assertions.assertEquals(certifiedCopyItem, actual.get());
+        Assertions.assertTrue(actual.isPresent());
+        assertThat(actual.get(), is(expectedCheckout));
     }
 
     @Test
-    @DisplayName("Fetch order item returns Optional.empty if no matching item found")
+    @DisplayName("Fetch checkout item returns Optional.empty if no matching item found")
     void getCheckoutItemReturnsEmptyOptionalIfNoMatchingItemFound() {
         // given
         when(checkoutResult.getData()).thenReturn(checkoutData);
@@ -412,20 +444,20 @@ public class CheckoutServiceTest {
         when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.of(checkoutResult));
 
         // when
-        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
+        Optional<Checkout> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
 
         // then
         Assertions.assertEquals(Optional.empty(), actual);
     }
 
     @Test
-    @DisplayName("Fetch order item returns Optional.empty if no matching order found")
-    void getCheckoutItemReturnsEmptyOptionalIfNoMatchingOrderFound() {
+    @DisplayName("Fetch checkout item returns Optional.empty if no matching checkout found")
+    void getCheckoutItemReturnsEmptyOptionalIfNoMatchingCheckoutFound() {
         // given
         when(checkoutRepository.findById(CHECKOUT_ID)).thenReturn(Optional.empty());
 
         // when
-        Optional<Item> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
+        Optional<Checkout> actual = serviceUnderTest.getCheckoutItem(CHECKOUT_ID, "UNKNOWN");
 
         // then
         Assertions.assertEquals(Optional.empty(), actual);

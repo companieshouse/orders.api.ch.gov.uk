@@ -1,5 +1,6 @@
 package uk.gov.companieshouse.orders.api.model;
 
+import java.util.Objects;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "checkout")
@@ -15,4 +16,20 @@ public class Checkout extends AbstractOrder {
         this.data = data;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Checkout checkout = (Checkout) o;
+        return Objects.equals(data, checkout.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(data);
+    }
 }
