@@ -582,11 +582,8 @@ class OrderControllerIntegrationTest {
                         "12345678")));
         checkoutRepository.save(preexistingCheckout);
 
-        final Checkout expectedCheckout = new Checkout();
-        expectedCheckout.setId(CHECKOUT_ID);
         final CheckoutData expectedCheckoutData = new CheckoutData();
         expectedCheckoutData.setItems(Collections.singletonList(expectedItem));
-        expectedCheckout.setData(expectedCheckoutData);
 
         mockMvc.perform(get("/checkouts/"+CHECKOUT_ID+"/items/CCD-123456-123456")
                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
@@ -596,7 +593,7 @@ class OrderControllerIntegrationTest {
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                        .contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isOk())
-               .andExpect(content().json(mapper.writeValueAsString(expectedCheckout)));
+               .andExpect(content().json(mapper.writeValueAsString(expectedCheckoutData)));
     }
 
     @DisplayName("Get checkout item returns HTTP 404 Not Found if no matching item ID")

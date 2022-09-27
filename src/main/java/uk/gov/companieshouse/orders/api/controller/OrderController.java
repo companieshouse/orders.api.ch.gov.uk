@@ -102,7 +102,7 @@ public class OrderController {
     }
 
     @GetMapping(GET_CHECKOUT_ITEM_URI)
-    public ResponseEntity<Checkout> getCheckoutItem(final @PathVariable("id") String checkoutId,
+    public ResponseEntity<CheckoutData> getCheckoutItem(final @PathVariable("id") String checkoutId,
             final @PathVariable("itemId") String itemId,
             final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = createLogMapWithRequestId(requestId);
@@ -113,7 +113,7 @@ public class OrderController {
                                  .orElseThrow(ResourceNotFoundException::new);
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info("Checkout with item found and returned", logMap);
-        return ResponseEntity.ok().body(checkout);
+        return ResponseEntity.ok().body(checkout.getData());
     }
 
     @GetMapping(GET_CHECKOUT_URI)
