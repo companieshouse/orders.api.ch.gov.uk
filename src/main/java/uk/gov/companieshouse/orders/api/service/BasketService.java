@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.orders.api.model.Basket;
+import uk.gov.companieshouse.orders.api.model.BasketData;
 import uk.gov.companieshouse.orders.api.repository.BasketRepository;
 
 @Service
@@ -24,6 +25,11 @@ public class BasketService {
             basket.setCreatedAt(now);
         }
         basket.setUpdatedAt(now);
+
+        if (basket.getData() != null) {
+            basket.getData().setEnrolled(true);
+        }
+
         return repository.save(basket);
     }
 
