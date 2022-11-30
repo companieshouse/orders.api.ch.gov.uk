@@ -1,15 +1,20 @@
 package uk.gov.companieshouse.orders.api.service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.orders.api.model.Basket;
 import uk.gov.companieshouse.orders.api.repository.BasketRepository;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class BasketService {
 
     private final BasketRepository repository;
+
+    @Value("${basket.enrolled}")
+    private boolean enrolled;
 
     public BasketService(BasketRepository repository) {
         this.repository = repository;
@@ -24,6 +29,11 @@ public class BasketService {
             basket.setCreatedAt(now);
         }
         basket.setUpdatedAt(now);
+
+        if (enrolled) {
+            basket.getData().setEnrolled(true);
+        }
+
         return repository.save(basket);
     }
 
