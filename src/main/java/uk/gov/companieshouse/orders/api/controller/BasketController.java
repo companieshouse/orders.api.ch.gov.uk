@@ -92,6 +92,8 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.items}/remove";
     public static final String GET_BASKET_LINKS_URI =
             "${uk.gov.companieshouse.orders.api.basket}/links";
+    public static final String PROCESS_FREE_ORDER_URI =
+            "${uk.gov.companieshouse.orders.api.basket.checkouts}/{id}/process-free-order";
     private static final String ATTEMPT_RETRIEVE_ITEM_MESSAGE =
             "Attempting to retrieve item with uri: %s from api client";
     private static final String RETRIEVED_ITEM_MESSAGE =
@@ -551,6 +553,27 @@ public class BasketController {
         }
     }
 
+    @PostMapping(PROCESS_FREE_ORDER_URI)
+    public ResponseEntity<Object> processFreeOrder(final @PathVariable String id,
+                                                   final HttpServletRequest request,
+                                                   final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        final Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        LoggingUtils.logIfNotNull(logMap, LoggingUtils.CHECKOUT_ID, id);
+        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
+        LOGGER.infoRequest(request, "Processing free order", logMap);
+
+        final Checkout checkout = checkoutService.getCheckoutById(id)
+                .orElseThrow(ResourceNotFoundException::new);
+
+        processOrder(checkout, logMap);
+
+        logMap.put(LoggingUtils.STATUS, NO_CONTENT);
+        LOGGER.infoRequest(request, "Free order processed", logMap);
+
+        // TODO BI-12341 Is this really what we would want to return?
+        return ResponseEntity.status(NO_CONTENT).body(null);
+    }
+
     /**
      * Updates the checkout identified with the payment status update provided.
      *
@@ -577,11 +600,23 @@ public class BasketController {
      */
     private void processSuccessfulPayment(final String requestId,
                                           final Checkout checkout) {
-        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        final Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        processOrder(checkout, logMap);
+        LOGGER.info("Process successful payment, order created and basket cleared", logMap);
+    }
+
+    /**
+     * Performs the actions required to process an order. This order must be "good to go" - i.e.,
+     * successfully paid for, or free.
+     *
+     * @param checkout  the checkout required to process the payment
+     * @param logMap log map for logging by client method
+     */
+    private void processOrder(final Checkout checkout,
+                              final Map<String, Object> logMap) {
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.USER_ID, checkout.getId());
         orderService.createOrder(checkout);
         basketService.clearBasket(checkout.getUserId());
-        LOGGER.info("Process successful payment, order created and basket cleared", logMap);
     }
 
     /**
