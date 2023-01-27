@@ -92,8 +92,6 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.items}/remove";
     public static final String GET_BASKET_LINKS_URI =
             "${uk.gov.companieshouse.orders.api.basket}/links";
-    public static final String PROCESS_FREE_ORDER_URI =
-            "${uk.gov.companieshouse.orders.api.basket.checkouts}/{id}/process-free-order";
     private static final String ATTEMPT_RETRIEVE_ITEM_MESSAGE =
             "Attempting to retrieve item with uri: %s from api client";
     private static final String RETRIEVED_ITEM_MESSAGE =
@@ -419,6 +417,10 @@ public class BasketController {
         } else {
             logMap.put(LoggingUtils.STATUS, OK);
             LOGGER.infoRequest(request, "Basket checkout completed no payment required", logMap);
+
+            processOrder(checkout, logMap);
+            LOGGER.infoRequest(request, "Free order processed", logMap);
+
             return new ResponseEntity<>(checkoutData, OK);
         }
     }
@@ -552,28 +554,6 @@ public class BasketController {
             return ResponseEntity.notFound().build();
         }
     }
-
-    @PostMapping(PROCESS_FREE_ORDER_URI)
-    public ResponseEntity<Object> processFreeOrder(final @PathVariable String id,
-                                                   final HttpServletRequest request,
-                                                   final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
-        final Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
-        LoggingUtils.logIfNotNull(logMap, LoggingUtils.CHECKOUT_ID, id);
-        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);
-        LOGGER.infoRequest(request, "Processing free order", logMap);
-
-        final Checkout checkout = checkoutService.getCheckoutById(id)
-                .orElseThrow(ResourceNotFoundException::new);
-
-        processOrder(checkout, logMap);
-
-        logMap.put(LoggingUtils.STATUS, NO_CONTENT);
-        LOGGER.infoRequest(request, "Free order processed", logMap);
-
-        // TODO BI-12341 Is this really what we would want to return?
-        return ResponseEntity.status(NO_CONTENT).body(null);
-    }
-
     /**
      * Updates the checkout identified with the payment status update provided.
      *
