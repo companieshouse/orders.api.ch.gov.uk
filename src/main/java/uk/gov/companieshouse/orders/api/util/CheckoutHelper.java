@@ -30,8 +30,6 @@ public class CheckoutHelper {
             }
         }
 
-        // TODO BI-12341 Remove temporary hack.
-        // return totalOrderCost;
-        return 0;
+        return totalOrderCost;
     }
 }
