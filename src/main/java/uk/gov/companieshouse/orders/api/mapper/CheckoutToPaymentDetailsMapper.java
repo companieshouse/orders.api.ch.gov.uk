@@ -2,6 +2,8 @@ package uk.gov.companieshouse.orders.api.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import uk.gov.companieshouse.logging.Logger;
+import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.api.dto.ItemDTO;
 import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
 import uk.gov.companieshouse.orders.api.model.Checkout;
@@ -12,8 +14,12 @@ import uk.gov.companieshouse.orders.api.model.ItemCosts;
 import java.util.ArrayList;
 import java.util.List;
 
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+
 @Mapper(componentModel = "spring")
 public interface CheckoutToPaymentDetailsMapper {
+
+    Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
 
     @Mapping(source = "data.paidAt", target = "paidAt")
     @Mapping(source = "data.reference", target = "paymentReference")
@@ -26,30 +32,38 @@ public interface CheckoutToPaymentDetailsMapper {
     default void updateDTOWithPaymentDetails(CheckoutData checkoutData, PaymentDetailsDTO paymentDetailsDTO) {
         List<ItemDTO> itemDTOs = new ArrayList<>();
         for (Item item : checkoutData.getItems()) {
-            for (ItemCosts itemCosts : item.getItemCosts()) {
-                ItemDTO itemDTO = new ItemDTO();
-                List<String> classOfPayment = new ArrayList<>();
-                classOfPayment.add("orderable-item");
-                itemDTO.setClassOfPayment(classOfPayment);
-
-                List<String> availablePaymentMethods = new ArrayList<>();
-                availablePaymentMethods.add("credit-card");
-                itemDTO.setAvailablePaymentMethods(availablePaymentMethods);
-
-                itemDTO.setResourceKind(item.getKind());
-                itemDTO.setKind("cost#cost");
-
-                itemDTO.setProductType(itemCosts.getProductType().getJsonName());
-                itemDTO.setAmount(itemCosts.getCalculatedCost());
-
-                itemDTO.setDescriptionIdentifier(item.getDescriptionIdentifier());
-                itemDTO.setDescriptionValues(item.getDescriptionValues());
-
-                itemDTO.setDescription(item.getDescription());
-                itemDTOs.add(itemDTO);
+            if (item.getTotalItemCost().equals("0")) {
+                LOGGER.debug("Excluding free item " + item.getId() + " from payment details.");
+            } else {
+                addPaidForItem(item, itemDTOs);
             }
         }
         paymentDetailsDTO.setItems(itemDTOs);
         paymentDetailsDTO.setKind("payment-details#payment-details");
+    }
+
+    default void addPaidForItem(final Item item, final List<ItemDTO> itemDTOs) {
+        for (ItemCosts itemCosts : item.getItemCosts()) {
+            ItemDTO itemDTO = new ItemDTO();
+            List<String> classOfPayment = new ArrayList<>();
+            classOfPayment.add("orderable-item");
+            itemDTO.setClassOfPayment(classOfPayment);
+
+            List<String> availablePaymentMethods = new ArrayList<>();
+            availablePaymentMethods.add("credit-card");
+            itemDTO.setAvailablePaymentMethods(availablePaymentMethods);
+
+            itemDTO.setResourceKind(item.getKind());
+            itemDTO.setKind("cost#cost");
+
+            itemDTO.setProductType(itemCosts.getProductType().getJsonName());
+            itemDTO.setAmount(itemCosts.getCalculatedCost());
+
+            itemDTO.setDescriptionIdentifier(item.getDescriptionIdentifier());
+            itemDTO.setDescriptionValues(item.getDescriptionValues());
+
+            itemDTO.setDescription(item.getDescription());
+            itemDTOs.add(itemDTO);
+        }
     }
 }
