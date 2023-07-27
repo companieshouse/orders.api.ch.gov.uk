@@ -6,7 +6,8 @@ import static uk.gov.companieshouse.orders.api.converter.EnumValueNameConverter.
 
 public enum DeliveryMethod {
     POSTAL,
-    COLLECTION;
+    COLLECTION,
+    DIGITAL;
 
     @JsonValue
     public String getJsonName() {
