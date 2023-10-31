@@ -4,7 +4,7 @@ import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.web.reactive.function.BodyInserters.fromObject;
+import static org.springframework.web.reactive.function.BodyInserters.fromValue;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_ADDITIONAL_COPY;
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_SAME_DAY;
@@ -105,7 +105,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
-				.body(fromObject(basketRequestDTO))
+				.body(fromValue(basketRequestDTO))
 				.exchange()
 				.expectStatus().isOk();
 	}
@@ -123,7 +123,7 @@ class OrdersApiAuthenticationTests {
 				.contentType(MediaType.APPLICATION_JSON)
 				.header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
-				.body(fromObject(basketRequestDTO))
+				.body(fromValue(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -143,7 +143,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
-				.body(fromObject(basketRequestDTO))
+				.body(fromValue(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -162,7 +162,7 @@ class OrdersApiAuthenticationTests {
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
-                .body(fromObject(basketRequestDTO))
+                .body(fromValue(basketRequestDTO))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -290,7 +290,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-				.body(fromObject(addDeliveryDetailsRequestDTO))
+				.body(fromValue(addDeliveryDetailsRequestDTO))
 				.exchange()
 				.expectStatus().isOk();
 	}
@@ -308,7 +308,7 @@ class OrdersApiAuthenticationTests {
 				.contentType(MediaType.APPLICATION_JSON)
 				.header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-				.body(fromObject(basketRequestDTO))
+				.body(fromValue(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -328,7 +328,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-				.body(fromObject(basketRequestDTO))
+				.body(fromValue(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -347,7 +347,7 @@ class OrdersApiAuthenticationTests {
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
-                .body(fromObject(basketRequestDTO))
+                .body(fromValue(basketRequestDTO))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }

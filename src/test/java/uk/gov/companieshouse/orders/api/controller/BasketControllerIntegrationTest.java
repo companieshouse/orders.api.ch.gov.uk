@@ -5,7 +5,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1040,7 +1040,7 @@ class BasketControllerIntegrationTest {
 
         MvcResult result = resultActions.andReturn();
         MockHttpServletResponse response = result.getResponse();
-        assertThat(response.getHeader(PAYMENT_REQUIRED_HEADER), isEmptyOrNullString());
+        assertThat(response.getHeader(PAYMENT_REQUIRED_HEADER), is(emptyOrNullString()));
         String contentAsString = response.getContentAsString();
         CheckoutData responseCheckoutData = mapper.readValue(contentAsString, CheckoutData.class);
 
@@ -2192,7 +2192,7 @@ class BasketControllerIntegrationTest {
         final CertifiedCopyItemOptions options = (CertifiedCopyItemOptions) certifiedCopy.getItemOptions();
         assertThat(isNotEmpty(options.getFilingHistoryDocuments()), is(true));
         org.assertj.core.api.Assertions.assertThat(options.getFilingHistoryDocuments().get(0))
-                .isEqualToComparingFieldByFieldRecursively(DOCUMENT);
+                .usingRecursiveComparison().isEqualTo(DOCUMENT);
     }
 
     /**
@@ -2309,7 +2309,7 @@ class BasketControllerIntegrationTest {
         assertThat(basket.getData().getItems().size(), is(1));
         assertThat(basket.getData().getItems().get(0).getItemUri(), is(itemUri));
         org.assertj.core.api.Assertions.assertThat(basket.getData().getDeliveryDetails())
-                .isEqualToComparingFieldByField(deliveryDetailsAdded);
+                .usingRecursiveComparison().isEqualTo(deliveryDetailsAdded);
     }
 
     /**

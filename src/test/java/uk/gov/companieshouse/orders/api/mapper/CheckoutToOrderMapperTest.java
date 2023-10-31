@@ -231,8 +231,8 @@ class CheckoutToOrderMapperTest {
         assertThat(order.getData().getItems().get(1) instanceof CertifiedCopy, is(true));
         final CertifiedCopy orderCopy = (CertifiedCopy) order.getData().getItems().get(1);
 
-        org.assertj.core.api.Assertions.assertThat(orderCertificate).isEqualToComparingFieldByField(checkoutCertificate);
-        org.assertj.core.api.Assertions.assertThat(orderCopy).isEqualToComparingFieldByField(checkoutCopy);
+        org.assertj.core.api.Assertions.assertThat(orderCertificate).isEqualTo(checkoutCertificate).usingRecursiveComparison();
+        org.assertj.core.api.Assertions.assertThat(orderCopy).isEqualTo(checkoutCopy).usingRecursiveComparison();
 
     }
 
