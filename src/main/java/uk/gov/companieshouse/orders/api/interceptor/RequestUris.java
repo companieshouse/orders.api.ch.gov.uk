@@ -3,7 +3,7 @@ package uk.gov.companieshouse.orders.api.interceptor;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.*;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_ITEM_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.CHECKOUTS_SEARCH_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.POST_REPROCESS_ORDER_URI;
@@ -27,6 +27,7 @@ class RequestUris {
     static final String PATCH_PAYMENT_DETAILS = "patchPaymentDetails";
     static final String GET_ORDER = "getOrder";
     static final String GET_ORDER_ITEM = "getOrderItem";
+    static final String PATCH_ORDER_ITEM = "patchOrderItem";
     static final String SEARCH = "searchCheckouts";
     static final String GET_CHECKOUT = "getCheckout";
     static final String GET_CHECKOUT_ITEM = "getCheckoutItem";
@@ -44,8 +45,8 @@ class RequestUris {
     @Value(GET_PAYMENT_DETAILS_URI)
     private String getPaymentDetailsUri;
     @Value(GET_ORDER_URI)
-    private String getOrderUri;
-    @Value(GET_ORDER_ITEM_URI)
+    private String orderItemUri;
+    @Value(ORDER_ITEM_URI)
     private String getOrderItemUri;
     @Value(CHECKOUTS_SEARCH_URI)
     private String searchUri;
@@ -113,7 +114,7 @@ class RequestUris {
                 .build());
 
         knownRequests.add(RequestMappingInfo
-                .paths(getOrderUri)
+                .paths(orderItemUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_ORDER)
                 .build());
@@ -123,6 +124,12 @@ class RequestUris {
                 .methods(RequestMethod.GET)
                 .mappingName(GET_ORDER_ITEM)
                 .build());
+
+        knownRequests.add(RequestMappingInfo
+            .paths(getOrderItemUri)
+            .methods(RequestMethod.PATCH)
+            .mappingName(PATCH_ORDER_ITEM)
+            .build());
 
         knownRequests.add(RequestMappingInfo
                 .paths(getCheckoutItemUri)

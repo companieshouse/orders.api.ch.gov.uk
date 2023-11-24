@@ -58,6 +58,7 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
             case GET_ORDER:
                 return hasAuthenticatedClient(request, response);
             case GET_ORDER_ITEM:
+            case PATCH_ORDER_ITEM:
                 return securityManager.checkIdentity() || hasAuthenticatedClient(request, response);
             case GET_CHECKOUT:
             case SEARCH:
