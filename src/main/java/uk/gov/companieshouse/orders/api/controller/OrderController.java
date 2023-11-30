@@ -107,7 +107,7 @@ public class OrderController {
 
     @PatchMapping(ORDER_ITEM_URI)
     public ResponseEntity<Item> patchOrderItem(final @PathVariable("id") String orderId,
-                                               final @PathVariable("item") String itemId,
+                                               final @PathVariable("itemId") String itemId,
                                                final @RequestBody PatchOrderedItemDTO patchOrderedItemDTO,
                                                final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = createLogMapWithRequestId(requestId);
