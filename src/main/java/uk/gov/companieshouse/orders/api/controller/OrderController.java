@@ -17,13 +17,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
+import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
 import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.model.Checkout;
@@ -32,6 +35,7 @@ import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
 import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemStatus;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.PageCriteria;
@@ -51,7 +55,7 @@ public class OrderController {
     public static final String GET_ORDER_URI =
             "${uk.gov.companieshouse.orders.api.orders}/{" + ORDER_ID_PATH_VARIABLE + "}";
 
-    public static final String GET_ORDER_ITEM_URI = "/orders/{id}/items/{itemId}";
+    public static final String ORDER_ITEM_URI = "/orders/{id}/items/{itemId}";
     public static final String GET_CHECKOUT_ITEM_URI = "/checkouts/{id}/items/{itemId}";
 
     /** <code>${uk.gov.companieshouse.orders.api.checkouts}/{id}</code> */
@@ -86,7 +90,7 @@ public class OrderController {
         return ResponseEntity.ok().body(orderRetrieved.getData());
     }
 
-    @GetMapping(GET_ORDER_ITEM_URI)
+    @GetMapping(ORDER_ITEM_URI)
     public ResponseEntity<Item> getOrderItem(final @PathVariable("id") String orderId,
                                              final @PathVariable("itemId") String itemId,
                                              final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
@@ -99,6 +103,21 @@ public class OrderController {
         logMap.put(LoggingUtils.STATUS, HttpStatus.OK);
         LOGGER.info("Order item found and returned", logMap);
         return ResponseEntity.ok().body(item);
+    }
+
+    @PatchMapping(ORDER_ITEM_URI)
+    public ResponseEntity<Item> patchOrderItem(final @PathVariable("id") String orderId,
+                                               final @PathVariable("item") String itemId,
+                                               final @RequestBody PatchOrderedItemDTO patchOrderedItemDTO,
+                                               final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+        Map<String, Object> logMap = createLogMapWithRequestId(requestId);
+        logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+        logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
+        LOGGER.info("Patching order item", logMap);
+        final Item patchedItem = orderService.patchOrderItem(orderId, itemId, patchOrderedItemDTO)
+            .orElseThrow(ResourceNotFoundException::new);
+
+        return ResponseEntity.ok().body(patchedItem);
     }
 
     @GetMapping(GET_CHECKOUT_ITEM_URI)

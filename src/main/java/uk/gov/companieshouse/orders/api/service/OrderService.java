@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.OrderReceived;
+import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
 import uk.gov.companieshouse.orders.api.exception.ForbiddenException;
 import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
@@ -101,6 +102,19 @@ public class OrderService {
                                    .filter(item -> item.getId().equals(itemId))
                                    .findFirst());
 
+    }
+
+    public Optional<Item> patchOrderItem(String orderId, String itemId, PatchOrderedItemDTO patchOrderedItemDTO) {
+        Optional<Order> order = getOrder(orderId);
+        return order.flatMap(o -> o.getData()
+            .getItems()
+            .stream()
+            .filter(item -> item.getId().equals(itemId))
+            .peek(item -> {
+                item.setStatus(patchOrderedItemDTO.getStatus());
+                item.setDigitalDocumentLocation(patchOrderedItemDTO.getDigitalDocumentLocation());
+            })
+            .findFirst());
     }
 
     public Optional<Checkout> getCheckout(String id) {
