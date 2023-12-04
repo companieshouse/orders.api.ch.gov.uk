@@ -105,30 +105,32 @@ public class OrderService {
     }
 
     public Optional<Item> patchOrderItem(String orderId, String itemId, PatchOrderedItemDTO patchOrderedItemDTO) {
-            Optional<Order> orderToUpdate = orderRepository.findById(orderId);
+            Map<String, Object> logMap = LoggingUtils.createLogMap();
+            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
+            LOGGER.info("Patching order item", logMap);
 
+            Optional<Order> orderToUpdate = orderRepository.findById(orderId);
             return orderToUpdate.flatMap(o -> {
                 Optional<Item> updatedItem = o.getData()
                     .getItems()
                     .stream()
                     .filter(item -> item.getId().equals(itemId))
                     .findFirst();
-
                 updatedItem.ifPresent(item -> {
-                    // Update the fields of the found item with the new values
                     item.setDigitalDocumentLocation(patchOrderedItemDTO.getDigitalDocumentLocation());
                     item.setStatus(patchOrderedItemDTO.getStatus());
-                    // You can update other fields as needed
                 });
 
-                // Save the updated order to the database
-                Order savedOrder;
                 try {
-                    savedOrder = orderRepository.save(orderToUpdate.get());
+                    orderRepository.save(orderToUpdate.get());
                 } catch (MongoException ex) {
-                    throw new MongoOperationException("Failed", ex);
+                    String errorMessage = String.format(
+                        "Failed to update item with id %s within order %s",itemId, orderId
+                    );
+                    LOGGER.error(errorMessage, ex, logMap);
+                    throw new MongoOperationException(errorMessage, ex);
                 }
-
                 return updatedItem;
             });
         }
