@@ -150,6 +150,26 @@ class UserAuthenticationInterceptorTests {
     }
 
     @Test
+    void preHandleAcceptsPatchOrderItemRequest() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    void preHandleRejectsPatchOrderItemRequest() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
     @DisplayName("preHandle accepts patch basket request that has the required headers")
     void preHandleAcceptsAuthenticatedPatchBasketRequest() {
 
