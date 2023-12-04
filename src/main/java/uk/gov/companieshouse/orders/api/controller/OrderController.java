@@ -114,6 +114,7 @@ public class OrderController {
         logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
         logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
         LOGGER.info("Patching order item", logMap);
+
         final Item patchedItem = orderService.patchOrderItem(orderId, itemId, patchOrderedItemDTO)
             .orElseThrow(ResourceNotFoundException::new);
 

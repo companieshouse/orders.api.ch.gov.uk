@@ -1,12 +1,6 @@
 package uk.gov.companieshouse.orders.api.service;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-
 import com.mongodb.MongoException;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
@@ -23,6 +17,12 @@ import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
 public class OrderService {
@@ -105,17 +105,33 @@ public class OrderService {
     }
 
     public Optional<Item> patchOrderItem(String orderId, String itemId, PatchOrderedItemDTO patchOrderedItemDTO) {
-        Optional<Order> order = getOrder(orderId);
-        return order.flatMap(o -> o.getData()
-            .getItems()
-            .stream()
-            .filter(item -> item.getId().equals(itemId))
-            .peek(item -> {
-                item.setStatus(patchOrderedItemDTO.getStatus());
-                item.setDigitalDocumentLocation(patchOrderedItemDTO.getDigitalDocumentLocation());
-            })
-            .findFirst());
-    }
+            Optional<Order> orderToUpdate = orderRepository.findById(orderId);
+
+            return orderToUpdate.flatMap(o -> {
+                Optional<Item> updatedItem = o.getData()
+                    .getItems()
+                    .stream()
+                    .filter(item -> item.getId().equals(itemId))
+                    .findFirst();
+
+                updatedItem.ifPresent(item -> {
+                    // Update the fields of the found item with the new values
+                    item.setDigitalDocumentLocation(patchOrderedItemDTO.getDigitalDocumentLocation());
+                    item.setStatus(patchOrderedItemDTO.getStatus());
+                    // You can update other fields as needed
+                });
+
+                // Save the updated order to the database
+                Order savedOrder;
+                try {
+                    savedOrder = orderRepository.save(orderToUpdate.get());
+                } catch (MongoException ex) {
+                    throw new MongoOperationException("Failed", ex);
+                }
+
+                return updatedItem;
+            });
+        }
 
     public Optional<Checkout> getCheckout(String id) {
         return checkoutRepository.findById(id);
