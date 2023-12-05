@@ -224,6 +224,47 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
+    @DisplayName("preHandle accepts patch order item request if they own the order resource")
+    void preHandleAcceptsPatchOrderItemRequestsIfUserOwnsResource() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects patch order item request if user does not own the order resource")
+    void preHandleRejectsPatchOrderItemRequestIfUserDoesNotOwnResource() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects patch order item request if order non existent")
+    void preHandleRejectsPatchOrderItemIfOrderNonExistent() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+
+        Executable actual = () -> interceptorUnderTest.preHandle(request, response, handler);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, actual);
+        assertEquals("Resource not found!", exception.getMessage());
+    }
+
+    @Test
     @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
     void ordersSearchValidAuthorisation() {
         when(securityManager.checkPermission()).thenReturn(true);

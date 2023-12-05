@@ -1,17 +1,12 @@
 package uk.gov.companieshouse.orders.api.service;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-
 import com.mongodb.MongoException;
-import java.time.LocalDateTime;
-import java.util.Map;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.OrderReceived;
+import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
 import uk.gov.companieshouse.orders.api.exception.ForbiddenException;
 import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
@@ -22,6 +17,12 @@ import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
 public class OrderService {
@@ -102,6 +103,37 @@ public class OrderService {
                                    .findFirst());
 
     }
+
+    public Optional<Item> patchOrderItem(String orderId, String itemId, PatchOrderedItemDTO patchOrderedItemDTO) {
+            Map<String, Object> logMap = LoggingUtils.createLogMap();
+            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
+            LOGGER.info("Patching order item", logMap);
+
+            Optional<Order> orderToUpdate = orderRepository.findById(orderId);
+            return orderToUpdate.flatMap(o -> {
+                Optional<Item> updatedItem = o.getData()
+                    .getItems()
+                    .stream()
+                    .filter(item -> item.getId().equals(itemId))
+                    .findFirst();
+                updatedItem.ifPresent(item -> {
+                    item.setDigitalDocumentLocation(patchOrderedItemDTO.getDigitalDocumentLocation());
+                    item.setStatus(patchOrderedItemDTO.getStatus());
+                });
+
+                try {
+                    orderRepository.save(orderToUpdate.get());
+                } catch (MongoException ex) {
+                    String errorMessage = String.format(
+                        "Failed to update item with id %s within order %s",itemId, orderId
+                    );
+                    LOGGER.error(errorMessage, ex, logMap);
+                    throw new MongoOperationException(errorMessage, ex);
+                }
+                return updatedItem;
+            });
+        }
 
     public Optional<Checkout> getCheckout(String id) {
         return checkoutRepository.findById(id);

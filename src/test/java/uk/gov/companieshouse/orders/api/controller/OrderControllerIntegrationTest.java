@@ -1,9 +1,54 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hamcrest.core.StringContains;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
+import uk.gov.companieshouse.orders.api.model.Certificate;
+import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
+import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
+import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
+import uk.gov.companieshouse.orders.api.model.CheckoutSummary;
+import uk.gov.companieshouse.orders.api.model.HRef;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemStatus;
+import uk.gov.companieshouse.orders.api.model.Links;
+import uk.gov.companieshouse.orders.api.model.Order;
+import uk.gov.companieshouse.orders.api.model.OrderData;
+import uk.gov.companieshouse.orders.api.model.PaymentStatus;
+import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
+import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+import uk.gov.companieshouse.orders.api.util.StubHelper;
+import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
+
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.stream.Stream;
+
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,48 +76,6 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.stream.Stream;
-
-import org.hamcrest.core.StringContains;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import uk.gov.companieshouse.api.util.security.Permission;
-import uk.gov.companieshouse.orders.api.model.Certificate;
-import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
-import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
-import uk.gov.companieshouse.orders.api.model.CertifiedCopyItemOptions;
-import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.CheckoutData;
-import uk.gov.companieshouse.orders.api.model.HRef;
-import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.Links;
-import uk.gov.companieshouse.orders.api.model.Order;
-import uk.gov.companieshouse.orders.api.model.OrderData;
-import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
-import uk.gov.companieshouse.orders.api.model.CheckoutSummary;
-import uk.gov.companieshouse.orders.api.model.PaymentStatus;
-import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
-import uk.gov.companieshouse.orders.api.repository.OrderRepository;
-import uk.gov.companieshouse.orders.api.util.StubHelper;
-import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
 @DirtiesContext
 @AutoConfigureMockMvc
 @SpringBootTest
@@ -88,6 +91,8 @@ class OrderControllerIntegrationTest {
     private static final String PAGE_SIZE_PARAM = "page_size";
     private static final String PAGE_SIZE_VALUE = "1";
     private static final String ERIC_AUTHORISED_KEY_PRIVILEGES = "ERIC-Authorised-Key-Privileges";
+    private static final String STATUS_SATISFIED = "satisfied";
+    private static final String DIGITAL_DOCUMENT_LOCATION = "/digital/document/location";
 
     @Autowired
     private MockMvc mockMvc;
@@ -560,6 +565,77 @@ class OrderControllerIntegrationTest {
                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                        .contentType(MediaType.APPLICATION_JSON))
                .andExpect(status().isNotFound());
+    }
+
+    @DisplayName("Patch an order item")
+    @Test
+    void patchOrderItem() throws Exception {
+        final Order preexistingOrder = new Order();
+        preexistingOrder.setId(ORDER_ID);
+        preexistingOrder.setUserId(ERIC_IDENTITY_VALUE);
+        final OrderData orderData = new OrderData();
+        preexistingOrder.setData(orderData);
+        orderData.setReference(ORDER_REFERENCE);
+        orderData.setTotalOrderCost("100");
+        Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
+            "12345678");
+        orderData.setItems(Arrays.asList(
+            StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                "12345678"),
+            expectedItem,
+            StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                "12345678")));
+        orderRepository.save(preexistingOrder);
+
+        PatchOrderedItemDTO patchOrderedItemDTO = new PatchOrderedItemDTO();
+        patchOrderedItemDTO.setStatus(ItemStatus.SATISFIED);
+        patchOrderedItemDTO.setDigitalDocumentLocation(DIGITAL_DOCUMENT_LOCATION);
+
+        mockMvc.perform(patch("/orders/"+ORDER_ID+"/items/CCD-123456-123456")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(patchOrderedItemDTO)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.digital_document_location").value(DIGITAL_DOCUMENT_LOCATION))
+            .andExpect(jsonPath("$.status").value(STATUS_SATISFIED));
+    }
+
+    @DisplayName("Patch an order item returns HTTP 404 Not Found if no matching item ID")
+    @Test
+    void patchOrderItemReturnsNotFoundIfNoMatchingItemID() throws Exception {
+        final Order preexistingOrder = new Order();
+        preexistingOrder.setId(ORDER_ID);
+        preexistingOrder.setUserId(ERIC_IDENTITY_VALUE);
+        final OrderData orderData = new OrderData();
+        preexistingOrder.setData(orderData);
+        orderData.setReference(ORDER_REFERENCE);
+        orderData.setTotalOrderCost("100");
+        Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
+            "12345678");
+        orderData.setItems(Arrays.asList(
+            StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                "12345678"),
+            expectedItem,
+            StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                "12345678")));
+        orderRepository.save(preexistingOrder);
+
+        PatchOrderedItemDTO patchOrderedItemDTO = new PatchOrderedItemDTO();
+        patchOrderedItemDTO.setStatus(ItemStatus.SATISFIED);
+        patchOrderedItemDTO.setDigitalDocumentLocation(DIGITAL_DOCUMENT_LOCATION);
+
+        mockMvc.perform(patch("/orders/"+ORDER_ID+"/items/NONEXISTENT")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(patchOrderedItemDTO)))
+            .andExpect(status().isNotFound());
     }
 
     @DisplayName("Get a checkout item")
