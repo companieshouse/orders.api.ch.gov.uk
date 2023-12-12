@@ -1,7 +1,7 @@
 package uk.gov.companieshouse.orders.api.util;
 
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface Loggable {
     Map<String, Object> getLogMap();
