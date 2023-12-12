@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "ab50e9c4-f259-4b16-ae18-e02fdbed21cf",
+		"_postman_id": "7e7d1b3f-44d1-4ed6-9bd5-fbd756cb7f31",
 		"name": "Orders API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "7646296"
@@ -719,6 +719,51 @@
 										"orders",
 										"ORD-065216-517934",
 										"reprocess"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Update ordered item status",
+					"item": [
+						{
+							"name": "patch ordered item",
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {
+									"content-type": true
+								}
+							},
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/merge-patch+json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"digital_document_location\": \"s3://document-api-images-cidev/docs/--EdB7fbldt5oujK6Nz7jZ3hGj_x6vW8Q_2gQTyjWBM/application-pdf\",\n    \"status\": \"satisfied\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{internal_url}}/item-groups/IG-197316-994337/items/CCD-768116-517930",
+									"host": [
+										"{{internal_url}}"
+									],
+									"path": [
+										"item-groups",
+										"IG-197316-994337",
+										"items",
+										"CCD-768116-517930"
 									]
 								}
 							},
