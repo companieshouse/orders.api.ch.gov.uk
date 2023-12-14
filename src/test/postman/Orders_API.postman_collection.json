@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "7e7d1b3f-44d1-4ed6-9bd5-fbd756cb7f31",
+		"_postman_id": "395226ed-eb33-4b93-a364-23abd30230a3",
 		"name": "Orders API",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "7646296"
@@ -755,15 +755,15 @@
 									}
 								},
 								"url": {
-									"raw": "{{internal_url}}/item-groups/IG-197316-994337/items/CCD-768116-517930",
+									"raw": "{{internal_url}}/orders/ORD-844016-962315/items/CCD-289716-962308",
 									"host": [
 										"{{internal_url}}"
 									],
 									"path": [
-										"item-groups",
-										"IG-197316-994337",
+										"orders",
+										"ORD-844016-962315",
 										"items",
-										"CCD-768116-517930"
+										"CCD-289716-962308"
 									]
 								}
 							},
@@ -777,6 +777,41 @@
 	"auth": {
 		"type": "oauth2",
 		"oauth2": [
+			{
+				"key": "scope",
+				"value": "{{scope}}",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{client_secret}}",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{client_id}}",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "{{access_token_url}}",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "{{auth_url}}",
+				"type": "string"
+			},
+			{
+				"key": "redirect_uri",
+				"value": "{{callback_url}}",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "{{token_name}}",
+				"type": "string"
+			},
 			{
 				"key": "accessToken",
 				"value": "65zWkuhzJJhOeEiLiFn5tgAZMjuZa2yX4mPPWBB_9nfQ_GMvawP0hx3OSZ4Zeq05rdHL17yKuZg2SbZjeop3cA",
