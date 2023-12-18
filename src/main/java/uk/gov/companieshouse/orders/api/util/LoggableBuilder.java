@@ -2,7 +2,7 @@ package uk.gov.companieshouse.orders.api.util;
 
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 
 public final class LoggableBuilder {
