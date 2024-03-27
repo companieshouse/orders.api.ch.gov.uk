@@ -34,7 +34,6 @@ class ApplicationConfigTest {
     @Mock
     private BasketEnrollmentFeatureToggle basketEnrollmentInterceptor;
 
-    private final String healthcheckUri = "healthcheck";
     private final String paymentDetailsUri = "payment-details";
     private final String ordersSearchUri = "orders-search-uri";
     private final String appendItemToBasketUri = "append-basket-item-uri";
@@ -42,7 +41,7 @@ class ApplicationConfigTest {
     @BeforeEach
     void setup() {
         config = Mockito.spy(new ApplicationConfig(loggingInterceptor, authenticationInterceptor,
-                authorisationInterceptor, featureToggleInterceptor, basketEnrollmentInterceptor, healthcheckUri, paymentDetailsUri, ordersSearchUri, appendItemToBasketUri));
+                authorisationInterceptor, featureToggleInterceptor, basketEnrollmentInterceptor, paymentDetailsUri, ordersSearchUri, appendItemToBasketUri));
     }
 
     @Test
@@ -82,11 +81,9 @@ class ApplicationConfigTest {
 
         config.addInterceptors(registry);
 
-        verify(authenticationInterceptorRegistration).excludePathPatterns(healthcheckUri);
-        verify(authorisationInterceptorRegistration).excludePathPatterns(healthcheckUri);
         verify(featureToggleInterceptorRegistration).addPathPatterns(ordersSearchUri);
         verify(basketEnrollmentInterceptorRegistration).addPathPatterns(appendItemToBasketUri);
-        verify(crudPermissionInterceptorRegistration).excludePathPatterns(paymentDetailsUri, healthcheckUri);
+        verify(crudPermissionInterceptorRegistration).excludePathPatterns(paymentDetailsUri);
         verify(crudPermissionInterceptorPaymentDetailsRegistration).addPathPatterns(paymentDetailsUri);
 
         InOrder inOrder = Mockito.inOrder(registry);
