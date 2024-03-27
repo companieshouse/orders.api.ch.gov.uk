@@ -13,25 +13,25 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static org.springframework.web.servlet.HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE;
 import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
 import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
-import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
+import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.*;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -41,8 +41,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.RequestPath;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.mock.web.MockHttpServletMapping;
+import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UrlPathHelper;
+import uk.gov.companieshouse.orders.api.exception.ResourceNotFoundException;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
@@ -130,7 +134,7 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get payment details internal API request that has the required headers")
+    @DisplayName("preHandle rejects get payment details internal API request that does not have internal user role")
     void preHandleRejectsUnauthorisedInternalApiGetPaymentDetailsRequest() {
 
         // Given
@@ -181,11 +185,93 @@ class UserAuthorisationInterceptorTests {
         thenRequestIsAccepted();
     }
 
-    @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
     @Test
+    @DisplayName("preHandle accepts get order item request if they own the order resource")
+    void preHandleAcceptsRequestsIfUserOwnsResource() {
+
+        // Given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get order item request if user does not own the order resource")
+    void preHandleRejectsRequestIfUserDoesNotOwnResource() {
+
+        // Given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get order item request if order non existent")
+    void preHandleRejectsIfOrderNonExistent() {
+
+        // Given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+
+        Executable actual = () -> interceptorUnderTest.preHandle(request, response, handler);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, actual);
+        assertEquals("Resource not found!", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("preHandle accepts patch order item request if they own the order resource")
+    void preHandleAcceptsPatchOrderItemRequestsIfUserOwnsResource() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetOrderOrderIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects patch order item request if user does not own the order resource")
+    void preHandleRejectsPatchOrderItemRequestIfUserDoesNotOwnResource() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects patch order item request if order non existent")
+    void preHandleRejectsPatchOrderItemIfOrderNonExistent() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+
+        Executable actual = () -> interceptorUnderTest.preHandle(request, response, handler);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, actual);
+        assertEquals("Resource not found!", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Authorisation for orders/search endpoint succeeds if caller is has correct permissions")
     void ordersSearchValidAuthorisation() {
         when(securityManager.checkPermission()).thenReturn(true);
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, "/checkouts/search");
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
@@ -196,7 +282,38 @@ class UserAuthorisationInterceptorTests {
     @Test
     void ordersSearchInvalidAuthorisation() {
         when(securityManager.checkPermission()).thenReturn(false);
-        givenRequest(GET, "/orders/search");
+        givenRequest(GET, "/checkouts/search");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
+    @Test
+    @DisplayName("Authorisation for get order item endpoint succeeds if caller has admin permissions")
+    void getOrderItemValidAuthorisation() {
+        // given
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+        when(securityManager.checkPermission()).thenReturn(true);
+
+        // when
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        // then
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authorisation for get order item endpoint false if caller has admin permissions")
+    @Test
+    void getOrderItemSearchInvalidAuthorisation() {
+        givenRequest(GET, "/orders/1234/items/5678");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenPathVariable(ORDER_ID_PATH_VARIABLE, "1");
+        when(orderRepository.findById("1")).thenReturn(Optional.of(order));
+        when(securityManager.checkPermission()).thenReturn(false);
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
@@ -216,16 +333,55 @@ class UserAuthorisationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get checkout user request that has the required headers")
-    void preHandleAcceptsAuthorisedUserGetCheckoutRequest() {
-
+    @DisplayName("preHandle accepts get checkout request authorised by security manager")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedBySecurityManager() {
         // Given
+        when(securityManager.checkPermission()).thenReturn(true);
         givenRequest(GET, "/checkouts/1234");
         givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
         givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
 
         // When and then
         thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout request authorised by user ownership")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedByOwnership() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser(ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get checkout request authorised with internal user role")
+    void preHandleAcceptsGetCheckoutRequestAuthorisedAsInternalUser() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasInternalUserRole();
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects get checkout request if neither authorised by security manager nor as resource owner")
+    void preHandleRejectsGetCheckoutRequestIfNotResourceOwner() {
+        // Given
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234");
+        givenRequestHasSignedInUser(WRONG_ERIC_IDENTITY_VALUE);
+        givenGetCheckoutIdPathVariableIsPopulated(ERIC_IDENTITY_VALUE);
+
+        // When and then
+        thenRequestIsRejected();
     }
 
     @Test
@@ -267,6 +423,104 @@ class UserAuthorisationInterceptorTests {
         assertEquals("No URI template path variables found in the request!", exception.getMessage());
     }
 
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that lacks the required headers")
+    void preHandleRejectsUnauthorisedPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that does not have internal user role")
+    void preHandleRejectsPostReprocessOrderRequestWithoutInternalUserRole() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestDoesNotHaveInternalUserRole();
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts post reprocess order request that has internal user role")
+    void preHandleAcceptsAuthorisedPostReprocessOrderRequest() {
+
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestHasInternalUserRole();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts get basket links request")
+    void getBasketLinks() {
+        // given
+        givenRequest(GET, "/basket/links");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts put remove basket item request")
+    void removeBasketItem() {
+        // given
+        givenRequest(PUT, "/basket/items/remove");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts add item to basket request")
+    void addBasketItem() {
+        // given
+        givenRequest(POST, "/basket/items");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts append item to basket request")
+    void appendBasketItem() {
+        // given
+        givenRequest(POST, "/basket/items/append");
+
+        // when and then
+        thenRequestIsAccepted();
+    }
+
+    @Test
+    @DisplayName("Authorisation for get checkout item endpoint succeeds if caller is has correct "
+            + "permissions")
+    void getCheckoutItemValidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(true);
+        givenRequest(GET, "/checkouts/1234/items/1234");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(true));
+    }
+
+    @DisplayName("Authentication for get checkout item endpoint false if caller has incorrect permissions")
+    @Test
+    void getCheckoutItemInvalidAuthorisation() {
+        when(securityManager.checkPermission()).thenReturn(false);
+        givenRequest(GET, "/checkouts/1234/items/1234");
+
+        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+
+        assertThat(actual, is(false));
+    }
+
     /**
      * Sets up request givens.
      * @param method the HTTP request method
@@ -278,6 +532,11 @@ class UserAuthorisationInterceptorTests {
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
         when(request.getAttribute(UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
+        when(request.getHttpServletMapping()).thenReturn(new MockHttpServletMapping("", "", "", null));
+        RequestPath requestPath = ServletRequestPathUtils.parseAndCache(request);
+        when(request.getServletPath()).thenReturn(uri);
+        when(request.getAttribute(ServletRequestPathUtils.class.getName() + ".PATH")).thenReturn(requestPath);
+
     }
 
     /**
@@ -354,6 +613,7 @@ class UserAuthorisationInterceptorTests {
     private static Stream<Arguments> apiGetRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get payment details internal API request that has the required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle accepts get order internal API request that has the required headers", "/orders/1234"),
+                arguments("preHandle accepts get order item internal API request that has the required headers", "/orders/1234/items/5678"),
                 arguments("preHandle accepts get checkout internal API request that has the required headers", "/checkouts/1234"));
     }
 }

@@ -47,6 +47,8 @@ public class Item {
 
     private String totalItemCost;
 
+    private String digitalDocumentLocation;
+
     public String getId() {
         return id;
     }
@@ -197,5 +199,13 @@ public class Item {
 
     public void setTotalItemCost(String totalItemCost) {
         this.totalItemCost = totalItemCost;
+    }
+
+    public String getDigitalDocumentLocation() {
+        return digitalDocumentLocation;
+    }
+
+    public void setDigitalDocumentLocation(String digitalDocumentLocation) {
+        this.digitalDocumentLocation = digitalDocumentLocation;
     }
 }

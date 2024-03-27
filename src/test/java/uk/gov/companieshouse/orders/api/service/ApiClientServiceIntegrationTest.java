@@ -130,14 +130,14 @@ public class ApiClientServiceIntegrationTest {
     @Test
     @DisplayName("getItem() incorrectly throws an IllegalArgumentException for unknown certificate")
     void getItemThrowsIllegalArgumentExceptionForCertificateNotFound () {
-        throwsIllegalArgumentExceptionForItemNotFound(UNKNOWN_CERTIFICATE_URI,
+        throwsApiErrorResponseExceptionForItemNotFound(UNKNOWN_CERTIFICATE_URI,
                                                       CERTIFICATES_API_NOT_FOUND_ERROR_RESPONSE_BODY);
     }
 
     @Test
     @DisplayName("getItem() incorrectly throws an IllegalArgumentException for unknown certified copy")
     void getItemThrowsIllegalArgumentExceptionForCertifiedCopyNotFound () {
-        throwsIllegalArgumentExceptionForItemNotFound(UNKNOWN_CERTIFIED_COPY_URI,
+        throwsApiErrorResponseExceptionForItemNotFound(UNKNOWN_CERTIFIED_COPY_URI,
                 CERTIFIED_COPIES_API_NOT_FOUND_ERROR_RESPONSE_BODY);
     }
 
@@ -181,6 +181,24 @@ public class ApiClientServiceIntegrationTest {
                         () -> serviceUnderTest.getItem(PASS_THROUGH_HEADER, unknownItemUri));
         assertThat(exception.getCause() instanceof IllegalArgumentException, is(true));
         assertThat(exception.getCause().getMessage(), is(SDK_ERROR_MESSAGE));
+    }
+
+    private void throwsApiErrorResponseExceptionForItemNotFound(final String unknownItemUri,
+                                                               final String notFoundResponseBody) {
+
+        // Given
+        givenSdkIsConfigured(environment, ENVIRONMENT_VARIABLES);
+        givenThat(get(urlEqualTo(unknownItemUri))
+                .willReturn(notFound()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(notFoundResponseBody)));
+
+        // When and then
+        final ApiErrorResponseException exception =
+                Assertions.assertThrows(ApiErrorResponseException.class,
+                        () -> serviceUnderTest.getItem(PASS_THROUGH_HEADER, unknownItemUri));
+        assertThat(exception.getStatusCode(), is(404));
+        assertThat(exception.getContent(), is(notFoundResponseBody));
     }
 
 }

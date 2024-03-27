@@ -12,20 +12,21 @@ API handling CRUD operations on CH Ordering Service
 2. Run `./start.sh` to run
 
 ### Environment Variables
-Name | Description | Mandatory | Location
---- | --- | --- | ---
-ORDERS_API_PORT | Port this application runs on when deployed. | ✓ | start.sh
+| Name            | Description                                  | Mandatory | Location |
+|-----------------|----------------------------------------------|-----------|----------|
+| ORDERS_API_PORT | Port this application runs on when deployed. | ✓         | start.sh |
 
 ### Endpoints
-Path | Method | Description
---- | --- | ---
-*`/basket`* | PATCH | Adds delivery details to `basket`.
-*`/basket/items`* | POST | Adds requested `item` to `basket`.
-*`/basket/checkouts`* | POST | Processes `basket` checkout. Creates a `checkout` resource.
-*`/basket/checkouts/{checkoutId}/payment`* | GET | Returns `paymentDetails` resource for a valid `checkoutId`.
-*`/basket/checkouts/{checkoutId}/payment`* | PATCH | Updates `checkout` resource with payment status.
-*`/orders/{orderId}`* | GET | Returns `OrderData` resource for a valid `orderId`.
-*`/healthcheck`* | GET | Returns HTTP OK (`200`) to indicate a healthy application instance.
+| Path                                       | Method | Description                                                         |
+|--------------------------------------------|--------|---------------------------------------------------------------------|
+| *`/basket`*                                | PATCH  | Adds delivery details to `basket`.                                  |
+| *`/basket/items`*                          | POST   | Adds requested `item` to `basket`.                                  |
+| *`/basket/checkouts`*                      | POST   | Processes `basket` checkout. Creates a `checkout` resource.         |
+| *`/basket/checkouts/{checkoutId}/payment`* | GET    | Returns `paymentDetails` resource for a valid `checkoutId`.         |
+| *`/basket/checkouts/{checkoutId}/payment`* | PATCH  | Updates `checkout` resource with payment status.                    |
+| *`/orders/{orderId}`*                      | GET    | Returns `OrderData` resource for a valid `orderId`.                 |
+| *`/orders/{orderId}/reprocess`*            | POST   | Triggers the re-processing of the order.                            |
+| *`/healthcheck`*                           | GET    | Returns HTTP OK (`200`) to indicate a healthy application instance. |
 
 [1]: http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 [2]: https://maven.apache.org/download.cgi

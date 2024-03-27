@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class BasketData {
     private DeliveryDetails deliveryDetails;
@@ -17,6 +18,8 @@ public class BasketData {
     private BasketLinks links;
 
     private String totalBasketCost;
+
+    private boolean enrolled;
 
 
     public DeliveryDetails getDeliveryDetails() {
@@ -67,6 +70,37 @@ public class BasketData {
         this.totalBasketCost = totalBasketCost;
     }
 
+    public boolean isEnrolled() {
+        return enrolled;
+    }
+
+    public void setEnrolled(boolean enrolled) {
+        this.enrolled = enrolled;
+    }
+
     @Override
     public String toString() { return new Gson().toJson(this); }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BasketData that = (BasketData) o;
+        return enrolled == that.enrolled
+                && Objects.equals(deliveryDetails, that.deliveryDetails)
+                && Objects.equals(etag, that.etag)
+                && Objects.equals(items, that.items)
+                && Objects.equals(kind, that.kind)
+                && Objects.equals(links, that.links)
+                && Objects.equals(totalBasketCost, that.totalBasketCost);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(deliveryDetails, etag, items, kind, links, totalBasketCost, enrolled);
+    }
 }

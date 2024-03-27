@@ -1,41 +1,28 @@
 package uk.gov.companieshouse.orders.api.service;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
-
 import com.mongodb.MongoException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.logging.LoggerFactory;
 import uk.gov.companieshouse.orders.OrderReceived;
+import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
 import uk.gov.companieshouse.orders.api.exception.ForbiddenException;
 import uk.gov.companieshouse.orders.api.exception.MongoOperationException;
 import uk.gov.companieshouse.orders.api.kafka.OrderReceivedMessageProducer;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import uk.gov.companieshouse.orders.api.mapper.CheckoutToOrderMapper;
-import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.CheckoutData;
-import uk.gov.companieshouse.orders.api.model.HRef;
 import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.Order;
-import uk.gov.companieshouse.orders.api.model.OrderCriteria;
-import uk.gov.companieshouse.orders.api.model.OrderData;
-import uk.gov.companieshouse.orders.api.model.OrderLinks;
-import uk.gov.companieshouse.orders.api.model.OrderSearchCriteria;
-import uk.gov.companieshouse.orders.api.model.OrderSearchResults;
-import uk.gov.companieshouse.orders.api.model.OrderSummary;
-import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
+
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 
 @Service
 public class OrderService {
@@ -107,60 +94,61 @@ public class OrderService {
         return orderRepository.findById(id);
     }
 
+    public Optional<Item> getOrderItem(String orderId, String itemId) {
+        Optional<Order> order = getOrder(orderId);
+        return order.flatMap(o -> o.getData()
+                                   .getItems()
+                                   .stream()
+                                   .filter(item -> item.getId().equals(itemId))
+                                   .findFirst());
+
+    }
+
+    public Optional<Item> patchOrderItem(String orderId, String itemId, PatchOrderedItemDTO patchOrderedItemDTO) {
+            Map<String, Object> logMap = LoggingUtils.createLogMap();
+            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+            LoggingUtils.logIfNotNull(logMap, LoggingUtils.ITEM_ID, itemId);
+            LOGGER.info("Patching order item", logMap);
+
+            Optional<Order> orderToUpdate = orderRepository.findById(orderId);
+            return orderToUpdate.flatMap(o -> {
+                Optional<Item> updatedItem = o.getData()
+                    .getItems()
+                    .stream()
+                    .filter(item -> item.getId().equals(itemId))
+                    .findFirst();
+                updatedItem.ifPresent(item -> {
+                    item.setDigitalDocumentLocation(patchOrderedItemDTO.getDigitalDocumentLocation());
+                    item.setStatus(patchOrderedItemDTO.getStatus());
+                });
+
+                try {
+                    orderRepository.save(orderToUpdate.get());
+                } catch (MongoException ex) {
+                    String errorMessage = String.format(
+                        "Failed to update item with id %s within order %s",itemId, orderId
+                    );
+                    LOGGER.error(errorMessage, ex, logMap);
+                    throw new MongoOperationException(errorMessage, ex);
+                }
+                return updatedItem;
+            });
+        }
+
     public Optional<Checkout> getCheckout(String id) {
         return checkoutRepository.findById(id);
     }
 
     /**
-     * Returns an result consisting of order summaries corresponding to the supplied search
-     * criteria.
-     *
-     * @param orderSearchCriteria to find existing orders
-     * @return OrderSearchResults matching the supplied criteria
+     * Resends a message to the Kafka 'order-received' topic for an existing order.
+     * @param order - the order to be reprocessed
      */
-    public OrderSearchResults searchOrders(OrderSearchCriteria orderSearchCriteria) {
-        OrderCriteria orderCriteria = orderSearchCriteria.getOrderCriteria();
-        Page<Order> orderPages = orderRepository.searchOrders(
-                searchFieldMapper.exactMatchOrAny(orderCriteria.getOrderId()),
-                searchFieldMapper.partialMatchOrAny(orderCriteria.getEmail()),
-                searchFieldMapper.exactMatchOrAny(orderCriteria.getCompanyNumber()),
-                PageRequest.of(0, orderSearchCriteria.getPageCriteria().getPageSize(), Sort.by("data.ordered_at").descending().and(Sort.by("_id")))); //TODO: refactor into mapper implementation
-        List<Order> orders = orderPages.toList();
-
-        return new OrderSearchResults(orderPages.getTotalElements(),
-                orders.stream().map(
-                        order -> OrderSummary.newBuilder()
-                                .withId(order.getId())
-                                .withEmail(
-                                        Optional.ofNullable(order.getData())
-                                                .map(OrderData::getOrderedBy)
-                                                .map(ActionedBy::getEmail)
-                                                .orElse(null))
-                                .withCompanyNumber(Optional.ofNullable(order.getData())
-                                        .map(OrderData::getItems)
-                                        .flatMap(items -> items.stream().findFirst())
-                                        .map(Item::getCompanyNumber)
-                                        .orElse(null))
-                                .withProductLine(
-                                        Optional.ofNullable(order.getData())
-                                                .map(OrderData::getItems)
-                                                .flatMap(items -> items.stream().findFirst())
-                                                .map(Item::getKind)
-                                                .orElse(null))
-                                .withOrderDate(order.getCreatedAt())
-                                .withPaymentStatus(getCheckout(order.getId())
-                                        .map(Checkout::getData)
-                                        .map(CheckoutData::getStatus)
-                                        .orElse(null))
-                                .withLinks(
-                                        Optional.ofNullable(order.getData())
-                                                .map(OrderData::getLinks)
-                                                .map(OrderLinks::getSelf)
-                                                .map(self -> new Links(new HRef(self),
-                                                        new HRef(self)))
-                                                .orElse(null))
-                                .build()
-                ).collect(Collectors.toList()));
+    public void reprocessOrder(final Order order) {
+        final String orderId = order.getId();
+        final Map<String, Object> logMap = LoggingUtils.createLogMap();
+        LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, orderId);
+        LOGGER.info("REPUBLISHING notification to Kafka 'order-received' topic for order - " + orderId + ".", logMap);
+        sendOrderReceivedMessage(order.getId());
     }
 
     /**
@@ -183,5 +171,9 @@ public class OrderService {
         order.setCreatedAt(now);
         order.setUpdatedAt(now);
         order.getData().setOrderedAt(now);
+    }
+
+    void setOrderEndpoint(String orderEndpoint) {
+        this.orderEndpoint = orderEndpoint;
     }
 }

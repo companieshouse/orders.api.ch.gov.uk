@@ -7,7 +7,9 @@ import static uk.gov.companieshouse.orders.api.converter.EnumValueNameConverter.
 public enum ItemStatus {
     UNKNOWN,
     PROCESSING,
-    SATISFIED;
+    SATISFIED,
+    CANCELLED,
+    FAILED;
 
     @JsonValue
     public String getJsonName() {

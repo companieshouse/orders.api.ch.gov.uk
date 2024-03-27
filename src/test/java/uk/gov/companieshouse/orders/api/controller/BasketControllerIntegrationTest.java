@@ -1,10 +1,78 @@
 package uk.gov.companieshouse.orders.api.controller;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
+import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
+import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
+import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
+import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_ADDITIONAL_COPY;
+import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_SAME_DAY;
+import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_INCORPORATION_SAME_DAY;
+import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_SAME_DAY;
+import static uk.gov.companieshouse.orders.api.model.ProductType.MISSING_IMAGE_DELIVERY_ACCOUNTS;
+
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_ACCESS_TOKEN;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISED_USER_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISED_USER_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_API_KEY_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_OAUTH2_TYPE_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_TYPE_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.MISSING_IMAGE_DELIVERY_KIND;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.SAME_DAY_CERTIFIED_COPY_COST;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.SAME_DAY_CERTIFIED_COPY_NEW_INCORPORATION_COST;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSION_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFICATE_URI;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFIED_COPY_URI;
+import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_MISSING_IMAGE_DELIVERY_URI;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,9 +91,9 @@ import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.api.util.security.Permission;
 import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.DeliveryDetailsDTO;
 import uk.gov.companieshouse.orders.api.dto.ItemDTO;
 import uk.gov.companieshouse.orders.api.dto.PaymentDetailsDTO;
@@ -43,6 +111,7 @@ import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
 import uk.gov.companieshouse.orders.api.model.Item;
 import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.model.ItemType;
 import uk.gov.companieshouse.orders.api.model.MissingImageDelivery;
 import uk.gov.companieshouse.orders.api.model.MissingImageDeliveryItemOptions;
 import uk.gov.companieshouse.orders.api.model.Order;
@@ -54,52 +123,8 @@ import uk.gov.companieshouse.orders.api.service.ApiClientService;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.orders.api.service.EtagGeneratorService;
 import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
+import uk.gov.companieshouse.orders.api.validator.CheckoutBasketValidator;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.collections.CollectionUtils.isNotEmpty;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.CONFLICT;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_KEY_ROLES;
-import static uk.gov.companieshouse.api.util.security.EricConstants.ERIC_AUTHORISED_TOKEN_PERMISSIONS;
-import static uk.gov.companieshouse.api.util.security.SecurityConstants.INTERNAL_USER_ROLE;
-import static uk.gov.companieshouse.orders.api.model.CertificateType.INCORPORATION_WITH_ALL_NAME_CHANGES;
-import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_ADDITIONAL_COPY;
-import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_SAME_DAY;
-import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_INCORPORATION_SAME_DAY;
-import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_SAME_DAY;
-import static uk.gov.companieshouse.orders.api.model.ProductType.MISSING_IMAGE_DELIVERY_ACCOUNTS;
-import static uk.gov.companieshouse.orders.api.util.TestConstants.*;
 
 @DirtiesContext
 @AutoConfigureMockMvc
@@ -136,7 +161,9 @@ class BasketControllerIntegrationTest {
     private static final LocalDateTime SATISFIED_AT = LocalDateTime.of(2020, Month.JANUARY, 1, 0, 0);
 
     private static final String EXPECTED_TOTAL_ORDER_COST = "15";
-    private static final String DISCOUNT_APPLIED_1 = "0";
+    private static final String EXPECTED_TOTAL_ORDER_COST_MULTIPLE = "33";
+    private static final int EXPECTED_CHECKOUT_ITEMS_SIZE = 3;
+        private static final String DISCOUNT_APPLIED_1 = "0";
     private static final String ITEM_COST_1 = "5";
     private static final String CALCULATED_COST_1 = "5";
     private static final String DISCOUNT_APPLIED_2 = "10";
@@ -237,6 +264,9 @@ class BasketControllerIntegrationTest {
     @Mock
     private ApiErrorResponseException apiErrorResponseException;
 
+    @Mock
+    private CheckoutBasketValidator checkoutBasketValidator;
+
     @BeforeEach
     void setUp() {
         timestamps = new TimestampedEntityVerifier();
@@ -252,8 +282,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add Item successfully adds an item to the basket and returns item if the basket does not exist")
     void addItemSuccessfullyAddsItemToBasketIfBasketDoesNotExist() throws Exception {
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         Certificate certificate = new Certificate();
         certificate.setCompanyNumber(COMPANY_NUMBER);
@@ -268,7 +298,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
 
         MvcResult result = resultActions.andReturn();
@@ -292,8 +322,8 @@ class BasketControllerIntegrationTest {
         Basket basket = new Basket();
         basketRepository.save(basket);
 
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         Certificate certificate = new Certificate();
         certificate.setCompanyNumber(COMPANY_NUMBER);
@@ -308,7 +338,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
 
         MvcResult result = resultActions.andReturn();
@@ -328,8 +358,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add certificate to basket responds with correctly populated certificate item options")
     void addCertificateReturnsCorrectlyPopulatedOptions() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         final Certificate certificate = new Certificate();
         final CertificateItemOptions options = new CertificateItemOptions();
@@ -344,7 +374,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_options.certificate_type",
                         is(INCORPORATION_WITH_ALL_NAME_CHANGES.getJsonName())));
@@ -356,8 +386,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add certified copy to basket responds with correctly populated certified copy item options")
     void addCertifiedCopyReturnsCorrectlyPopulatedOptions() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
 
         final CertifiedCopy copy = new CertifiedCopy();
         final CertifiedCopyItemOptions options = new CertifiedCopyItemOptions();
@@ -372,7 +402,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_options.filing_history_documents[0].filing_history_date",
                         is(DOCUMENT.getFilingHistoryDate())))
@@ -391,8 +421,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add certified copy to basket responds with correctly populated certified copy item costs")
     void addCertifiedCopyReturnsCorrectlyPopulatedCosts() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFIED_COPY_URI);
 
         final CertifiedCopy copy = new CertifiedCopy();
         copy.setItemCosts(CERTIFIED_COPY_ITEM_COSTS);
@@ -405,7 +435,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_costs[0].discount_applied",
                         is(SAME_DAY_COPY_COST.getDiscountApplied())))
@@ -426,8 +456,8 @@ class BasketControllerIntegrationTest {
     @Test
     @DisplayName("Add missing image delivery to basket responds with correctly populated missing image delivery options")
     void addMissingImageDeliveryCorrectlyPopulatedOptions() throws Exception {
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
 
         final MissingImageDelivery missingImageDelivery = new MissingImageDelivery();
         final MissingImageDeliveryItemOptions options = new MissingImageDeliveryItemOptions();
@@ -445,7 +475,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.item_options.filing_history_date",
                         is(DOCUMENT.getFilingHistoryDate())))
@@ -471,8 +501,8 @@ class BasketControllerIntegrationTest {
         basket.getData().setItems(Collections.singletonList(basketItem));
         basketRepository.save(basket);
 
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(INVALID_ITEM_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(INVALID_ITEM_URI);
         when(apiClientService.getItem(anyString(), anyString())).thenThrow(apiErrorResponseException);
 
         final ApiError expectedValidationError =
@@ -486,7 +516,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().json(mapper.writeValueAsString(expectedValidationError)))
                 .andDo(MockMvcResultHandlers.print());
@@ -503,8 +533,8 @@ class BasketControllerIntegrationTest {
         basket.setData(basketData);
         basketRepository.save(basket);
 
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-        addToBasketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
 
         mockMvc.perform(post("/basket/items")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
@@ -512,7 +542,7 @@ class BasketControllerIntegrationTest {
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(addToBasketRequestDTO)))
+                .content(mapper.writeValueAsString(basketRequestDTO)))
                 .andExpect(status().isOk());
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
@@ -534,6 +564,128 @@ class BasketControllerIntegrationTest {
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
         assertFalse(retrievedBasket.isPresent());
+    }
+
+    @Test
+    @DisplayName("Append item endpoint appends an item to the basket if no duplicate exists")
+    void appendItemSuccessfullyAppendsAnItemToTheBasket() throws Exception {
+        Item item = new Item();
+        item.setItemUri(OLD_CERTIFICATE_URI);
+        BasketData basketData = new BasketData();
+        basketData.setItems(Arrays.asList(item));
+        basketData.setEnrolled(true);
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basket.setData(basketData);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(post("/basket/items/append")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                       .contentType(MediaType.APPLICATION_JSON)
+                       .content(mapper.writeValueAsString(basketRequestDTO)))
+               .andExpect(status().isOk());
+
+        final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
+        assertEquals(OLD_CERTIFICATE_URI,
+                retrievedBasket.get().getData().getItems().get(0).getItemUri());
+        assertEquals(VALID_CERTIFICATE_URI,
+                retrievedBasket.get().getData().getItems().get(1).getItemUri());
+    }
+
+    @Test
+    @DisplayName("Append item endpoint does not append an item to the basket if an item with a "
+            + "duplicate item URI exists")
+    void appendItemSkipsItemIfDuplicateItemUri() throws Exception {
+        Item item = new Item();
+        item.setItemUri(OLD_CERTIFICATE_URI);
+        BasketData basketData = new BasketData();
+        basketData.setItems(Arrays.asList(item));
+        basketData.setEnrolled(true);
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basket.setData(basketData);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(OLD_CERTIFICATE_URI);
+
+        mockMvc.perform(post("/basket/items/append")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                       .contentType(MediaType.APPLICATION_JSON)
+                       .content(mapper.writeValueAsString(basketRequestDTO)))
+               .andExpect(status().isOk());
+
+        final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
+        assertEquals(1, retrievedBasket.get().getData().getItems().size());
+        assertEquals(OLD_CERTIFICATE_URI,
+                retrievedBasket.get().getData().getItems().get(0).getItemUri());
+    }
+
+    @Test
+    @DisplayName("Append item endpoint returns HTTP 400 Bad Request if basket full")
+    void appendItemReturnsBadRequestIfBasketFull() throws Exception {
+        Item firstItem = new Item();
+        firstItem.setItemUri(OLD_CERTIFICATE_URI);
+        Item secondItem = new Item();
+        secondItem.setItemUri("/orderable/certificates/11111112");
+        BasketData basketData = new BasketData();
+        basketData.setItems(Arrays.asList(firstItem, secondItem));
+        basketData.setEnrolled(true);
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basket.setData(basketData);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(post("/basket/items/append")
+                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                       .contentType(MediaType.APPLICATION_JSON)
+                       .content(mapper.writeValueAsString(basketRequestDTO)))
+               .andExpect(status().isBadRequest())
+               .andExpect(jsonPath("$.status", is(equalTo("BAD_REQUEST"))))
+               .andExpect(jsonPath("$.errors[0]", is(equalTo("Basket is full"))));
+
+        final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
+        assertEquals(2, retrievedBasket.get().getData().getItems().size());
+    }
+
+    @Test
+    @DisplayName("Append item endpoint returns HTTP 404 when the user is disenrolled")
+    void appendItemShouldReturn404IfUserDisenrolled() throws Exception {
+        Item item = new Item();
+        item.setItemUri(OLD_CERTIFICATE_URI);
+        BasketData basketData = new BasketData();
+        basketData.setItems(Arrays.asList(item));
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basket.setData(basketData);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(post("/basket/items/append")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -578,6 +730,125 @@ class BasketControllerIntegrationTest {
         assertEquals(FORENAME, retrievedOptions.getForename());
         assertEquals(SURNAME, retrievedOptions.getSurname());
         assertEquals(EXPECTED_TOTAL_ORDER_COST, checkoutData.getTotalOrderCost());
+    }
+
+    @Test
+    @DisplayName("Checkout basket creates checkout with correctly with multiple items")
+    void checkoutBasketWithMultipleItems () throws Exception {
+        final LocalDateTime start = timestamps.start();
+        final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().getItems().add(certificateItem);
+        Item missingImageItem = new Item();
+        missingImageItem.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        basket.getData().getItems().add(missingImageItem);
+
+        basketRepository.save(basket);
+
+        final CertifiedCopy copy = new CertifiedCopy();
+        copy.setKind(CERTIFIED_COPY_KIND);
+        final CertifiedCopyItemOptions documentOptions = new CertifiedCopyItemOptions();
+        documentOptions.setFilingHistoryDocuments(singletonList(DOCUMENT));
+        copy.setItemOptions(documentOptions);
+        copy.setItemCosts(createItemCosts());
+        copy.setPostageCost(POSTAGE_COST);
+        copy.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFIED_COPY_URI)).thenReturn(copy);
+
+        final Certificate certificate = new Certificate();
+        certificate.setKind(CERTIFICATE_KIND);
+        final CertificateItemOptions options = new CertificateItemOptions();
+        options.setCertificateType(INCORPORATION_WITH_ALL_NAME_CHANGES);
+        certificate.setItemOptions(options);
+        certificate.setItemCosts(createItemCosts());
+        certificate.setPostageCost(POSTAGE_COST);
+        certificate.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFICATE_URI)).thenReturn(certificate);
+
+        final MissingImageDelivery missingImageDelivery = new MissingImageDelivery();
+        missingImageDelivery.setKind(MISSING_IMAGE_DELIVERY_KIND);
+        missingImageDelivery.setItemOptions(MISSING_IMAGE_DELIVERY_ITEM_OPTIONS);
+        missingImageDelivery.setItemCosts(MISSING_IMAGE_DELIVERY_COSTS);
+        missingImageDelivery.setPostageCost(POSTAGE_COST);
+        missingImageDelivery.setPostalDelivery(false);
+        missingImageDelivery.setTotalItemCost(MID_TOTAL_ITEM_COST);
+        missingImageDelivery.setKind(MISSING_IMAGE_DELIVERY_KIND);
+
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_MISSING_IMAGE_DELIVERY_URI)).thenReturn(missingImageDelivery);
+
+        ResultActions resultActions = mockMvc.perform(post("/basket/checkouts")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_USER_HEADER_NAME, ERIC_AUTHORISED_USER_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN))
+                .andExpect(status().isAccepted());
+
+        MvcResult result = resultActions.andReturn();
+        MockHttpServletResponse response = result.getResponse();
+        assertThat(response.getHeader(PAYMENT_REQUIRED_HEADER), is(COSTS_LINK));
+        String contentAsString = response.getContentAsString();
+        CheckoutData responseCheckoutData = mapper.readValue(contentAsString, CheckoutData.class);
+
+        final Optional<Checkout> retrievedCheckout = checkoutRepository.findById(responseCheckoutData.getReference());
+        assertTrue(retrievedCheckout.isPresent());
+        assertEquals(ERIC_IDENTITY_VALUE, retrievedCheckout.get().getUserId());
+        final CheckoutData checkoutData = retrievedCheckout.get().getData();
+        assertEquals(EXPECTED_TOTAL_ORDER_COST_MULTIPLE, checkoutData.getTotalOrderCost());
+        assertEquals(CERTIFIED_COPY_KIND, checkoutData.getItems().get(0).getKind());
+        assertEquals(CERTIFICATE_KIND, checkoutData.getItems().get(1).getKind());
+        assertEquals(MISSING_IMAGE_DELIVERY_KIND, checkoutData.getItems().get(2).getKind());
+        assertEquals(EXPECTED_CHECKOUT_ITEMS_SIZE, checkoutData.getItems().size());
+    }
+
+    @Test
+    @DisplayName("Checkout basket returns bad request error when unable to retrieve MID item")
+    void checkoutBasketWithErrorOnMultipleItems () throws Exception {
+        final LocalDateTime start = timestamps.start();
+        final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().getItems().add(certificateItem);
+        Item missingImageItem = new Item();
+        missingImageItem.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        basket.getData().getItems().add(missingImageItem);
+
+        basketRepository.save(basket);
+
+        final CertifiedCopy copy = new CertifiedCopy();
+        copy.setKind(CERTIFIED_COPY_KIND);
+        final CertifiedCopyItemOptions documentOptions = new CertifiedCopyItemOptions();
+        documentOptions.setFilingHistoryDocuments(singletonList(DOCUMENT));
+        copy.setItemOptions(documentOptions);
+        copy.setItemCosts(createItemCosts());
+        copy.setPostageCost(POSTAGE_COST);
+        copy.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFIED_COPY_URI)).thenReturn(copy);
+
+        final Certificate certificate = new Certificate();
+        certificate.setKind(CERTIFICATE_KIND);
+        final CertificateItemOptions options = new CertificateItemOptions();
+        options.setCertificateType(INCORPORATION_WITH_ALL_NAME_CHANGES);
+        certificate.setItemOptions(options);
+        certificate.setItemCosts(createItemCosts());
+        certificate.setPostageCost(POSTAGE_COST);
+        certificate.setPostalDelivery(false);
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFICATE_URI)).thenReturn(certificate);
+
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_MISSING_IMAGE_DELIVERY_URI)).thenThrow(apiErrorResponseException);
+
+        ResultActions resultActions = mockMvc.perform(post("/basket/checkouts")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_USER_HEADER_NAME, ERIC_AUTHORISED_USER_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, checkoutRepository.count());
     }
 
     @Test
@@ -728,6 +999,7 @@ class BasketControllerIntegrationTest {
         BasketData basketData = new BasketData();
         if (isPostalDelivery) {
             DeliveryDetails deliveryDetails = new DeliveryDetails();
+            deliveryDetails.setCompanyName(COMPANY_NAME);
             deliveryDetails.setAddressLine1(ADDRESS_LINE_1);
             deliveryDetails.setForename(FORENAME);
             deliveryDetails.setSurname(SURNAME);
@@ -974,6 +1246,7 @@ class BasketControllerIntegrationTest {
 
         final DeliveryDetails getDeliveryDetails = response.getDeliveryDetails();
         final Item item = response.getItems().get(0);
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1051,6 +1324,7 @@ class BasketControllerIntegrationTest {
 
         final DeliveryDetails getDeliveryDetails = response.getDeliveryDetails();
         final Item item = response.getItems().get(0);
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1075,6 +1349,54 @@ class BasketControllerIntegrationTest {
         assertEquals(TOTAL_ITEM_COST, item.getTotalItemCost());
 
         verifyBasketIsUnchanged(start, basket.getData().getDeliveryDetails(), VALID_CERTIFIED_COPY_URI);
+    }
+
+    @Test
+    @DisplayName("Get basket successfully returns a basket populated with multiple items")
+    void getBasketReturnsBasketPopulatedWithMultipleItems() throws Exception {
+        final LocalDateTime start = timestamps.start();
+        final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
+        Item certificateItem = new Item();
+        certificateItem.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().getItems().add(certificateItem);
+
+        Item missingImageItem = new Item();
+        missingImageItem.setItemUri(VALID_MISSING_IMAGE_DELIVERY_URI);
+        basket.getData().getItems().add(missingImageItem);
+
+        basketRepository.save(basket);
+
+        final CertifiedCopy copy = new CertifiedCopy();
+        copy.setKind(ItemType.CERTIFIED_COPY.getKind());
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFIED_COPY_URI)).thenReturn(copy);
+
+        final Certificate certificate = new Certificate();
+        certificate.setKind(ItemType.CERTIFICATE.getKind());
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_CERTIFICATE_URI)).thenReturn(certificate);
+
+        final MissingImageDelivery missingImageDelivery = new MissingImageDelivery();
+        missingImageDelivery.setKind(ItemType.MISSING_IMAGE_DELIVERY.getKind());
+        when(apiClientService.getItem(ERIC_ACCESS_TOKEN, VALID_MISSING_IMAGE_DELIVERY_URI)).thenReturn(missingImageDelivery);
+
+        final String jsonResponse = mockMvc.perform(get("/basket")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].kind",
+                        is(ItemType.CERTIFIED_COPY.getKind())))
+                .andExpect(jsonPath("$.items[1].kind",
+                        is(ItemType.CERTIFICATE.getKind())))
+                .andExpect(jsonPath("$.items[2].kind",
+                        is(ItemType.MISSING_IMAGE_DELIVERY.getKind())))
+                .andReturn().getResponse().getContentAsString();
+
+        final BasketData response = mapper.readValue(jsonResponse, BasketData.class);
+        final List<Item> item = response.getItems();
+        assertEquals(3, item.size());
     }
 
     @Test
@@ -1106,6 +1428,7 @@ class BasketControllerIntegrationTest {
 
         AddDeliveryDetailsRequestDTO addDeliveryDetailsRequestDTO = new AddDeliveryDetailsRequestDTO();
         DeliveryDetailsDTO deliveryDetailsDTO = new DeliveryDetailsDTO();
+        deliveryDetailsDTO.setCompanyName(COMPANY_NAME);
         deliveryDetailsDTO.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetailsDTO.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetailsDTO.setCountry(COUNTRY);
@@ -1128,6 +1451,7 @@ class BasketControllerIntegrationTest {
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
         final DeliveryDetails getDeliveryDetails = retrievedBasket.get().getData().getDeliveryDetails();
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1145,6 +1469,7 @@ class BasketControllerIntegrationTest {
 
         AddDeliveryDetailsRequestDTO addDeliveryDetailsRequestDTO = new AddDeliveryDetailsRequestDTO();
         DeliveryDetailsDTO deliveryDetailsDTO = new DeliveryDetailsDTO();
+        deliveryDetailsDTO.setCompanyName(COMPANY_NAME);
         deliveryDetailsDTO.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetailsDTO.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetailsDTO.setCountry(COUNTRY);
@@ -1167,6 +1492,7 @@ class BasketControllerIntegrationTest {
 
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
         final DeliveryDetails getDeliveryDetails = retrievedBasket.get().getData().getDeliveryDetails();
+        assertEquals(COMPANY_NAME, getDeliveryDetails.getCompanyName());
         assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
         assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
         assertEquals(COUNTRY, getDeliveryDetails.getCountry());
@@ -1189,13 +1515,10 @@ class BasketControllerIntegrationTest {
         deliveryDetailsDTO.setSurname(SURNAME);
         deliveryDetailsDTO.setForename(FORENAME);
         deliveryDetailsDTO.setLocality(LOCALITY);
+
         addDeliveryDetailsRequestDTO.setDeliveryDetails(deliveryDetailsDTO);
 
-        final ApiError expectedValidationError =
-                new ApiError(BAD_REQUEST,
-                        asList("delivery_details.address_line_1: must not be blank"));
-
-        mockMvc.perform(patch("/basket")
+        MvcResult result = mockMvc.perform(patch("/basket")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -1203,8 +1526,10 @@ class BasketControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(addDeliveryDetailsRequestDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().json(mapper.writeValueAsString(expectedValidationError)))
-                .andDo(MockMvcResultHandlers.print());
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+        Assertions.assertEquals("Invalid request content.", result.getResponse().getErrorMessage());
+        Assertions.assertTrue(result.getResolvedException().getMessage().contains("address_line_1 may not be blank"));
     }
 
     @Test
@@ -1748,12 +2073,104 @@ class BasketControllerIntegrationTest {
                 .andExpect(jsonPath("$.payment_reference", is(checkout.getId())))
                 .andExpect(jsonPath("$.kind", is("payment-details#payment-details")))
                 .andExpect(jsonPath("$.status", is("paid")))
-                .andExpect(jsonPath("$.company_number", is(COMPANY_NUMBER)))
                 .andExpect(jsonPath("$.paid_at", is(paymentsApiParsableDateTime(PAID_AT_DATE))))
                 .andExpect(jsonPath("$.links.self", is(mapper.convertValue(paymentLinksDTO.getSelf(), String.class))))
                 .andExpect(jsonPath("$.links.resource", is(mapper.convertValue(paymentLinksDTO.getResource(), String.class))))
                 .andDo(MockMvcResultHandlers.print());
 
+    }
+
+    @Test
+    @DisplayName("Test remove basket item removes item from basket successfully")
+    void removeBasketItem() throws Exception {
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        final Item item = new Item();
+        item.setItemUri(VALID_CERTIFICATE_URI);
+        basket.getData().setItems(Collections.singletonList(item));
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(put("/basket/items/remove")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Test remove basket item returns HTTP conflict when item_uri not found")
+    void removeBasketItemItemNotFound() throws Exception {
+        Basket basket = new Basket();
+        basket.setId(ERIC_IDENTITY_VALUE);
+        basketRepository.save(basket);
+
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(put("/basket/items/remove")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("Test remove basket item returns not found if basket does not exist")
+    void removeBasketItemBasketNotFound() throws Exception {
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+        basketRequestDTO.setItemUri(VALID_CERTIFICATE_URI);
+
+        mockMvc.perform(put("/basket/items/remove")
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(basketRequestDTO)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("Test get basket links returns basket successfully")
+    void getBasketLinks() throws Exception {
+        final LocalDateTime start = timestamps.start();
+        createBasket(start);
+
+        final String jsonResponse = mockMvc.perform(get("/basket/links")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        final Basket response = mapper.readValue(jsonResponse, Basket.class);
+
+        final DeliveryDetails getDeliveryDetails = response.getData().getDeliveryDetails();
+        assertEquals(ADDRESS_LINE_1, getDeliveryDetails.getAddressLine1());
+        assertEquals(ADDRESS_LINE_2, getDeliveryDetails.getAddressLine2());
+        assertEquals(COUNTRY, getDeliveryDetails.getCountry());
+        assertEquals(FORENAME, getDeliveryDetails.getForename());
+        assertEquals(LOCALITY, getDeliveryDetails.getLocality());
+        assertEquals(SURNAME, getDeliveryDetails.getSurname());
+        assertEquals(VALID_CERTIFICATE_URI, response.getData().getItems().get(0).getItemUri());
+        assertEquals(ERIC_IDENTITY_VALUE, response.getId());
+        assertEquals(start, response.getCreatedAt());
+        assertEquals(start, response.getUpdatedAt());
     }
 
     /**
@@ -1841,7 +2258,8 @@ class BasketControllerIntegrationTest {
         copy.setItemOptions(options);
 
         return checkoutService.createCheckout(
-                copy, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(copy), ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE,
+                new DeliveryDetails());
     }
 
     private Checkout createCertificateCheckout() {
@@ -1856,7 +2274,9 @@ class BasketControllerIntegrationTest {
         certificate.setItemOptions(options);
 
         return checkoutService.createCheckout(
-                certificate, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(certificate), ERIC_IDENTITY_VALUE,
+                ERIC_AUTHORISED_USER_VALUE,
+                new DeliveryDetails());
     }
 
     private Checkout createMissingImageCheckout() {
@@ -1869,7 +2289,8 @@ class BasketControllerIntegrationTest {
         missingImageDelivery.setItemOptions(MISSING_IMAGE_DELIVERY_ITEM_OPTIONS);
 
         return checkoutService.createCheckout(
-                missingImageDelivery, ERIC_IDENTITY_VALUE, ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
+                Collections.singletonList(missingImageDelivery), ERIC_IDENTITY_VALUE,
+                ERIC_AUTHORISED_USER_VALUE, new DeliveryDetails());
     }
 
     /**
@@ -1887,8 +2308,8 @@ class BasketControllerIntegrationTest {
         assertThat(basket.getCreatedAt(), is(basketCreationTime));
         assertThat(basket.getUpdatedAt(), is(basketCreationTime));
         assertThat(basket.getId(), is(ERIC_IDENTITY_VALUE));
-        assertThat(basket.getItems().size(), is(1));
-        assertThat(basket.getItems().get(0).getItemUri(), is(itemUri));
+        assertThat(basket.getData().getItems().size(), is(1));
+        assertThat(basket.getData().getItems().get(0).getItemUri(), is(itemUri));
         org.assertj.core.api.Assertions.assertThat(basket.getData().getDeliveryDetails())
                 .isEqualToComparingFieldByField(deliveryDetailsAdded);
     }
@@ -1896,7 +2317,7 @@ class BasketControllerIntegrationTest {
     /**
      * Creates a basket containing an item with just its item URI member populated, and some delivery details.
      * In this way, it creates a basket in the database that is similar to what results when
-     * {@link BasketController#addItemToBasket(AddToBasketRequestDTO, HttpServletRequest, String)} and
+     * {@link BasketController#addItemToBasket(BasketRequestDTO, HttpServletRequest, String)} and
      * {@link BasketController#addDeliveryDetailsToBasket(AddDeliveryDetailsRequestDTO, HttpServletRequest, String)}
      * have been called.
      * @param start the creation/update time of the basket
@@ -1909,7 +2330,7 @@ class BasketControllerIntegrationTest {
     /**
      * Creates a basket containing an item with just its item URI member populated, and some delivery details.
      * In this way, it creates a basket in the database that is similar to what results when
-     * {@link BasketController#addItemToBasket(AddToBasketRequestDTO, HttpServletRequest, String)} and
+     * {@link BasketController#addItemToBasket(BasketRequestDTO, HttpServletRequest, String)} and
      * {@link BasketController#addDeliveryDetailsToBasket(AddDeliveryDetailsRequestDTO, HttpServletRequest, String)}
      * have been called.
      * @param start the creation/update time of the basket
@@ -1926,6 +2347,7 @@ class BasketControllerIntegrationTest {
         basket.getData().getItems().add(basketItem);
 
         DeliveryDetails deliveryDetails = new DeliveryDetails();
+        deliveryDetails.setCompanyName(COMPANY_NAME);
         deliveryDetails.setAddressLine1(ADDRESS_LINE_1);
         deliveryDetails.setAddressLine2(ADDRESS_LINE_2);
         deliveryDetails.setCountry(COUNTRY);
@@ -2023,8 +2445,6 @@ class BasketControllerIntegrationTest {
         itemDTO3.setProductType("certificate-additional-copy");
         itemDTOs.add(itemDTO3);
         paymentDetailsDTO.setItems(itemDTOs);
-
-        paymentDetailsDTO.setCompanyNumber(COMPANY_NUMBER);
 
         return paymentDetailsDTO;
     }

@@ -1,11 +1,9 @@
 package uk.gov.companieshouse.orders.api.model;
 
 import com.google.gson.Gson;
+import java.time.LocalDateTime;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Document(collection = "basket")
 public class Basket implements TimestampedEntity {
@@ -49,14 +47,6 @@ public class Basket implements TimestampedEntity {
 
     public void setData(BasketData data) {
         this.data = data;
-    }
-
-    public void setItems(List<Item> items) {
-        data.setItems(items);
-    }
-
-    public List<Item> getItems() {
-        return data.getItems();
     }
 
     @Override

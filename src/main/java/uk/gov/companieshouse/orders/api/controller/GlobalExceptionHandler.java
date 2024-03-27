@@ -6,11 +6,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.lang.Nullable;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,7 +27,7 @@ import uk.gov.companieshouse.orders.api.model.ApiError;
 import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
 
 @ControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public abstract class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     public static final String MESSAGE_ERROR_VALUE_KEY = "message";
     public static final String CONSTRAINT_VIOLATION_ERROR = "constraint-violation";
@@ -38,20 +40,21 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            final MethodArgumentNotValidException ex,
-            final HttpHeaders headers,
-            final HttpStatus status,
-            final WebRequest request) {
+    @Nullable
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(final MethodArgumentNotValidException ex,
+                                                                  final HttpHeaders headers,
+                                                                  final HttpStatusCode status,
+                                                                  final WebRequest request) {
         final ApiError apiError = buildBadRequestApiError(ex);
         return handleExceptionInternal(ex, apiError, headers, apiError.getStatus(), request);
     }
 
     @Override
+    @Nullable
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             final HttpMessageNotReadableException ex,
             final HttpHeaders headers,
-            final HttpStatus status,
+            final HttpStatusCode status,
             final WebRequest request) {
 
         if (ex.getCause() instanceof JsonProcessingException) {
@@ -130,4 +133,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         final String errorMessage = jpe.getOriginalMessage();
         return new ApiError(HttpStatus.BAD_REQUEST, singletonList(errorMessage));
     }
+
+    protected abstract ResponseEntity<Object> handleExceptionInternal(Exception ex,
+                                                                      Object body,
+                                                                      HttpHeaders headers,
+                                                                      HttpStatus status,
+                                                                      WebRequest request);
 }

@@ -3,7 +3,7 @@ package uk.gov.companieshouse.orders.api.model;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-public class OrderSummary {
+public class CheckoutSummary {
     private final String id;
     private final String email;
     private final String companyNumber;
@@ -12,7 +12,7 @@ public class OrderSummary {
     private final PaymentStatus paymentStatus;
     private final Links links;
 
-    private OrderSummary(Builder builder) {
+    private CheckoutSummary(Builder builder) {
         id = builder.id;
         email = builder.email;
         companyNumber = builder.companyNumber;
@@ -26,7 +26,7 @@ public class OrderSummary {
         return new Builder();
     }
 
-    public static final class Builder {
+    public static final class Builder implements CheckoutSummaryBuildable {
         private String id;
         private String email;
         private String companyNumber;
@@ -58,7 +58,7 @@ public class OrderSummary {
             return this;
         }
 
-        public Builder withOrderDate(LocalDateTime orderDate) {
+        public Builder withCheckoutDate(LocalDateTime orderDate) {
             this.orderDate = orderDate;
             return this;
         }
@@ -73,8 +73,8 @@ public class OrderSummary {
             return this;
         }
 
-        public OrderSummary build() {
-            return new OrderSummary(this);
+        public CheckoutSummary build() {
+            return new CheckoutSummary(this);
         }
     }
 
@@ -110,7 +110,7 @@ public class OrderSummary {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        OrderSummary that = (OrderSummary) o;
+        CheckoutSummary that = (CheckoutSummary) o;
         return Objects.equals(id, that.id) && Objects.equals(email,
                 that.email) && Objects.equals(companyNumber,
                 that.companyNumber) && Objects.equals(productLine,

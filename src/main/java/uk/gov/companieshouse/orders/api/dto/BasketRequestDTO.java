@@ -3,11 +3,11 @@ package uk.gov.companieshouse.orders.api.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
-public class AddToBasketRequestDTO {
+public class BasketRequestDTO {
 
-    @NotBlank
+    @NotBlank(message = "item_uri may not be blank")
     @JsonProperty("item_uri")
     private String itemUri;
 

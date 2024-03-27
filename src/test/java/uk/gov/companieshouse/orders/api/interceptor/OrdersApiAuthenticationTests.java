@@ -1,35 +1,5 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.reactive.server.WebTestClient;
-
-import uk.gov.companieshouse.api.util.security.Permission;
-import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.AddToBasketRequestDTO;
-import uk.gov.companieshouse.orders.api.dto.DeliveryDetailsDTO;
-import uk.gov.companieshouse.orders.api.model.Basket;
-import uk.gov.companieshouse.orders.api.model.Certificate;
-import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
-import uk.gov.companieshouse.orders.api.model.Checkout;
-import uk.gov.companieshouse.orders.api.model.CheckoutData;
-import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
-import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.ItemCosts;
-import uk.gov.companieshouse.orders.api.service.ApiClientService;
-import uk.gov.companieshouse.orders.api.service.BasketService;
-import uk.gov.companieshouse.orders.api.service.CheckoutService;
-import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
-
-import java.util.List;
-import java.util.Optional;
-
 import static java.util.Arrays.asList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -49,6 +19,35 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSION_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
+import uk.gov.companieshouse.orders.api.dto.DeliveryDetailsDTO;
+import uk.gov.companieshouse.orders.api.model.Basket;
+import uk.gov.companieshouse.orders.api.model.Certificate;
+import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
+import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.ItemCosts;
+import uk.gov.companieshouse.orders.api.service.ApiClientService;
+import uk.gov.companieshouse.orders.api.service.BasketService;
+import uk.gov.companieshouse.orders.api.service.CheckoutService;
+import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 @DirtiesContext
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -96,8 +95,8 @@ class OrdersApiAuthenticationTests {
 	void addItemAcceptsRequestWithSignedInUser() {
 
 		// Given
-		final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-		addToBasketRequestDTO.setItemUri(ITEM_URI);
+		final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+		basketRequestDTO.setItemUri(ITEM_URI);
 
 		// When and then
 		webTestClient.post().uri("/basket/items")
@@ -106,7 +105,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
-				.body(fromObject(addToBasketRequestDTO))
+				.body(fromObject(basketRequestDTO))
 				.exchange()
 				.expectStatus().isOk();
 	}
@@ -116,15 +115,15 @@ class OrdersApiAuthenticationTests {
 	void addItemRejectsRequestWithoutAnyAuthenticatedClient() {
 
 		// Given
-		final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-		addToBasketRequestDTO.setItemUri(ITEM_URI);
+		final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+		basketRequestDTO.setItemUri(ITEM_URI);
 
 		// When and then
 		webTestClient.post().uri("/basket/items")
 				.contentType(MediaType.APPLICATION_JSON)
 				.header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
-				.body(fromObject(addToBasketRequestDTO))
+				.body(fromObject(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -134,8 +133,8 @@ class OrdersApiAuthenticationTests {
 	void addItemRejectsRequestWithAuthenticatedApiOnly() {
 
 		// Given
-		final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-		addToBasketRequestDTO.setItemUri(ITEM_URI);
+		final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+		basketRequestDTO.setItemUri(ITEM_URI);
 
 		// When and then
 		webTestClient.post().uri("/basket/items")
@@ -144,7 +143,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.CREATE))
-				.body(fromObject(addToBasketRequestDTO))
+				.body(fromObject(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -153,7 +152,7 @@ class OrdersApiAuthenticationTests {
     @DisplayName("Add item returns unathorised when using wrong token permissions")
     void addItemInvalidTokenPermissions() {
         // Given
-        AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
+        BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
 
         // When and then
         webTestClient.post().uri("/basket/items")
@@ -163,7 +162,7 @@ class OrdersApiAuthenticationTests {
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
-                .body(fromObject(addToBasketRequestDTO))
+                .body(fromObject(basketRequestDTO))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
@@ -195,7 +194,9 @@ class OrdersApiAuthenticationTests {
 
 		when(basketService.getBasketById(anyString())).thenReturn(Optional.of(basket));
 		when(checkoutService.createCheckout(
-				any(Certificate.class), any(String.class), any(String.class), any(DeliveryDetails.class)))
+				any(List.class), any(String.class),
+				any(String.class),
+				any(DeliveryDetails.class)))
 				.thenReturn(checkout);
 
 		CheckoutData checkoutDataResp = new CheckoutData();
@@ -299,15 +300,15 @@ class OrdersApiAuthenticationTests {
 	void patchBasketRejectsRequestWithoutAnyAuthenticatedClient() {
 
 		// Given
-		final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-		addToBasketRequestDTO.setItemUri(ITEM_URI);
+		final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+		basketRequestDTO.setItemUri(ITEM_URI);
 
 		// When and then
 		webTestClient.patch().uri("/basket")
 				.contentType(MediaType.APPLICATION_JSON)
 				.header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-				.body(fromObject(addToBasketRequestDTO))
+				.body(fromObject(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -317,8 +318,8 @@ class OrdersApiAuthenticationTests {
 	void patchBasketRejectsRequestWithAuthenticatedApiOnly() {
 
 		// Given
-		final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
-		addToBasketRequestDTO.setItemUri(ITEM_URI);
+		final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
+		basketRequestDTO.setItemUri(ITEM_URI);
 
 		// When and then
 		webTestClient.patch().uri("/basket")
@@ -327,7 +328,7 @@ class OrdersApiAuthenticationTests {
 				.header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
 				.header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-				.body(fromObject(addToBasketRequestDTO))
+				.body(fromObject(basketRequestDTO))
 				.exchange()
 				.expectStatus().isUnauthorized();
 	}
@@ -336,7 +337,7 @@ class OrdersApiAuthenticationTests {
     @DisplayName("Patch basket returns unauthorised when using wrong token permissions")
     void patchBasketInvalidTokenPermissions() throws Exception {
      // Given
-        final AddToBasketRequestDTO addToBasketRequestDTO = new AddToBasketRequestDTO();
+        final BasketRequestDTO basketRequestDTO = new BasketRequestDTO();
 
         // When and then
         webTestClient.patch().uri("/basket")
@@ -346,7 +347,7 @@ class OrdersApiAuthenticationTests {
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
                 .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
                 .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
-                .body(fromObject(addToBasketRequestDTO))
+                .body(fromObject(basketRequestDTO))
                 .exchange()
                 .expectStatus().isUnauthorized();
     }

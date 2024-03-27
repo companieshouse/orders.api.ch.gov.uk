@@ -1,11 +1,11 @@
 package uk.gov.companieshouse.orders.api.model;
 
-public class OrderCriteria {
+public class CheckoutCriteria {
     private final String orderId;
     private final String email;
     private final String companyNumber;
 
-    private OrderCriteria(Builder builder) {
+    private CheckoutCriteria(Builder builder) {
         orderId = builder.orderId;
         email = builder.email;
         companyNumber = builder.companyNumber;
@@ -38,12 +38,12 @@ public class OrderCriteria {
             return this;
         }
 
-        public OrderCriteria build() {
-            return new OrderCriteria(this);
+        public CheckoutCriteria build() {
+            return new CheckoutCriteria(this);
         }
     }
 
-    public String getOrderId() {
+    public String getCheckoutId() {
         return orderId;
     }
 

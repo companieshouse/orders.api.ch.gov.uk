@@ -11,6 +11,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.ERIC_IDENTITY_TYPE;
@@ -19,8 +20,8 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,8 +33,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.RequestPath;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.mock.web.MockHttpServletMapping;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
@@ -73,23 +77,13 @@ class UserAuthenticationInterceptorTests {
     @Test
     @DisplayName("preHandle rejects add item request that lacks required headers")
     void preHandleRejectsUnauthenticatedAddItemRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/items");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/basket/items");
     }
 
     @Test
     @DisplayName("preHandle rejects checkout basket request that lacks required headers")
     void preHandleRejectsUnauthenticatedCheckoutBasketRequest() {
-
-        // Given
-        givenRequest(POST, "/basket/checkouts");
-
-        // When and then
-        thenRequestIsRejected();
+        postToUriExpectingRejection("/basket/checkouts");
     }
 
     @Test
@@ -125,12 +119,11 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
-    @Test
-    @DisplayName("preHandle accepts add item request that has the required headers")
-    void preHandleAcceptsAuthenticatedAddItemRequest() {
-
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("signedInPostRequestFixtures")
+    void preHandleAcceptsPostRequestForSignedInUsers(String displayName, String uri) {
         // Given
-        givenRequest(POST, "/basket/items");
+        givenRequest(POST, uri);
         givenRequestHasSignedInUser();
 
         // When and then
@@ -138,11 +131,21 @@ class UserAuthenticationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts checkout basket request that has the required headers")
-    void preHandleAcceptsAuthenticatedCheckoutBasketRequest() {
-
+    @DisplayName("preHandle accepts remove basket item request from a user with OAuth2 authentication")
+    void preHandleAcceptsPostRequestForSignedInUsers() {
         // Given
-        givenRequest(POST, "/basket/checkouts");
+        givenRequest(PUT, "/basket/items/remove");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("signedInGetRequestFixtures")
+    void preHandleAcceptsGetRequestForSignedInUsers(String displayName, String uri) {
+        // Given
+        givenRequest(GET, uri);
         givenRequestHasSignedInUser();
 
         // When and then
@@ -150,15 +153,23 @@ class UserAuthenticationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get payment details request that has signed in user headers")
-    void preHandleAcceptsSignedInUserGetPaymentDetailsRequest() {
+    void preHandleAcceptsPatchOrderItemRequest() {
 
         // Given
-        givenRequest(GET, "/basket/checkouts/1234/payment");
+        givenRequest(PATCH, "/orders/1234/items/5678");
         givenRequestHasSignedInUser();
 
         // When and then
         thenRequestIsAccepted();
+    }
+
+    @Test
+    void preHandleRejectsPatchOrderItemRequest() {
+
+        // Given
+        givenRequest(PATCH, "/orders/1234/items/5678");
+        // When and then
+        thenRequestIsRejected();
     }
 
     @Test
@@ -186,22 +197,10 @@ class UserAuthenticationInterceptorTests {
     }
 
     @Test
-    @DisplayName("preHandle accepts get order request that has signed in user headers")
-    void preHandleAcceptsSignedInUserGetOrderRequest() {
-
-        // Given
-        givenRequest(GET, "/orders/1234");
-        givenRequestHasSignedInUser();
-
-        // When and then
-        thenRequestIsAccepted();
-    }
-
-    @Test
     @DisplayName("preHandle accepts get checkout request that has signed in user headers")
     void preHandleAcceptsSignedInUserGetCheckoutRequest() {
-
         // Given
+        when(securityManager.checkIdentity()).thenReturn(true);
         givenRequest(GET, "/checkouts/1234");
         givenRequestHasSignedInUser();
 
@@ -212,8 +211,8 @@ class UserAuthenticationInterceptorTests {
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("authenticatedRequestFixtures")
     void preHandleAcceptsAuthenticatedApiRequest(String displayName, String uriPath) {
-
         // Given
+        when(securityManager.checkIdentity()).thenReturn(true);
         givenRequest(GET, uriPath);
         givenRequestHasAuthenticatedApi();
 
@@ -282,26 +281,58 @@ class UserAuthenticationInterceptorTests {
         thenRequestIsRejected();
     }
 
-    @DisplayName("Authentication for orders/search endpoint succeeds if caller identity is valid")
-    @Test
-    void ordersSearchValidIdentity() {
-        when(securityManager.checkIdentity()).thenReturn(true);
-        givenRequest(GET, "/orders/search");
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("hasAdminAuthenticationFixtures")
+    void ordersSearchValidIdentity(String displayName, String endpoint, boolean isValid) {
+        when(securityManager.checkIdentity()).thenReturn(isValid);
+        givenRequest(GET, endpoint);
 
         boolean actual = interceptorUnderTest.preHandle(request, response, handler);
 
-        assertThat(actual, is(true));
+        assertThat(actual, is(isValid));
     }
 
-    @DisplayName("Authentication for orders/search endpoint false if caller identity is invalid")
     @Test
-    void ordersSearchInvalidIdentity() {
-        when(securityManager.checkIdentity()).thenReturn(false);
-        givenRequest(GET, "/orders/search");
+    @DisplayName("preHandle rejects post reprocess order request that is unauthenticated")
+    void preHandleRejectsUnauthenticatedPostReprocessOrderRequest() {
+        postToUriExpectingRejection("/orders/1234/reprocess");
+    }
 
-        boolean actual = interceptorUnderTest.preHandle(request, response, handler);
+    @Test
+    @DisplayName("preHandle rejects post reprocess order request that is from an authenticated user")
+    void preHandleRejectsAuthenticatedUserPostReprocessOrderRequest() {
 
-        assertThat(actual, is(false));
+        // Given
+        givenRequest(POST, "/orders/1234/reprocess");
+        givenRequestHasSignedInUser();
+
+        // When and then
+        thenRequestIsRejected();
+    }
+
+    @Test
+    @DisplayName("preHandle accepts post reprocess order request that is from an internal API")
+    void preHandleAcceptsAuthenticatedInternalApiPostReprocessOrderRequestRequest() {
+
+        // Given
+        givenRequest(POST, "/basket/checkouts/1234/payment");
+        givenRequestHasAuthenticatedApi();
+
+        // When and then
+        thenRequestIsAccepted();
+    }
+
+    /**
+     * Sets up a POST request to the URI provided, expects the request to be rejected
+     * @param uri the request URI
+     */
+    private void postToUriExpectingRejection(final String uri) {
+
+        // Given
+        givenRequest(POST, uri);
+
+        // When and then
+        thenRequestIsRejected();
     }
 
     /**
@@ -315,6 +346,11 @@ class UserAuthenticationInterceptorTests {
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
         when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
+        when(request.getHttpServletMapping()).thenReturn(new MockHttpServletMapping("", "", "", null));
+        RequestPath requestPath = ServletRequestPathUtils.parseAndCache(request);
+        when(request.getServletPath()).thenReturn(uri);
+        when(request.getAttribute(ServletRequestPathUtils.class.getName() + ".PATH")).thenReturn(requestPath);
+
     }
 
     /**
@@ -383,12 +419,44 @@ class UserAuthenticationInterceptorTests {
     private static Stream<Arguments> authenticatedRequestFixtures() {
         return Stream.of(arguments("preHandle accepts get checkout request that has authenticated API headers", "/checkouts/1234"),
                 arguments("preHandle accepts get order request that has authenticated API headers", "/orders/1234"),
-                arguments("preHandle accepts get payment details request that has authenticated API headers", "/basket/checkouts/1234/payment"));
+                arguments("preHandle accepts get order item request that has authenticated API headers", "/orders/1234/items/5678"),
+                arguments("preHandle accepts get payment details request that has authenticated "
+                        + "API headers", "/basket/checkouts/1234/payment"));
     }
 
     private static Stream<Arguments> unauthenticatedRequestFixtures() {
         return Stream.of(arguments("preHandle rejects get payment details request that lacks required headers", "/basket/checkouts/1234/payment"),
                 arguments("preHandle rejects get basket request that lacks required headers", "/basket"),
-                arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"));
+                arguments("preHandle rejects get order request that lacks required headers", "/orders/1234"),
+                arguments("preHandle rejects get order item request that lacks required headers", "/orders/1234/items/5678"),
+                arguments("preHandle rejects get basket links request that lacks requires "
+                        + "headers", "/basket/links"));
+    }
+
+    private static Stream<Arguments> signedInPostRequestFixtures() {
+        return Stream.of(arguments("preHandle accepts add item request that has the required headers", "/basket/items"),
+                arguments("preHandle accepts checkout basket request that has the required "
+                        + "headers", "/basket/checkouts"),
+                arguments("preHandle accepts append item request that has the required headers",
+                        "/basket/items/append"));
+    }
+
+    private static Stream<Arguments> signedInGetRequestFixtures() {
+        return Stream.of(arguments("preHandle accepts get payment details request that has signed in user headers", "/basket/checkouts/1234/payment"),
+                arguments("preHandle accepts get order request that has signed in user headers", "/orders/1234"),
+                arguments("preHandle accepts get order item request that has signed in user headers", "/orders/1234/items/5678"),
+                arguments("preHandle accepts get basket links request from a user with OAuth2 authentication", "/basket/links"));
+    }
+
+    private static Stream<Arguments> hasAdminAuthenticationFixtures() {
+        return Stream.of(arguments("Authentication for orders/search endpoint succeeds if caller identity is valid", "/checkouts/search", true),
+                arguments("Authentication for orders/search endpoint fails if caller identity is invalid", "/checkouts/search", false),
+                arguments("Authentication for get order item endpoint succeeds if caller identity is valid", "/orders/1234/items/5678", true),
+                arguments("Authentication for get order item endpoint fails if caller identity is"
+                        + " invalid", "/orders/1234/items/5678", false),
+                arguments("Authentication for get checkout item endpoint succeeds if caller "
+                        + "identity is valid", "/checkouts/1234/items/5678", true),
+                arguments("Authentication for get checkout item endpoint fails if caller identity "
+                        + "is invalid", "/checkouts/1234/items/5678", false));
     }
 }

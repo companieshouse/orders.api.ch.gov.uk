@@ -3,12 +3,26 @@ package uk.gov.companieshouse.orders.api.service;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Checkout;
+import uk.gov.companieshouse.orders.api.model.CheckoutCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutData;
+import uk.gov.companieshouse.orders.api.model.CheckoutLinks;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
+import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
+import uk.gov.companieshouse.orders.api.model.CheckoutSummaryBuilderFactory;
 import uk.gov.companieshouse.orders.api.model.DeliveryDetails;
+import uk.gov.companieshouse.orders.api.model.HRef;
 import uk.gov.companieshouse.orders.api.model.Item;
+import uk.gov.companieshouse.orders.api.model.Links;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.util.CheckoutHelper;
@@ -20,15 +34,21 @@ public class CheckoutService {
     private final EtagGeneratorService etagGeneratorService;
     private final LinksGeneratorService linksGeneratorService;
     private final CheckoutHelper checkoutHelper;
+    private final SearchFieldMapper searchFieldMapper;
+    private final CheckoutSummaryBuilderFactory summaryBuilderFactory;
 
     public CheckoutService(CheckoutRepository checkoutRepository,
-                           EtagGeneratorService etagGeneratorService,
-                           LinksGeneratorService linksGeneratorService,
-                           CheckoutHelper checkoutHelper) {
+            EtagGeneratorService etagGeneratorService,
+            LinksGeneratorService linksGeneratorService,
+            CheckoutHelper checkoutHelper,
+            SearchFieldMapper searchFieldMapper,
+            CheckoutSummaryBuilderFactory summaryBuilderFactory) {
         this.checkoutRepository = checkoutRepository;
         this.etagGeneratorService = etagGeneratorService;
         this.linksGeneratorService = linksGeneratorService;
         this.checkoutHelper = checkoutHelper;
+        this.searchFieldMapper = searchFieldMapper;
+        this.summaryBuilderFactory = summaryBuilderFactory;
     }
 
     private String autoGenerateId() {
@@ -42,7 +62,8 @@ public class CheckoutService {
         return "ORD-" + String.join("-", tranId);
     }
 
-    public Checkout createCheckout(Item item, String userId, String email, DeliveryDetails deliveryDetails) {
+    public Checkout createCheckout(List<Item> itemsList, String userId, String email,
+            DeliveryDetails deliveryDetails) {
         final LocalDateTime now = LocalDateTime.now();
         String checkoutId = autoGenerateId();
 
@@ -59,7 +80,7 @@ public class CheckoutService {
         checkout.getData().setStatus(PaymentStatus.PENDING);
         checkout.getData().setEtag(etagGeneratorService.generateEtag());
         checkout.getData().setLinks(linksGeneratorService.generateCheckoutLinks(checkoutId));
-        checkout.getData().getItems().add(item);
+        checkout.getData().getItems().addAll(itemsList);
         checkout.getData().setReference(checkoutId);
         checkout.getData().setKind("order");
         checkout.getData().setDeliveryDetails(deliveryDetails);
@@ -74,7 +95,59 @@ public class CheckoutService {
     }
 
     /**
+     * Returns a result consisting of order summaries corresponding to the supplied search
+     * criteria.
+     *
+     * @param checkoutSearchCriteria to find existing orders
+     * @return OrderSearchResults matching the supplied criteria
+     */
+    public CheckoutSearchResults searchCheckouts(CheckoutSearchCriteria checkoutSearchCriteria) {
+        CheckoutCriteria checkoutCriteria = checkoutSearchCriteria.getCheckoutCriteria();
+        Page<Checkout> checkoutPages = checkoutRepository.searchCheckouts(
+                searchFieldMapper.exactMatchOrAny(checkoutCriteria.getCheckoutId()),
+                searchFieldMapper.partialMatchOrAny(checkoutCriteria.getEmail()),
+                searchFieldMapper.exactMatchOrAny(checkoutCriteria.getCompanyNumber()),
+                PageRequest.of(0, checkoutSearchCriteria.getPageCriteria().getPageSize(), Sort.by("created_at").descending().and(Sort.by("_id")))); //TODO: refactor into mapper implementation
+        List<Checkout> checkouts = checkoutPages.toList();
+
+        return new CheckoutSearchResults(checkoutPages.getTotalElements(),
+                checkouts.stream().map(
+                        checkout -> summaryBuilderFactory.newCheckoutSummaryBuilder()
+                                .withId(checkout.getId())
+                                .withEmail(
+                                        Optional.ofNullable(checkout.getData())
+                                                .map(CheckoutData::getCheckedOutBy)
+                                                .map(ActionedBy::getEmail)
+                                                .orElse(null))
+                                .withCompanyNumber(Optional.ofNullable(checkout.getData())
+                                        .map(CheckoutData::getItems)
+                                        .flatMap(items -> items.stream().findFirst())
+                                        .map(Item::getCompanyNumber)
+                                        .orElse(null))
+                                .withProductLine(
+                                        Optional.ofNullable(checkout.getData())
+                                                .map(CheckoutData::getItems)
+                                                .flatMap(items -> items.stream().findFirst())
+                                                .map(Item::getKind)
+                                                .orElse(null))
+                                .withCheckoutDate(checkout.getCreatedAt())
+                                .withPaymentStatus(Optional.ofNullable(checkout.getData())
+                                        .map(CheckoutData::getStatus)
+                                        .orElse(null))
+                                .withLinks(
+                                        Optional.ofNullable(checkout.getData())
+                                                .map(CheckoutData::getLinks)
+                                                .map(CheckoutLinks::getSelf)
+                                                .map(self -> new Links(new HRef(self),
+                                                        new HRef(self)))
+                                                .orElse(null))
+                                .build()
+                ).collect(Collectors.toList()));
+    }
+
+    /**
      * Saves the checkout, assumed to have been updated, to the database.
+     *
      * @param updatedCheckout the certificate item to save
      * @return the latest checkout state resulting from the save
      */
@@ -83,5 +156,20 @@ public class CheckoutService {
         updatedCheckout.setUpdatedAt(now);
         updatedCheckout.getData().setEtag(etagGeneratorService.generateEtag());
         return checkoutRepository.save(updatedCheckout);
+    }
+
+    public Optional<Checkout> getCheckoutItem(String checkoutId, String itemId) {
+        Optional<Checkout> checkout = getCheckoutById(checkoutId);
+        Optional<Item> matchedItem = checkout.flatMap(c -> c.getData()
+                .getItems()
+                .stream()
+                .filter(item -> item.getId().equals(itemId))
+                .findFirst());
+        if (!matchedItem.isPresent()) {
+            return Optional.empty();
+        } else {
+            checkout.ifPresent(c -> c.getData().setItems(Collections.singletonList(matchedItem.get())));
+            return checkout;
+        }
     }
 }

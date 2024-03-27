@@ -3,7 +3,8 @@ package uk.gov.companieshouse.orders.api.exception;
 public enum ErrorType {
     BASKET_ITEMS_MISSING("Basket is empty"),
     BASKET_ITEM_INVALID("Failed to retrieve item"),
-    DELIVERY_DETAILS_MISSING("Delivery details missing for postal delivery");
+    DELIVERY_DETAILS_MISSING("Delivery details missing for postal delivery"),
+    BASKET_FULL("Basket is full");
 
     private String value;
 

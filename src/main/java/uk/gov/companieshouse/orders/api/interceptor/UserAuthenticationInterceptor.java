@@ -3,14 +3,7 @@ package uk.gov.companieshouse.orders.api.interceptor;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.ADD_ITEM;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.CHECKOUT_BASKET;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_CHECKOUT;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_ORDER;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAYMENT_DETAILS;
-import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
+import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.*;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDENTITY_TYPE;
@@ -18,8 +11,8 @@ import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.OAUTH2_IDEN
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -52,18 +45,27 @@ public class UserAuthenticationInterceptor implements HandlerInterceptor {
                 .orElse(true);
     }
 
-    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {switch (name) {
+    private boolean checkAuthenticated(HttpServletRequest request, HttpServletResponse response, String name) {
+        switch (name) {
             case ADD_ITEM:
             case CHECKOUT_BASKET:
             case BASKET:
+            case GET_BASKET_LINKS:
+            case REMOVE_BASKET_ITEM:
+            case APPEND_BASKET_ITEM:
                 return hasSignedInUser(request, response);
             case GET_PAYMENT_DETAILS:
             case GET_ORDER:
-            case GET_CHECKOUT:
                 return hasAuthenticatedClient(request, response);
+            case GET_ORDER_ITEM:
+            case PATCH_ORDER_ITEM:
+                return securityManager.checkIdentity() || hasAuthenticatedClient(request, response);
+            case GET_CHECKOUT:
             case SEARCH:
+            case GET_CHECKOUT_ITEM:
                 return securityManager.checkIdentity();
             case PATCH_PAYMENT_DETAILS:
+            case POST_REPROCESS_ORDER:
                 return hasAuthenticatedApi(request, response);
             default:
                 // This should not happen.

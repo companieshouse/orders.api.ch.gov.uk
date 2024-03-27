@@ -3,11 +3,11 @@ package uk.gov.companieshouse.orders.api.model;
 import java.util.List;
 import java.util.Objects;
 
-public class OrderSearchResults {
+public class CheckoutSearchResults {
     private final long totalOrders;
-    private final List<OrderSummary> orderSummaries;
+    private final List<CheckoutSummary> orderSummaries;
 
-    public OrderSearchResults(long totalOrders, List<OrderSummary> orderSummaries) {
+    public CheckoutSearchResults(long totalOrders, List<CheckoutSummary> orderSummaries) {
         this.totalOrders = totalOrders;
         this.orderSummaries = orderSummaries;
     }
@@ -16,7 +16,7 @@ public class OrderSearchResults {
         return totalOrders;
     }
 
-    public List<OrderSummary> getOrderSummaries() {
+    public List<CheckoutSummary> getOrderSummaries() {
         return orderSummaries;
     }
 
@@ -28,7 +28,7 @@ public class OrderSearchResults {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        OrderSearchResults that = (OrderSearchResults) o;
+        CheckoutSearchResults that = (CheckoutSearchResults) o;
         return totalOrders == that.totalOrders && Objects.equals(orderSummaries,
                 that.orderSummaries);
     }

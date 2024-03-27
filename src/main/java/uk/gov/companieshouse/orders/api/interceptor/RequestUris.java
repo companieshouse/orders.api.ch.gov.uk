@@ -1,13 +1,12 @@
 package uk.gov.companieshouse.orders.api.interceptor;
 
-import static uk.gov.companieshouse.orders.api.controller.BasketController.ADD_ITEM_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.BASKET_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_BASKET_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.GET_PAYMENT_DETAILS_URI;
-import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
+import static uk.gov.companieshouse.orders.api.controller.BasketController.*;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_CHECKOUT_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDER_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.GET_ORDER_URI;
-import static uk.gov.companieshouse.orders.api.controller.OrderController.ORDERS_SEARCH_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.CHECKOUTS_SEARCH_URI;
+import static uk.gov.companieshouse.orders.api.controller.OrderController.POST_REPROCESS_ORDER_URI;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,8 +26,15 @@ class RequestUris {
     static final String PATCH_BASKET = "basket";
     static final String PATCH_PAYMENT_DETAILS = "patchPaymentDetails";
     static final String GET_ORDER = "getOrder";
-    static final String SEARCH = "searchOrders";
+    static final String GET_ORDER_ITEM = "getOrderItem";
+    static final String PATCH_ORDER_ITEM = "patchOrderItem";
+    static final String SEARCH = "searchCheckouts";
     static final String GET_CHECKOUT = "getCheckout";
+    static final String GET_CHECKOUT_ITEM = "getCheckoutItem";
+    static final String POST_REPROCESS_ORDER = "postReprocessOrder";
+    static final String GET_BASKET_LINKS = "getBasketLinks";
+    static final String REMOVE_BASKET_ITEM = "putRemoveBasketItem";
+    static final String APPEND_BASKET_ITEM = "postAppendBasketItem";
 
     @Value(ADD_ITEM_URI)
     private String addItemUri;
@@ -39,13 +45,25 @@ class RequestUris {
     @Value(GET_PAYMENT_DETAILS_URI)
     private String getPaymentDetailsUri;
     @Value(GET_ORDER_URI)
-    private String getOrderUri;
-    @Value(ORDERS_SEARCH_URI)
+    private String orderItemUri;
+    @Value(ORDER_ITEM_URI)
+    private String getOrderItemUri;
+    @Value(CHECKOUTS_SEARCH_URI)
     private String searchUri;
     @Value(GET_CHECKOUT_URI)
     private String getCheckoutUri;
+    @Value(GET_CHECKOUT_ITEM_URI)
+    private String getCheckoutItemUri;
     @Value(PATCH_PAYMENT_DETAILS_URI)
     private String patchPaymentDetailsUri;
+    @Value(POST_REPROCESS_ORDER_URI)
+    private String postReprocessOrderUri;
+    @Value(GET_BASKET_LINKS_URI)
+    private String getBasketLinksUri;
+    @Value(REMOVE_ITEM_URI)
+    private String putRemoveBasketItemUri;
+    @Value(APPEND_ITEM_URI)
+    private String postAppendBasketItemUri;
 
     @Bean
     List<RequestMappingInfo> requestMappingInfoList() {
@@ -87,7 +105,7 @@ class RequestUris {
                 .mappingName(PATCH_PAYMENT_DETAILS)
                 .build());
 
-        // Note: SEARCH [/orders/search] must rank higher than GET_ORDER [/orders/{id}] so that
+        // Note: SEARCH [/checkouts/search] must rank higher than GET_ORDER [/orders/{id}] so that
         // it is mapped correctly.
         knownRequests.add(RequestMappingInfo
                 .paths(searchUri)
@@ -96,15 +114,57 @@ class RequestUris {
                 .build());
 
         knownRequests.add(RequestMappingInfo
-                .paths(getOrderUri)
+                .paths(orderItemUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_ORDER)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(getOrderItemUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_ORDER_ITEM)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+            .paths(getOrderItemUri)
+            .methods(RequestMethod.PATCH)
+            .mappingName(PATCH_ORDER_ITEM)
+            .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(getCheckoutItemUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_CHECKOUT_ITEM)
                 .build());
 
         knownRequests.add(RequestMappingInfo
                 .paths(getCheckoutUri)
                 .methods(RequestMethod.GET)
                 .mappingName(GET_CHECKOUT)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(postReprocessOrderUri)
+                .methods(RequestMethod.POST)
+                .mappingName(POST_REPROCESS_ORDER)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(getBasketLinksUri)
+                .methods(RequestMethod.GET)
+                .mappingName(GET_BASKET_LINKS)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(putRemoveBasketItemUri)
+                .methods(RequestMethod.PUT)
+                .mappingName(REMOVE_BASKET_ITEM)
+                .build());
+
+        knownRequests.add(RequestMappingInfo
+                .paths(postAppendBasketItemUri)
+                .methods(RequestMethod.POST)
+                .mappingName(APPEND_BASKET_ITEM)
                 .build());
 
         return Collections.unmodifiableList(knownRequests);
