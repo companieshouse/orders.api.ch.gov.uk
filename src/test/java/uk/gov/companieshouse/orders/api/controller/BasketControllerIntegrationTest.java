@@ -32,6 +32,7 @@ import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFICATE_SAM
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_INCORPORATION_SAME_DAY;
 import static uk.gov.companieshouse.orders.api.model.ProductType.CERTIFIED_COPY_SAME_DAY;
 import static uk.gov.companieshouse.orders.api.model.ProductType.MISSING_IMAGE_DELIVERY_ACCOUNTS;
+
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFIED_COPY_KIND;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.DOCUMENT;
@@ -52,7 +53,6 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_
 import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFICATE_URI;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFIED_COPY_URI;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_MISSING_IMAGE_DELIVERY_URI;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -65,11 +65,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assertions;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -1512,13 +1515,10 @@ class BasketControllerIntegrationTest {
         deliveryDetailsDTO.setSurname(SURNAME);
         deliveryDetailsDTO.setForename(FORENAME);
         deliveryDetailsDTO.setLocality(LOCALITY);
+
         addDeliveryDetailsRequestDTO.setDeliveryDetails(deliveryDetailsDTO);
 
-        final ApiError expectedValidationError =
-                new ApiError(BAD_REQUEST,
-                        asList("delivery_details.address_line_1: must not be blank"));
-
-        mockMvc.perform(patch("/basket")
+        MvcResult result = mockMvc.perform(patch("/basket")
                 .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
                 .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
                 .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
@@ -1526,8 +1526,10 @@ class BasketControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(addDeliveryDetailsRequestDTO)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().json(mapper.writeValueAsString(expectedValidationError)))
-                .andDo(MockMvcResultHandlers.print());
+                .andDo(MockMvcResultHandlers.print())
+                .andReturn();
+        Assertions.assertEquals("Invalid request content.", result.getResponse().getErrorMessage());
+        Assertions.assertTrue(result.getResolvedException().getMessage().contains("address_line_1 may not be blank"));
     }
 
     @Test

@@ -12,9 +12,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Path;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Path;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -45,7 +47,7 @@ class GlobalExceptionHandlerTest {
     private static final String MESSAGE1 = "message1";
     private static final String MESSAGE2 = "message2";
     private static final String ORIGINAL_MESSAGE = "original";
-    private static final HttpStatus ORIGINAL_STATUS = MULTI_STATUS;
+    private static final HttpStatusCode ORIGINAL_STATUS = MULTI_STATUS;
     public static final String KAFKA_MESSAGING_FAILURE = "Kafka messaging failure";
     public static final String MONGO_OPERATION_FAILURE = "Mongo operation failure";
 
@@ -154,12 +156,12 @@ class GlobalExceptionHandlerTest {
 
         // When
         final ResponseEntity<Object> response =
-                handlerUnderTest.handleHttpMessageNotReadable(hex, headers, ORIGINAL_STATUS, request);
+                handlerUnderTest.handleHttpMessageNotReadable(hex, new HttpHeaders(), ORIGINAL_STATUS, request);
 
         // Then
         // Note these assertions are testing behaviour implemented in the Spring framework.
-        assertThat(response.getStatusCode(), is(ORIGINAL_STATUS));
-        assertThat(response.getBody(), is(nullValue()));
+        Assertions.assertEquals(response.getStatusCode(), ORIGINAL_STATUS);
+        Assertions.assertTrue(response.getBody().toString().contains("Failed to read request"));
     }
 
     @Test

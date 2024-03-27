@@ -18,12 +18,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -422,10 +423,10 @@ public class BasketController {
     }
 
     @PatchMapping(PATCH_PAYMENT_DETAILS_URI)
-    public ResponseEntity<String> patchBasketPaymentDetails(final @RequestBody BasketPaymentRequestDTO basketPaymentRequestDTO,
-                                                            HttpServletRequest request,
-                                                            final @PathVariable String id,
-                                                            final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
+    public ResponseEntity<String> patchBasketPaymentDetails(@NonNull final @RequestBody BasketPaymentRequestDTO basketPaymentRequestDTO,
+                                                            @NonNull HttpServletRequest request,
+                                                            @NonNull final @PathVariable("id") String id,
+                                                            @NonNull final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
         Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.CHECKOUT_ID, id);
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.ORDER_ID, id);

@@ -11,8 +11,8 @@ import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.logIfNotNull
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -35,7 +35,6 @@ import uk.gov.companieshouse.orders.api.model.CheckoutData;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchCriteria;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
 import uk.gov.companieshouse.orders.api.model.Item;
-import uk.gov.companieshouse.orders.api.model.ItemStatus;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.OrderData;
 import uk.gov.companieshouse.orders.api.model.PageCriteria;

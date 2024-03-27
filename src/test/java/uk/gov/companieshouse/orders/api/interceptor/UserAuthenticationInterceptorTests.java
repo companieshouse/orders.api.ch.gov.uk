@@ -20,8 +20,8 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.util.stream.Stream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,8 +33,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.RequestPath;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.mock.web.MockHttpServletMapping;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
@@ -343,6 +346,11 @@ class UserAuthenticationInterceptorTests {
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
         when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
+        when(request.getHttpServletMapping()).thenReturn(new MockHttpServletMapping("", "", "", null));
+        RequestPath requestPath = ServletRequestPathUtils.parseAndCache(request);
+        when(request.getServletPath()).thenReturn(uri);
+        when(request.getAttribute(ServletRequestPathUtils.class.getName() + ".PATH")).thenReturn(requestPath);
+
     }
 
     /**

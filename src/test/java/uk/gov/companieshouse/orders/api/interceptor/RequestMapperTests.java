@@ -23,15 +23,19 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.GET_BASKET_LINKS;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.REMOVE_BASKET_ITEM;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.server.RequestPath;
 import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.mock.web.MockHttpServletMapping;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.web.util.ServletRequestPathUtils;
 import org.springframework.web.util.UrlPathHelper;
 
 /**
@@ -52,8 +56,9 @@ class RequestMapperTests {
     @DisplayName("getRequestMappingInfo gets the add item request mapping")
     void getRequestMappingInfoGetsAddItem() {
 
+        String servletPath = "/basket/items";
         // Given
-        givenRequest(POST, "/basket/items");
+        givenRequest(POST, servletPath);
 
         // When and then
         assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(ADD_ITEM));
@@ -63,8 +68,9 @@ class RequestMapperTests {
     @DisplayName("getRequestMappingInfo gets the checkout basket request mapping")
     void getRequestMappingInfoGetsCheckoutBasket() {
 
+        String servletPath = "/basket/checkouts";
         // Given
-        givenRequest(POST, "/basket/checkouts");
+        givenRequest(POST, servletPath);
 
         // When and then
         assertThat(requestMapperUnderTest.getRequestMapping(request).getName(), is(CHECKOUT_BASKET));
@@ -233,5 +239,10 @@ class RequestMapperTests {
         when(request.getContextPath()).thenReturn("");
         when(request.getServletPath()).thenReturn("");
         when(request.getAttribute( UrlPathHelper.class.getName() + ".PATH")).thenReturn(uri);
+        when(request.getHttpServletMapping()).thenReturn(new MockHttpServletMapping("", "", "", null));
+        RequestPath requestPath = ServletRequestPathUtils.parseAndCache(request);
+        when(request.getServletPath()).thenReturn(uri);
+        when(request.getAttribute(ServletRequestPathUtils.class.getName() + ".PATH")).thenReturn(requestPath);
+
     }
 }
