@@ -134,9 +134,9 @@ public abstract class GlobalExceptionHandler extends ResponseEntityExceptionHand
         return new ApiError(HttpStatus.BAD_REQUEST, singletonList(errorMessage));
     }
 
-    protected abstract ResponseEntity<Object> handleExceptionInternal(Exception ex,
-                                                                      Object body,
-                                                                      HttpHeaders headers,
-                                                                      HttpStatus status,
-                                                                      WebRequest request);
+    protected abstract ResponseEntity<Object> handleExceptionInternal(final Exception ex,
+                                                                      final Object body,
+                                                                      final HttpHeaders headers,
+                                                                      final HttpStatus status,
+                                                                      final WebRequest request);
 }
