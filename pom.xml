@@ -36,7 +36,7 @@
         <api-security-java.version>2.0.0</api-security-java.version>
         <de-flapdoodle-embed-mongo.version>4.9.3</de-flapdoodle-embed-mongo.version>
         <wiremock-standalone.version>3.4.2</wiremock-standalone.version>
-        <spring-boot-dependencies.version>3.2.3</spring-boot-dependencies.version>
+        <spring-boot-dependencies.version>3.2.4</spring-boot-dependencies.version>
         <spring-boot-maven-plugin.version>3.2.0</spring-boot-maven-plugin.version>
 
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>

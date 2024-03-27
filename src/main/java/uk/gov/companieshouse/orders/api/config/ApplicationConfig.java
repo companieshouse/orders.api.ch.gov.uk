@@ -2,7 +2,6 @@ package uk.gov.companieshouse.orders.api.config;
 
 import static uk.gov.companieshouse.orders.api.controller.BasketController.APPEND_ITEM_URI;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.PATCH_PAYMENT_DETAILS_URI;
-import static uk.gov.companieshouse.orders.api.controller.HealthcheckController.HEALTHCHECK_URI;
 import static uk.gov.companieshouse.orders.api.controller.OrderController.CHECKOUTS_SEARCH_URI;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +33,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
     private final UserAuthorisationInterceptor authorisationInterceptor;
     private final OrdersSearchEndpointFeatureToggle ordersSearchEndpointFeatureToggle;
     private final BasketEnrollmentFeatureToggle basketEnrollmentFeatureToggle;
-    private final String healthcheckUri;
     private final String paymentDetailsUri;
     private final String ordersSearchUri;
     private final String appendItemUri;
@@ -44,7 +42,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
                              final UserAuthorisationInterceptor authorisationInterceptor,
                              final OrdersSearchEndpointFeatureToggle ordersSearchEndpointFeatureToggle,
                              final BasketEnrollmentFeatureToggle basketEnrollmentFeatureToggle,
-                             @Value(HEALTHCHECK_URI) final String healthcheckUri,
                              @Value(PATCH_PAYMENT_DETAILS_URI) final String paymentDetailsUri,
                              @Value(CHECKOUTS_SEARCH_URI) final String ordersSearchUri,
                              @Value(APPEND_ITEM_URI) final String appendItemUri) {
@@ -53,7 +50,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
         this.authorisationInterceptor = authorisationInterceptor;
         this.ordersSearchEndpointFeatureToggle = ordersSearchEndpointFeatureToggle;
         this.basketEnrollmentFeatureToggle = basketEnrollmentFeatureToggle;
-        this.healthcheckUri = healthcheckUri;
         this.paymentDetailsUri = paymentDetailsUri;
         this.ordersSearchUri = ordersSearchUri;
         this.appendItemUri = appendItemUri;
@@ -64,9 +60,9 @@ public class ApplicationConfig implements WebMvcConfigurer {
         registry.addInterceptor(loggingInterceptor);
         registry.addInterceptor(basketEnrollmentFeatureToggle).addPathPatterns(appendItemUri);
         registry.addInterceptor(ordersSearchEndpointFeatureToggle).addPathPatterns(ordersSearchUri);
-        registry.addInterceptor(authenticationInterceptor).excludePathPatterns(healthcheckUri);
-        registry.addInterceptor(authorisationInterceptor).excludePathPatterns(healthcheckUri);
-        registry.addInterceptor(crudPermissionInterceptor()).excludePathPatterns(paymentDetailsUri, healthcheckUri);
+        registry.addInterceptor(authenticationInterceptor);
+        registry.addInterceptor(authorisationInterceptor);
+        registry.addInterceptor(crudPermissionInterceptor()).excludePathPatterns(paymentDetailsUri);
         // Different interceptor for payment details as API key traffic needs to be allowed:
         // - PATCH is always ignored since oauth2 is blocked for this function
         // - GET ignores API key requests to allow payments api to get costs but if oauth2 is used it still checks token permissions
