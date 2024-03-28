@@ -85,6 +85,7 @@ public class BasketController {
             "${uk.gov.companieshouse.orders.api.basket.items.append}";
     public static final String BASKET_URI =
             "${uk.gov.companieshouse.orders.api.basket}";
+    public static final String BASKET_URI_WITH_TRAILING_SLASH = "${uk.gov.companieshouse.orders.api.basket}/";
     public static final String CHECKOUT_BASKET_URI =
             "${uk.gov.companieshouse.orders.api.basket.checkouts}";
     public static final String PATCH_PAYMENT_DETAILS_URI =
@@ -293,7 +294,7 @@ public class BasketController {
         return ResponseEntity.status(HttpStatus.OK).body(basket.getData());
     }
 
-    @PatchMapping(BASKET_URI)
+    @PatchMapping({BASKET_URI, BASKET_URI_WITH_TRAILING_SLASH})
     public ResponseEntity<?> addDeliveryDetailsToBasket(final @Valid @RequestBody AddDeliveryDetailsRequestDTO addDeliveryDetailsRequestDTO,
                                                         HttpServletRequest request,
                                                         final @RequestHeader(REQUEST_ID_HEADER_NAME) String requestId) {
