@@ -38,11 +38,11 @@
         <wiremock-standalone.version>3.4.2</wiremock-standalone.version>
         <spring-boot-dependencies.version>3.2.4</spring-boot-dependencies.version>
         <spring-boot-maven-plugin.version>3.2.0</spring-boot-maven-plugin.version>
-
+        <commons-compress.version>1.26.1</commons-compress.version>
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <log4j-version>2.20.0</log4j-version>
-
+        <http2-common.version>11.0.20</http2-common.version>
         <!-- Docker -->
         <jib-maven-plugin.version>3.4.1</jib-maven-plugin.version>
     </properties>
@@ -65,6 +65,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
             <version>3.2.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons-compress.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-common</artifactId>
+            <version>${http2-common.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
