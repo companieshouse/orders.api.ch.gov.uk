@@ -8,7 +8,7 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.NO_CONTENT;
 import static org.springframework.http.HttpStatus.OK;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,7 +69,7 @@ import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 @RestController
 public class BasketController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
 
     public static final String CHECKOUT_ID_PATH_VARIABLE = "checkoutId";
 

@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class LoggingUtils {
     
-    public static final String APPLICATION_NAMESPACE = "orders.api.ch.gov.uk";
+    public static final String APPLICATION_NAME_SPACE = "orders.api.ch.gov.uk";
     public static final String AUTHORIZATION_TYPE = "authorization_type";
     public static final String AUTHORIZED = "authorized";
     public static final String BASKET_ID = "basket_id";
@@ -38,7 +38,7 @@ public class LoggingUtils {
 
     public static final String REQUEST_ID_HEADER_NAME = "X-Request-ID";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
 
     public static Map<String, Object> createLogMapWithRequestId(String requestId){
         Map<String, Object> logMap = new HashMap<>();

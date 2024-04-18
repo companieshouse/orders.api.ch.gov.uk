@@ -13,11 +13,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 @Component
 public class CheckoutBasketValidator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
     private ApiClientService apiClientService;
     private DeliveryDetailsValidator deliveryDetailsValidator;
 
