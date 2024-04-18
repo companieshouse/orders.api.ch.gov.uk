@@ -3,7 +3,7 @@ package uk.gov.companieshouse.orders.api.controller;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_HEADER_NAME;
 import static uk.gov.companieshouse.orders.api.controller.BasketController.CHECKOUT_ID_PATH_VARIABLE;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.REQUEST_ID;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.createLogMapWithRequestId;
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.logIfNotNull;
@@ -46,7 +46,7 @@ import uk.gov.companieshouse.orders.api.util.LoggableBuilder;
 @Validated
 @RestController
 public class OrderController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
 
     public static final String ORDER_ID_PATH_VARIABLE = "id";
 

@@ -19,7 +19,7 @@ import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.PATCH_PAY
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.POST_REPROCESS_ORDER;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.REMOVE_BASKET_ITEM;
 import static uk.gov.companieshouse.orders.api.interceptor.RequestUris.SEARCH;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 import static uk.gov.companieshouse.orders.api.util.EricHeaderHelper.API_KEY_IDENTITY_TYPE;
 
 import java.util.Optional;
@@ -45,7 +45,7 @@ import java.util.function.Function;
 @Service
 public class UserAuthorisationInterceptor implements HandlerInterceptor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
 
     private static final String PATH_VARIABLES_ERROR = "No URI template path variables found in the request!";
 

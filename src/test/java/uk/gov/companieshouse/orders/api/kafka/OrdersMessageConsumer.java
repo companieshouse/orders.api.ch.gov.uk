@@ -12,11 +12,11 @@ import uk.gov.companieshouse.logging.LoggerFactory;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 @Service
 public class OrdersMessageConsumer implements InitializingBean {
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
     private static final String ORDER_RECEIVED_TOPIC = "order-received";
     private static final String GROUP_NAME = "order-received-consumers";
     private CHKafkaConsumerGroup consumerGroup;
