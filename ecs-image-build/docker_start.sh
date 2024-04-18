@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Start script for orders.api.gov.uk
+# Start script for orders.api.ch.gov.uk
 
 PORT=8080
 
