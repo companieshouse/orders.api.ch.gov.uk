@@ -4,21 +4,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.model.Basket;
 import uk.gov.companieshouse.orders.api.util.StubHelper;
 
+@Testcontainers
 @DataMongoTest
-class BasketRepositoryIntegrationTest {
+class BasketRepositoryIntegrationTest extends AbstractMongoConfig {
 
     @Autowired
     private BasketRepository basketRepository;
 
     @Autowired
     private BasketRepositoryImpl basketRepositoryImpl;
+
+    @BeforeAll
+    static void setup() {
+        mongoDBContainer.start();
+    }
 
     @AfterEach
     void teardown() {

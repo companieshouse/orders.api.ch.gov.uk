@@ -69,6 +69,7 @@ import java.util.Optional;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -87,9 +88,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.api.error.ApiErrorResponseException;
 import uk.gov.companieshouse.api.model.payment.PaymentApi;
 import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketItemDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketPaymentRequestDTO;
@@ -126,11 +129,12 @@ import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
 import uk.gov.companieshouse.orders.api.validator.CheckoutBasketValidator;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
+@Testcontainers
 @DirtiesContext
 @AutoConfigureMockMvc
 @SpringBootTest
 @EmbeddedKafka
-class BasketControllerIntegrationTest {
+class BasketControllerIntegrationTest extends AbstractMongoConfig {
 
     private static final String OLD_CERTIFICATE_URI = "/orderable/certificates/11111111";
 
@@ -159,11 +163,10 @@ class BasketControllerIntegrationTest {
     private static final Boolean POSTAL_DELIVERY = true;
     private static final Integer QUANTITY = 1;
     private static final LocalDateTime SATISFIED_AT = LocalDateTime.of(2020, Month.JANUARY, 1, 0, 0);
-
     private static final String EXPECTED_TOTAL_ORDER_COST = "15";
     private static final String EXPECTED_TOTAL_ORDER_COST_MULTIPLE = "33";
     private static final int EXPECTED_CHECKOUT_ITEMS_SIZE = 3;
-        private static final String DISCOUNT_APPLIED_1 = "0";
+    private static final String DISCOUNT_APPLIED_1 = "0";
     private static final String ITEM_COST_1 = "5";
     private static final String CALCULATED_COST_1 = "5";
     private static final String DISCOUNT_APPLIED_2 = "10";
@@ -173,7 +176,6 @@ class BasketControllerIntegrationTest {
     private static final String ITEM_COST_3 = "5";
     private static final String CALCULATED_COST_3 = "5";
     private static final String INVALID_ITEM_URI = "invalid_uri";
-
     private static final String PAYMENT_REQUIRED_HEADER = "x-payment-required";
     private static final String COSTS_LINK = "payments.service/payments";
 
@@ -266,6 +268,11 @@ class BasketControllerIntegrationTest {
 
     @Mock
     private CheckoutBasketValidator checkoutBasketValidator;
+
+    @BeforeAll
+    static void setup() {
+        mongoDBContainer.start();
+    }
 
     @BeforeEach
     void setUp() {

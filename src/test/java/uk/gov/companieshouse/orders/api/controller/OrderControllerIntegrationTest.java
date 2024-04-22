@@ -3,6 +3,7 @@ package uk.gov.companieshouse.orders.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
 import uk.gov.companieshouse.orders.api.exceptionhandler.ConstraintValidationError;
 import uk.gov.companieshouse.orders.api.model.Certificate;
@@ -80,12 +83,13 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
+@Testcontainers
 @DirtiesContext
 @AutoConfigureMockMvc
 @SpringBootTest
 @EmbeddedKafka
 @ActiveProfiles({"orders-search-enabled", "orders-search-multibasket-enabled"})
-class OrderControllerIntegrationTest {
+class OrderControllerIntegrationTest extends AbstractMongoConfig {
     private static final String ORDER_ID = "0001";
     private static final String ORDER_REFERENCE = "0001";
     private static final String CHECKOUT_ID = "0002";
@@ -109,6 +113,11 @@ class OrderControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @BeforeAll
+    static void setup() {
+        mongoDBContainer.start();
+    }
 
     @AfterEach
     void tearDown() {

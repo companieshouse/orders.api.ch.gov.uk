@@ -23,6 +23,8 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,9 @@ import org.springframework.http.MediaType;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.dto.AddDeliveryDetailsRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.BasketRequestDTO;
 import uk.gov.companieshouse.orders.api.dto.DeliveryDetailsDTO;
@@ -49,10 +53,11 @@ import uk.gov.companieshouse.orders.api.service.BasketService;
 import uk.gov.companieshouse.orders.api.service.CheckoutService;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
+@Testcontainers
 @DirtiesContext
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EmbeddedKafka
-class OrdersApiAuthenticationTests {
+class OrdersApiAuthenticationTests extends AbstractMongoConfig {
 
 	private static final String ITEM_URI = "/orderable/certificates/12345678";
 	private static final String COMPANY_NUMBER = "00006400";
@@ -89,6 +94,11 @@ class OrdersApiAuthenticationTests {
 
 	@MockBean
 	private CheckoutData checkoutData;
+
+	@BeforeAll
+	static void setup() {
+		mongoDBContainer.start();
+	}
 
 	@Test
 	@DisplayName("Add item accepts request with signed in user")
