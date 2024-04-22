@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,14 +16,23 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.util.StubHelper;
 
+
+@Testcontainers
 @DataMongoTest
-class CheckoutRepositoryIntegrationTest {
+class CheckoutRepositoryIntegrationTest extends AbstractMongoConfig {
 
     @Autowired
     private CheckoutRepository checkoutRepository;
+
+    @BeforeAll
+    static void setup() {
+        mongoDBContainer.start();
+    }
 
     @AfterEach
     void teardown() {

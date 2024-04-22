@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,9 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.model.CheckoutSearchResults;
 import uk.gov.companieshouse.orders.api.model.CheckoutSummary;
 import uk.gov.companieshouse.orders.api.model.HRef;
@@ -37,12 +40,13 @@ import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.util.StubHelper;
 import uk.gov.companieshouse.orders.api.util.TestConstants;
 
+@Testcontainers
 @DirtiesContext
 @AutoConfigureMockMvc
 @SpringBootTest
 @EmbeddedKafka
 @ActiveProfiles({"orders-search-enabled", "orders-search-multibasket-disabled"})
-class OrdersSearchMultibasketDisabledIntegrationTest {
+class OrdersSearchMultibasketDisabledIntegrationTest extends AbstractMongoConfig {
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,6 +56,11 @@ class OrdersSearchMultibasketDisabledIntegrationTest {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @BeforeAll
+    static void setup() {
+        mongoDBContainer.start();
+    }
 
     @AfterEach
     void tearDown() {

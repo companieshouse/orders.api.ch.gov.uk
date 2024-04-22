@@ -3,29 +3,29 @@ package uk.gov.companieshouse.orders.api.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 
 public class DeliveryDetailsDTO {
 
     @JsonProperty("company_name")
     private String companyName;
 
-    @NotBlank
+    @NotBlank(message = "address_line_1 may not be blank")
     @JsonProperty("address_line_1")
     private String addressLine1;
 
     @JsonProperty("address_line_2")
     private String addressLine2;
 
-    @NotBlank
+    @NotBlank(message = "country may not be blank")
     @JsonProperty("country")
     private String country;
 
-    @NotBlank
+    @NotBlank(message = "forename may not be blank")
     @JsonProperty("forename")
     private String forename;
 
-    @NotBlank
+    @NotBlank(message = "locality may not be blank")
     @JsonProperty("locality")
     private String locality;
 
@@ -38,7 +38,7 @@ public class DeliveryDetailsDTO {
     @JsonProperty("region")
     private String region;
 
-    @NotBlank
+    @NotBlank(message = "surname may not be blank")
     @JsonProperty("surname")
     private String surname;
 

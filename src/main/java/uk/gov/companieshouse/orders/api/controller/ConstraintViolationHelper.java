@@ -2,8 +2,8 @@ package uk.gov.companieshouse.orders.api.controller;
 
 import java.util.Arrays;
 import java.util.Optional;
-import javax.validation.ConstraintViolation;
-import javax.validation.Path;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Path;
 import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
 

@@ -11,11 +11,11 @@ import uk.gov.companieshouse.orders.OrderReceived;
 
 import java.util.Date;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 @Service
 public class OrdersMessageFactory {
-	private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+	private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
 	private final SerializerFactory serializerFactory;
 	private static final String ORDER_RECEIVED_TOPIC = "order-received";
 

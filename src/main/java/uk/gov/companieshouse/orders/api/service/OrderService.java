@@ -22,12 +22,12 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 @Service
 public class OrderService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
 
     private final CheckoutToOrderMapper mapper;
     private final CheckoutRepository checkoutRepository;

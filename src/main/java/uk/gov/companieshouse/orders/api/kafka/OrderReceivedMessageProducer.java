@@ -11,11 +11,11 @@ import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAMESPACE;
+import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 @Service
 public class OrderReceivedMessageProducer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAMESPACE);
+    private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
     private final OrdersMessageFactory ordersAvroSerializer;
     private final OrdersKafkaProducer ordersKafkaProducer;
 
@@ -43,7 +43,7 @@ public class OrderReceivedMessageProducer {
                 logMapCallback.put(LoggingUtils.TOPIC, topic);
                 logMapCallback.put(LoggingUtils.ORDER_ID, orderId);
                 logMapCallback.put(LoggingUtils.OFFSET, offset);
-                LoggerFactory.getLogger(APPLICATION_NAMESPACE).info("Message sent to Kafka topic", logMapCallback);
+                LoggerFactory.getLogger(APPLICATION_NAME_SPACE).info("Message sent to Kafka topic", logMapCallback);
             });
         } catch (Exception e) {
             final String errorMessage

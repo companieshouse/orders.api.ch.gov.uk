@@ -3,6 +3,8 @@ package uk.gov.companieshouse.orders.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hamcrest.core.StringContains;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,14 +13,19 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.api.util.security.Permission;
+import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
 import uk.gov.companieshouse.orders.api.dto.PatchOrderedItemDTO;
+import uk.gov.companieshouse.orders.api.exceptionhandler.ConstraintValidationError;
 import uk.gov.companieshouse.orders.api.model.Certificate;
 import uk.gov.companieshouse.orders.api.model.CertificateItemOptions;
 import uk.gov.companieshouse.orders.api.model.CertifiedCopy;
@@ -76,12 +83,13 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_PERMISSI
 import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_ID_VALUE;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.WRONG_ERIC_IDENTITY_VALUE;
 
+@Testcontainers
 @DirtiesContext
 @AutoConfigureMockMvc
 @SpringBootTest
 @EmbeddedKafka
 @ActiveProfiles({"orders-search-enabled", "orders-search-multibasket-enabled"})
-class OrderControllerIntegrationTest {
+class OrderControllerIntegrationTest extends AbstractMongoConfig {
     private static final String ORDER_ID = "0001";
     private static final String ORDER_REFERENCE = "0001";
     private static final String CHECKOUT_ID = "0002";
@@ -106,6 +114,11 @@ class OrderControllerIntegrationTest {
     @Autowired
     private ObjectMapper mapper;
 
+    @BeforeAll
+    static void setup() {
+        mongoDBContainer.start();
+    }
+
     @AfterEach
     void tearDown() {
         orderRepository.deleteAll();
@@ -123,12 +136,12 @@ class OrderControllerIntegrationTest {
         preexistingOrder.setData(orderData);
         orderRepository.save(preexistingOrder);
 
-        mockMvc.perform(get("/orders/"+ORDER_ID)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/orders/" + ORDER_ID)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(orderData)));
     }
@@ -151,11 +164,11 @@ class OrderControllerIntegrationTest {
         orderRepository.save(preexistingOrder);
 
         mockMvc.perform(get("/orders/" + ORDER_ID)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].item_options.certificate_type",
                         is(INCORPORATION_WITH_ALL_NAME_CHANGES.getJsonName())))
@@ -180,11 +193,11 @@ class OrderControllerIntegrationTest {
         orderRepository.save(preexistingOrder);
 
         mockMvc.perform(get("/orders/" + ORDER_ID)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].item_options.filing_history_documents[0].filing_history_date",
                         is(DOCUMENT.getFilingHistoryDate())))
@@ -197,13 +210,13 @@ class OrderControllerIntegrationTest {
     }
 
     @Test
-   void respondsWithNotFoundIfOrderDoesNotExist() throws Exception {
-        mockMvc.perform(get("/orders/"+ORDER_ID)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+    void respondsWithNotFoundIfOrderDoesNotExist() throws Exception {
+        mockMvc.perform(get("/orders/" + ORDER_ID)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
@@ -218,12 +231,12 @@ class OrderControllerIntegrationTest {
         preexistingOrder.setData(orderData);
         orderRepository.save(preexistingOrder);
 
-        mockMvc.perform(get("/orders/"+ORDER_ID)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, WRONG_ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/orders/" + ORDER_ID)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, WRONG_ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -238,14 +251,14 @@ class OrderControllerIntegrationTest {
         preexistingCheckout.setData(checkoutData);
         checkoutRepository.save(preexistingCheckout);
 
-        mockMvc.perform(get("/checkouts/"+ CHECKOUT_ID)
-            .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-            .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-            .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-            .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(checkoutData)));
+        mockMvc.perform(get("/checkouts/" + CHECKOUT_ID)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(checkoutData)));
     }
 
     @DisplayName("Should find a single checkout when searching by order id")
@@ -263,14 +276,14 @@ class OrderControllerIntegrationTest {
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("id", CHECKOUT_ID)
-                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param("id", CHECKOUT_ID)
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
@@ -290,14 +303,14 @@ class OrderControllerIntegrationTest {
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("email", "demo@ch")
-                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param("email", "demo@ch")
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
@@ -319,14 +332,14 @@ class OrderControllerIntegrationTest {
                                 .build()));
 
         mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
-                .param("company_number", "12345678")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+                        .param(PAGE_SIZE_PARAM, PAGE_SIZE_VALUE)
+                        .param("company_number", "12345678")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().json(mapper.writeValueAsString(expected), true));
     }
@@ -368,37 +381,38 @@ class OrderControllerIntegrationTest {
                 .andExpect(jsonPath("$.order_summaries.*", hasSize(1)));
     }
 
-    @DisplayName("Should return HTTP 400 Bad Request if query parameter page_size is absent")
-    @Test
-    void returnBadRequestIfPageSizeAbsent() throws Exception {
-        mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0].error", is("constraint-violation")))
-                .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size is mandatory")))
-                .andExpect(jsonPath("$.errors[0].location", is("page_size")))
-                .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
-    }
 
     @DisplayName("Should return HTTP 400 Bad Request if page size less than 1")
     @Test
     void returnBadRequestPageSize0() throws Exception {
-        mockMvc.perform(get(ORDERS_SEARCH_PATH)
-                .param("page_size", "0")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0].error", is("constraint-violation")))
-                .andExpect(jsonPath("$.errors[0].error_values.message", is("page_size must be greater than 0")))
-                .andExpect(jsonPath("$.errors[0].location", is("page_size")))
-                .andExpect(jsonPath("$.errors[0].type", is("ch:validation")));
+        MvcResult mvcResult = mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                    .param("page_size", "0")
+                    .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                    .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                    .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
+                    .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                    .contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        ConstraintValidationError constraintValidationError =
+                (new ObjectMapper()).readValue(mvcResult.getResponse().getContentAsString(), ConstraintValidationError.class);
+        Assertions.assertEquals(constraintValidationError.getStatus(), HttpStatus.BAD_REQUEST);
+        Assertions.assertEquals(constraintValidationError.getConstraintErrors().get(0), "page_size must be greater than 0");
+    }
+
+    @DisplayName("Should return HTTP 400 Bad Request if query parameter page_size is absent")
+    @Test
+    void returnBadRequestIfPageSizeAbsent() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(get(ORDERS_SEARCH_PATH)
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, "*")
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+        ConstraintValidationError constraintValidationError =
+                (new ObjectMapper()).readValue(mvcResult.getResponse().getContentAsString(), ConstraintValidationError.class);
+        Assertions.assertEquals(constraintValidationError.getStatus(), HttpStatus.BAD_REQUEST);
+        Assertions.assertEquals(constraintValidationError.getConstraintErrors().get(0), "page_size is mandatory");
     }
 
     @DisplayName("Order search fails to authenticate caller when identity not provided")
@@ -486,7 +500,7 @@ class OrderControllerIntegrationTest {
     @Test
     void reprocessOrderConfirmsSuccessfulReprocessing() throws Exception {
         orderRepository.save(StubHelper.getOrder(ORDER_ID, "demo@ch.gov.uk", "12345678"));
-                 mockMvc.perform(reprocessOrderWithRequiredCredentials())
+        mockMvc.perform(reprocessOrderWithRequiredCredentials())
                 .andExpect(status().isOk())
                 .andExpect(content().string(new StringContains("Order number 0001 reprocessed.")));
     }
@@ -528,14 +542,14 @@ class OrderControllerIntegrationTest {
                         "12345678")));
         orderRepository.save(preexistingOrder);
 
-        mockMvc.perform(get("/orders/"+ORDER_ID+"/items/CCD-123456-123456")
-                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                       .contentType(MediaType.APPLICATION_JSON))
-               .andExpect(status().isOk())
-               .andExpect(content().json(mapper.writeValueAsString(expectedItem)));
+        mockMvc.perform(get("/orders/" + ORDER_ID + "/items/CCD-123456-123456")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expectedItem)));
     }
 
     @DisplayName("Get order item returns HTTP 404 Not Found if no matching item ID")
@@ -558,13 +572,13 @@ class OrderControllerIntegrationTest {
                         "12345678")));
         orderRepository.save(preexistingOrder);
 
-        mockMvc.perform(get("/orders/"+ORDER_ID+"/items/NONEXISTENT")
-                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                       .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                       .contentType(MediaType.APPLICATION_JSON))
-               .andExpect(status().isNotFound());
+        mockMvc.perform(get("/orders/" + ORDER_ID + "/items/NONEXISTENT")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @DisplayName("Patch an order item")
@@ -578,30 +592,30 @@ class OrderControllerIntegrationTest {
         orderData.setReference(ORDER_REFERENCE);
         orderData.setTotalOrderCost("100");
         Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
-            "12345678");
+                "12345678");
         orderData.setItems(Arrays.asList(
-            StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
-                "12345678"),
-            expectedItem,
-            StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
-                "12345678")));
+                StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                        "12345678"),
+                expectedItem,
+                StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                        "12345678")));
         orderRepository.save(preexistingOrder);
 
         PatchOrderedItemDTO patchOrderedItemDTO = new PatchOrderedItemDTO();
         patchOrderedItemDTO.setStatus(ItemStatus.SATISFIED);
         patchOrderedItemDTO.setDigitalDocumentLocation(DIGITAL_DOCUMENT_LOCATION);
 
-        mockMvc.perform(patch("/orders/"+ORDER_ID+"/items/CCD-123456-123456")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(patchOrderedItemDTO)))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.digital_document_location").value(DIGITAL_DOCUMENT_LOCATION))
-            .andExpect(jsonPath("$.status").value(STATUS_SATISFIED));
+        mockMvc.perform(patch("/orders/" + ORDER_ID + "/items/CCD-123456-123456")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(patchOrderedItemDTO)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.digital_document_location").value(DIGITAL_DOCUMENT_LOCATION))
+                .andExpect(jsonPath("$.status").value(STATUS_SATISFIED));
     }
 
     @DisplayName("Patch an order item returns HTTP 404 Not Found if no matching item ID")
@@ -615,27 +629,27 @@ class OrderControllerIntegrationTest {
         orderData.setReference(ORDER_REFERENCE);
         orderData.setTotalOrderCost("100");
         Item expectedItem = StubHelper.getOrderItem("CCD-123456-123456", "item#certified-copy",
-            "12345678");
+                "12345678");
         orderData.setItems(Arrays.asList(
-            StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
-                "12345678"),
-            expectedItem,
-            StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
-                "12345678")));
+                StubHelper.getOrderItem("MID-123456-123456", "item#missing-image-delivery",
+                        "12345678"),
+                expectedItem,
+                StubHelper.getOrderItem("CRT-123456-123456", "item#certificate",
+                        "12345678")));
         orderRepository.save(preexistingOrder);
 
         PatchOrderedItemDTO patchOrderedItemDTO = new PatchOrderedItemDTO();
         patchOrderedItemDTO.setStatus(ItemStatus.SATISFIED);
         patchOrderedItemDTO.setDigitalDocumentLocation(DIGITAL_DOCUMENT_LOCATION);
 
-        mockMvc.perform(patch("/orders/"+ORDER_ID+"/items/NONEXISTENT")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(patchOrderedItemDTO)))
-            .andExpect(status().isNotFound());
+        mockMvc.perform(patch("/orders/" + ORDER_ID + "/items/NONEXISTENT")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_OAUTH2_TYPE_VALUE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.UPDATE))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(patchOrderedItemDTO)))
+                .andExpect(status().isNotFound());
     }
 
     @DisplayName("Get a checkout item")
@@ -661,15 +675,15 @@ class OrderControllerIntegrationTest {
         final CheckoutData expectedCheckoutData = new CheckoutData();
         expectedCheckoutData.setItems(Collections.singletonList(expectedItem));
 
-        mockMvc.perform(get("/checkouts/"+CHECKOUT_ID+"/items/CCD-123456-123456")
-                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                       .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                       .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
-                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                       .contentType(MediaType.APPLICATION_JSON))
-               .andExpect(status().isOk())
-               .andExpect(content().json(mapper.writeValueAsString(expectedCheckoutData)));
+        mockMvc.perform(get("/checkouts/" + CHECKOUT_ID + "/items/CCD-123456-123456")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(expectedCheckoutData)));
     }
 
     @DisplayName("Get checkout item returns HTTP 404 Not Found if no matching item ID")
@@ -692,37 +706,37 @@ class OrderControllerIntegrationTest {
                         "12345678")));
         checkoutRepository.save(preexistingOrder);
 
-        mockMvc.perform(get("/checkouts/"+ORDER_ID+"/items/NONEXISTENT")
-                       .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                       .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                       .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
-                       .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                       .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                       .contentType(MediaType.APPLICATION_JSON))
-               .andExpect(status().isNotFound());
+        mockMvc.perform(get("/checkouts/" + ORDER_ID + "/items/NONEXISTENT")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 
     @DisplayName("Get checkout item returns HTTP 404 Not Found if no matching checkout ID")
     @Test
     void getCheckoutItemReturnsNotFoundIfNoMatchingCheckoutID() throws Exception {
-        mockMvc.perform(get("/checkouts/"+ORDER_ID+"/items/NONEXISTENT")
-                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
-                .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
-                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
-                .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/checkouts/" + ORDER_ID + "/items/NONEXISTENT")
+                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                        .header(ERIC_IDENTITY_TYPE, API_KEY_IDENTITY_TYPE)
+                        .header(ERIC_AUTHORISED_KEY_PRIVILEGES, INTERNAL_USER_ROLE)
+                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                        .header(ERIC_AUTHORISED_TOKEN_PERMISSIONS, String.format(TOKEN_PERMISSION_VALUE, Permission.Value.READ))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 
     private MockHttpServletRequestBuilder reprocessOrderWithRequiredCredentials() {
         return post("/orders/" + ORDER_ID + "/reprocess")
-                        .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
-                        .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
-                        .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
-                        .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
-                        .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
-                        .contentType(MediaType.APPLICATION_JSON);
+                .header(REQUEST_ID_HEADER_NAME, TOKEN_REQUEST_ID_VALUE)
+                .header(ERIC_IDENTITY_TYPE_HEADER_NAME, ERIC_IDENTITY_API_KEY_TYPE_VALUE)
+                .header(ERIC_IDENTITY_HEADER_NAME, ERIC_IDENTITY_VALUE)
+                .header(ERIC_AUTHORISED_KEY_ROLES, INTERNAL_USER_ROLE)
+                .header(ApiSdkManager.getEricPassthroughTokenHeader(), ERIC_ACCESS_TOKEN)
+                .contentType(MediaType.APPLICATION_JSON);
     }
 
     static Stream<Arguments> noMatchesFixture() {
