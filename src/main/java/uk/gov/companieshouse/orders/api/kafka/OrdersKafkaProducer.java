@@ -24,7 +24,7 @@ import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_
 @Service
 public class OrdersKafkaProducer implements InitializingBean {
     private static final Logger LOGGER = LoggerFactory.getLogger(APPLICATION_NAME_SPACE);
-    private CHKafkaProducer chKafkaProducer;
+    private OrdersApiKafkaProducer chKafkaProducer;
     @Value("${spring.kafka.producer.bootstrap-servers}")
     private String brokerAddresses;
 
@@ -61,6 +61,6 @@ public class OrdersKafkaProducer implements InitializingBean {
         config.setAcks(Acks.WAIT_FOR_ALL);
         config.setRetries(10);
         config.setMaxBlockMilliseconds(10000);
-        chKafkaProducer = new CHKafkaProducer(config);
+        chKafkaProducer = new OrdersApiKafkaProducer(config);
     }
 }
