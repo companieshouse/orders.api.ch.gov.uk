@@ -1,4 +1,4 @@
-# Define all hardcoded local variable and local variables looked up from data resources
+ # Define all hardcoded local variable and local variables looked up from data resources
 locals {
   stack_name                  = "order-service" # this must match the stack name the service deploys into
   name_prefix                 = "${local.stack_name}-${var.environment}"
@@ -9,7 +9,7 @@ locals {
   docker_repo                 = "orders.api.ch.gov.uk"
   kms_alias                   = "alias/${var.aws_profile}/environment-services-kms"
   lb_listener_rule_priority   = 95
-  lb_listener_paths           = ["/orders-api/*","/orders/*","/checkouts/*","/basket/*" ]
+  lb_listener_paths           = ["/orders-api/*","/orders/*","/checkouts/*","/basket*" ]
   healthcheck_path            = "/orders-api/healthcheck" #healthcheck path for order-api
   healthcheck_matcher         = "200"
   vpc_name                    = local.stack_secrets["vpc_name"]
@@ -64,8 +64,7 @@ locals {
   task_secrets = concat(local.service_secret_list,local.global_secret_list,[])
 
   task_environment = concat(local.ssm_global_version_map,local.ssm_service_version_map,[
-    { "name" : "PORT", "value" : local.container_port },
-    { "name" : "LOGLEVEL", "value" : var.log_level }
+    { "name" : "PORT", "value" : local.container_port }
   ])
 
   # get eric secrets from global secrets map
