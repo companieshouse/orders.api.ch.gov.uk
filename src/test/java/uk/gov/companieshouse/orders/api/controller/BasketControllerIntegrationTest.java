@@ -1522,6 +1522,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
         deliveryDetailsDTO.setSurname(SURNAME);
         deliveryDetailsDTO.setForename(FORENAME);
         deliveryDetailsDTO.setLocality(LOCALITY);
+        deliveryDetailsDTO.setPostalCode(POSTAL_CODE);
 
         addDeliveryDetailsRequestDTO.setDeliveryDetails(deliveryDetailsDTO);
 
@@ -1535,8 +1536,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
                 .andExpect(status().isBadRequest())
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
-        Assertions.assertEquals("Invalid request content.", result.getResponse().getErrorMessage());
-        Assertions.assertTrue(result.getResolvedException().getMessage().contains("address_line_1 may not be blank"));
+        Assertions.assertTrue(result.getResponse().getContentAsString().contains("address_line_1 may not be blank"));
     }
 
     @Test
