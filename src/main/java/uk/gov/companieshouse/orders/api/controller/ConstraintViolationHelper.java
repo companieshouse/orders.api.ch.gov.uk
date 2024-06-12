@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import uk.gov.companieshouse.orders.api.util.FieldNameConverter;
 
 @Component
-class ConstraintViolationHelper {
+public class ConstraintViolationHelper {
     private final FieldNameConverter converter;
 
     public ConstraintViolationHelper(FieldNameConverter converter) {
