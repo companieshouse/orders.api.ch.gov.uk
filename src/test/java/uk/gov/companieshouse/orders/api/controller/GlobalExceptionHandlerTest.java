@@ -16,6 +16,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,7 +61,6 @@ class GlobalExceptionHandlerTest {
             super(converter, helper);
         }
 
-        @Override
         protected ResponseEntity<Object> handleExceptionInternal(final Exception ex,
                                                                  final Object body,
                                                                  final HttpHeaders headers,
@@ -94,7 +94,6 @@ class GlobalExceptionHandlerTest {
     @Mock
     private FieldNameConverter converter;
 
-    @Mock
     private HttpHeaders headers;
 
     @Mock
@@ -108,6 +107,11 @@ class GlobalExceptionHandlerTest {
 
     @Mock
     private Path path;
+
+    @BeforeEach
+    void setup() {
+        headers = new HttpHeaders();
+    }
 
     @Test
     void buildsApiErrorFromMethodArgumentNotValidException() {
