@@ -1536,7 +1536,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
                 .andExpect(status().isBadRequest())
                 .andDo(MockMvcResultHandlers.print())
                 .andReturn();
-        Assertions.assertTrue(result.getResponse().getContentAsString().contains("address_line_1 may not be blank"));
+        Assertions.assertTrue(result.getResponse().getContentAsString().contains("delivery_details.address_line_1: must not be blank"));
     }
 
     @Test
