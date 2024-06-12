@@ -11,11 +11,11 @@ import java.util.List;
 @Component
 public class DeliveryDetailsValidator {
 
-    private static final String ADDRESS_LINE_1_VALIDATION = "delivery_details.address_line_1 may not be blank";
-    private static final String COUNTRY_VALIDATION = "delivery_details.country may not be blank";
-    private static final String FORENAME_VALIDATION = "delivery_details.forename may not be blank";
-    private static final String SURNAME_VALIDATION = "delivery_details.surname may not be blank";
-    private static final String LOCALITY_VALIDATION = "delivery_details.locality may not be blank";
+    private static final String ADDRESS_LINE_1_VALIDATION = "delivery_details.address_line_1: must not be blank";
+    private static final String COUNTRY_VALIDATION = "delivery_details.country: must not be blank";
+    private static final String FORENAME_VALIDATION = "delivery_details.forename: must not be blank";
+    private static final String SURNAME_VALIDATION = "delivery_details.surname: must not be blank";
+    private static final String LOCALITY_VALIDATION = "delivery_details.locality: must not be blank";
     private static final String POSTAL_CODE_VALIDATION = "Postcode or Region is required";
 
     public DeliveryDetailsValidator() { }
