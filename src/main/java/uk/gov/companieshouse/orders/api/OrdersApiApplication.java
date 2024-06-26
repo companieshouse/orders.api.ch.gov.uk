@@ -9,6 +9,9 @@ import uk.gov.companieshouse.logging.Logger;
 import uk.gov.companieshouse.orders.api.environment.RequiredEnvironmentVariables;
 import uk.gov.companieshouse.orders.api.logging.LoggingUtils;
 
+import java.util.Locale;
+import java.util.TimeZone;
+
 @SpringBootApplication
 public class OrdersApiApplication {
     private static Logger LOGGER = LoggingUtils.getLogger();
@@ -17,6 +20,8 @@ public class OrdersApiApplication {
 
     public static void main(String[] args) {
         if(checkEnvironmentVariables()) {
+            TimeZone.setDefault(TimeZone.getTimeZone("Europe/London"));
+            Locale.setDefault(Locale.UK);
             SpringApplication.run(OrdersApiApplication.class, args);
         }
     }
