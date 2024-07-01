@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,17 +14,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
+import uk.gov.companieshouse.orders.api.config.MongoConfig;
 import uk.gov.companieshouse.orders.api.model.Checkout;
 import uk.gov.companieshouse.orders.api.util.StubHelper;
 
 
 @Testcontainers
 @DataMongoTest
+@Import(MongoConfig.class)
 class CheckoutRepositoryIntegrationTest extends AbstractMongoConfig {
 
     @Autowired
@@ -110,9 +114,9 @@ class CheckoutRepositoryIntegrationTest extends AbstractMongoConfig {
     @DisplayName("repository returns one checkout if page size of 1 specified")
     void testSearchCheckoutsWithPageSize() {
         // given
-        Checkout firstCheckout = StubHelper.getCheckout("ORD-123-456", "demo1@ch.gov.uk", "12345678", LocalDate.of(2021, 1, 1).atStartOfDay());
-        Checkout secondCheckout = StubHelper.getCheckout("ORD-654-321", "demo2@ch.gov.uk", "87654321", LocalDate.of(2022, 1, 1).atStartOfDay());
-        Checkout thirdCheckout = StubHelper.getCheckout("ORD-987-654", "demo3@ch.gov.uk", "87654321", LocalDate.of(2022, 1, 1).atStartOfDay());
+        Checkout firstCheckout = StubHelper.getCheckout("ORD-123-456", "demo1@ch.gov.uk", "12345678", LocalDate.of(2021, 1, 1).atStartOfDay().atOffset(ZoneOffset.UTC));
+        Checkout secondCheckout = StubHelper.getCheckout("ORD-654-321", "demo2@ch.gov.uk", "87654321", LocalDate.of(2022, 1, 1).atStartOfDay().atOffset(ZoneOffset.UTC));
+        Checkout thirdCheckout = StubHelper.getCheckout("ORD-987-654", "demo3@ch.gov.uk", "87654321", LocalDate.of(2022, 1, 1).atStartOfDay().atOffset(ZoneOffset.UTC));
         checkoutRepository.saveAll(Arrays.asList(firstCheckout, secondCheckout, thirdCheckout));
 
         // when

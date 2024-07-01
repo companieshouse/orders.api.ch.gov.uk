@@ -47,6 +47,7 @@ import uk.gov.companieshouse.orders.api.util.StubHelper;
 import uk.gov.companieshouse.sdk.manager.ApiSdkManager;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Stream;
@@ -271,7 +272,7 @@ class OrderControllerIntegrationTest extends AbstractMongoConfig {
                                 .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC))
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -298,7 +299,7 @@ class OrderControllerIntegrationTest extends AbstractMongoConfig {
                                 .withId(CHECKOUT_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC))
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 
@@ -327,7 +328,7 @@ class OrderControllerIntegrationTest extends AbstractMongoConfig {
                                 .withId(ORDER_ID)
                                 .withEmail("demo@ch.gov.uk")
                                 .withPaymentStatus(PaymentStatus.PAID)
-                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC))
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 

@@ -9,13 +9,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import uk.gov.companieshouse.orders.api.config.AbstractMongoConfig;
+import uk.gov.companieshouse.orders.api.config.MongoConfig;
 import uk.gov.companieshouse.orders.api.model.Basket;
 import uk.gov.companieshouse.orders.api.util.StubHelper;
 
 @Testcontainers
 @DataMongoTest
+@Import(MongoConfig.class)
 class BasketRepositoryIntegrationTest extends AbstractMongoConfig {
 
     @Autowired

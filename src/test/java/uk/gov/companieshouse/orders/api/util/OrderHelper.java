@@ -4,6 +4,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Item;
@@ -40,6 +41,6 @@ public final class OrderHelper {
     }
 
     public static Order getOrder(String orderId, String email, String companyNumber) {
-        return getOrder(orderId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay());
+        return getOrder(orderId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC));
     }
 }

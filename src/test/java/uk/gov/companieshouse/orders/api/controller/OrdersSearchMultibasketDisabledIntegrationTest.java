@@ -15,6 +15,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.TOKEN_REQUEST_
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -81,7 +82,7 @@ class OrdersSearchMultibasketDisabledIntegrationTest extends AbstractMongoConfig
                                        .withCompanyNumber("12345678")
                                        .withProductLine("item#certificate")
                                        .withPaymentStatus(PaymentStatus.PAID)
-                                       .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay())
+                                       .withCheckoutDate(LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC))
                                        .withLinks(new Links(new HRef("http"), new HRef("http")))
                                        .build()));
 

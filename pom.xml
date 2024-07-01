@@ -259,6 +259,7 @@
             <version>${api-helper-java.version}</version>
             <scope>compile</scope>
         </dependency>
+
     </dependencies>
 
     <build>

@@ -17,6 +17,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -317,7 +318,7 @@ public class CheckoutServiceTest {
         when(checkedOutBy.getEmail()).thenReturn("demo@ch.gov.uk");
         when(checkoutData.getItems()).thenReturn(Collections.singletonList(item));
         when(item.getKind()).thenReturn("item#certificate");
-        when(checkoutResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 04, 11).atStartOfDay());
+        when(checkoutResult.getCreatedAt()).thenReturn(LocalDate.of(2022, 04, 11).atStartOfDay().atOffset(ZoneOffset.UTC));
         when(checkoutData.getLinks()).thenReturn(links);
         when(links.getSelf()).thenReturn("http");
         when(searchFieldMapper.exactMatchOrAny("ORD-123-456")).thenReturn("mapped checkout id");
@@ -331,7 +332,7 @@ public class CheckoutServiceTest {
                                 .withId("ORD-123-456")
                                 .withEmail("demo@ch.gov.uk")
                                 .withProductLine("item#certificate")
-                                .withCheckoutDate(LocalDate.of(2022, 04, 11).atStartOfDay())
+                                .withCheckoutDate(LocalDate.of(2022, 04, 11).atStartOfDay().atOffset(ZoneOffset.UTC))
                                 .withLinks(new Links(new HRef("http"), new HRef("http")))
                                 .build()));
 

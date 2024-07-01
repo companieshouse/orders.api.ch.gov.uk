@@ -4,6 +4,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +41,7 @@ public final class StubHelper {
     }
 
     public static Checkout getCheckout(String checkoutId, String email, String companyNumber) {
-        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay(), null);
+        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC), null);
     }
 
     public static Checkout getCheckout(String checkoutId, String email, String companyNumber, OffsetDateTime creationDate) {
@@ -48,7 +49,7 @@ public final class StubHelper {
     }
 
     public static Checkout getCheckout(String checkoutId, String email, String companyNumber, PaymentStatus paymentStatus) {
-        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay(), paymentStatus);
+        return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC), paymentStatus);
     }
 
     public static Order getOrder(String orderId, List<Item> items, String email,
@@ -81,7 +82,7 @@ public final class StubHelper {
     }
 
     public static Order getOrder(String orderId, String email, String companyNumber) {
-        return getOrder(orderId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay());
+        return getOrder(orderId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay().atOffset(ZoneOffset.UTC));
     }
 
     public static Item getOrderItem(String id, String kind, String companyNumber) {
@@ -95,8 +96,8 @@ public final class StubHelper {
     public static Basket getBasket(String id) {
         final Basket basket = new Basket();
         basket.setId(id);
-        basket.setCreatedAt(OffsetDateTime.of(2022,07,15, 11, 40));
-        basket.setUpdatedAt(OffsetDateTime.of(2022,07,15, 11, 40));
+        basket.setCreatedAt(OffsetDateTime.of(2022, 7, 15, 11, 40, 0, 0, ZoneOffset.UTC));
+        basket.setUpdatedAt(OffsetDateTime.of(2022, 7, 15, 11, 40, 0, 0, ZoneOffset.UTC));
 
         BasketData data = new BasketData();
         data.setEnrolled(true);

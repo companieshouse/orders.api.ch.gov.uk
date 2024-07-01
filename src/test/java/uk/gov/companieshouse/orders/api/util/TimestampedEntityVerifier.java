@@ -3,6 +3,7 @@ package uk.gov.companieshouse.orders.api.util;
 import uk.gov.companieshouse.orders.api.model.TimestampedEntity;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -28,7 +29,7 @@ public class TimestampedEntityVerifier {
      * @return the recorded start timestamp
      */
     public OffsetDateTime start() {
-        intervalStart = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+        intervalStart = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).withOffsetSameInstant(ZoneOffset.UTC);
         return intervalStart;
     }
 

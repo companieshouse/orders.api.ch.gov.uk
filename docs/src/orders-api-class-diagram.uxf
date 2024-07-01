@@ -154,7 +154,7 @@ Order</panel_attributes>
 AbstractOrder
 --
 +id:String
-+createdAt:LocalDateTime</panel_attributes>
++createdAt:OffsetDateTime</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
@@ -179,7 +179,7 @@ AbstractOrder
     <panel_attributes>uk.gov.companieshouse.orders.api.model::
 OrderData
 --
-+orderedAt:LocalDateTime</panel_attributes>
++orderedAt:OffsetDateTime</panel_attributes>
     <additional_attributes/>
   </element>
   <element>
