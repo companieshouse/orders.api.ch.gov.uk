@@ -20,7 +20,9 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEA
 
 import java.io.IOException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,6 +37,7 @@ import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -673,7 +676,8 @@ class BasketControllerTest {
         final String checkout_id = "123456789";
         final String payment_id = "987654321";
         final String eric_header = "EricHeader";
-        final LocalDateTime paidAt = LocalDateTime.now();
+        final OffsetDateTime paidAt = OffsetDateTime.now();
+        final LocalDateTime paidAtLocal = paidAt.toLocalDateTime();
 
         final MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(ApiSdkManager.getEricPassthroughTokenHeader(), eric_header);
@@ -704,7 +708,7 @@ class BasketControllerTest {
         // Then
         verify(checkoutData).setStatus(paymentOutcome);
         if (paymentOutcome.equals(PaymentStatus.PAID)) {
-            verify(checkoutData).setPaidAt(paidAt);
+            verify(checkoutData).setPaidAt(paidAtLocal);
             verify(checkoutData).setPaymentReference(payment_id);
         }
         verify(checkoutService).saveCheckout(checkout);
