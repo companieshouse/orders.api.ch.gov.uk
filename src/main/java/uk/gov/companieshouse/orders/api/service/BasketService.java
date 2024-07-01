@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import uk.gov.companieshouse.orders.api.model.Basket;
 import uk.gov.companieshouse.orders.api.repository.BasketRepository;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Service
@@ -21,7 +21,7 @@ public class BasketService {
     }
 
     public Basket saveBasket(Basket basket) {
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         if(basket.getId() == null) {
             throw new IllegalArgumentException("ID Must be present");
         }

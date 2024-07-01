@@ -3,7 +3,7 @@ package uk.gov.companieshouse.orders.api.model;
 import com.google.gson.Gson;
 import org.springframework.data.annotation.Id;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * Factors out those data fields common to both {@link Checkout} and {@link Order}.
@@ -12,9 +12,9 @@ public abstract class AbstractOrder implements TimestampedEntity {
     @Id
     private String id;
 
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     private String userId;
 
@@ -26,19 +26,19 @@ public abstract class AbstractOrder implements TimestampedEntity {
         this.id = id;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 

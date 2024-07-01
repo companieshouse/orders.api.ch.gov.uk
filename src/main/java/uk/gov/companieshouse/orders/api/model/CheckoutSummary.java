@@ -1,6 +1,6 @@
 package uk.gov.companieshouse.orders.api.model;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class CheckoutSummary {
@@ -8,7 +8,7 @@ public class CheckoutSummary {
     private final String email;
     private final String companyNumber;
     private final String productLine;
-    private final LocalDateTime orderDate;
+    private final OffsetDateTime orderDate;
     private final PaymentStatus paymentStatus;
     private final Links links;
 
@@ -31,7 +31,7 @@ public class CheckoutSummary {
         private String email;
         private String companyNumber;
         private String productLine;
-        private LocalDateTime orderDate;
+        private OffsetDateTime orderDate;
         private PaymentStatus paymentStatus;
         private Links links;
 
@@ -58,7 +58,7 @@ public class CheckoutSummary {
             return this;
         }
 
-        public Builder withCheckoutDate(LocalDateTime orderDate) {
+        public Builder withCheckoutDate(OffsetDateTime orderDate) {
             this.orderDate = orderDate;
             return this;
         }
@@ -94,7 +94,7 @@ public class CheckoutSummary {
         return productLine;
     }
 
-    public LocalDateTime getOrderDate() {
+    public OffsetDateTime getOrderDate() {
         return orderDate;
     }
 

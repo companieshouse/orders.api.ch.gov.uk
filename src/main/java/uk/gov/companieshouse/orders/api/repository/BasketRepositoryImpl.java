@@ -2,7 +2,7 @@ package uk.gov.companieshouse.orders.api.repository;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -33,7 +33,7 @@ public class BasketRepositoryImpl implements BasketRepositoryCustom {
 
         Update update = new Update();
         update.set("data", newBasketData);
-        update.set("updated_at", LocalDateTime.now());
+        update.set("updated_at", OffsetDateTime.now());
 
         return mongoTemplate.findAndModify(query, update, Basket.class);
     }
@@ -44,7 +44,7 @@ public class BasketRepositoryImpl implements BasketRepositoryCustom {
         query.addCriteria(Criteria.where("_id").is(id));
         Update update = new Update();
         update.pull("data.items", Query.query(Criteria.where("item_uri").is(uri)));
-        update.set("updated_at", LocalDateTime.now());
+        update.set("updated_at", OffsetDateTime.now());
 
         return mongoTemplate.findAndModify(query, update, Basket.class);
     }

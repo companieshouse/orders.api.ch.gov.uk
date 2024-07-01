@@ -1,20 +1,20 @@
 package uk.gov.companieshouse.orders.api.model;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class OrderData extends AbstractOrderData {
 
-    private LocalDateTime orderedAt;
+    private OffsetDateTime orderedAt;
 
     private ActionedBy orderedBy;
 
     private OrderLinks links;
 
-    public LocalDateTime getOrderedAt() {
+    public OffsetDateTime getOrderedAt() {
         return orderedAt;
     }
 
-    public void setOrderedAt(LocalDateTime orderedAt) {
+    public void setOrderedAt(OffsetDateTime orderedAt) {
         this.orderedAt = orderedAt;
     }
 

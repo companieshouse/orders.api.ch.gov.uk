@@ -1,11 +1,11 @@
 package uk.gov.companieshouse.orders.api.model;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class CheckoutData extends AbstractOrderData {
 
-    private LocalDateTime paidAt;
+    private OffsetDateTime paidAt;
 
     private ActionedBy checkedOutBy;
 
@@ -13,11 +13,11 @@ public class CheckoutData extends AbstractOrderData {
 
     private CheckoutLinks links;
 
-    public LocalDateTime getPaidAt() {
+    public OffsetDateTime getPaidAt() {
         return paidAt;
     }
 
-    public void setPaidAt(LocalDateTime paidAt) {
+    public void setPaidAt(OffsetDateTime paidAt) {
         this.paidAt = paidAt;
     }
 

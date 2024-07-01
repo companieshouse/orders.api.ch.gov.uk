@@ -1,7 +1,10 @@
 package uk.gov.companieshouse.orders.api.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.ConverterFactory;
@@ -13,6 +16,10 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import uk.gov.companieshouse.orders.api.converter.EnumToStringConverterFactory;
+import uk.gov.companieshouse.orders.api.converter.OffsetDateTimeReadConverter;
+import uk.gov.companieshouse.orders.api.converter.OffsetDateTimeReadConverterFactory;
+import uk.gov.companieshouse.orders.api.converter.OffsetDateTimeWriteConverter;
+import uk.gov.companieshouse.orders.api.converter.OffsetDateTimeWriteConverterFactory;
 import uk.gov.companieshouse.orders.api.converter.StringToEnumConverterFactory;
 
 @Configuration
@@ -24,6 +31,13 @@ public class MongoConfig {
      * the default MappingMongoConverter.
      * Copied from items.orders.api.ch.gov.uk
      */
+//    @Bean
+//    public MongoCustomConversions mongoCustomConversions() {
+//        return new MongoCustomConversions(Arrays.asList(
+//                new OffsetDateTimeWriteConverter(),
+//                new OffsetDateTimeReadConverter()
+//        ));
+//    }
 
     @Bean
     public MappingMongoConverter mappingMongoConverter(final MongoDatabaseFactory factory,
@@ -37,6 +51,8 @@ public class MongoConfig {
         final List<ConverterFactory<?, ?>> converters = new ArrayList<>();
         converters.add(new StringToEnumConverterFactory());
         converters.add(new EnumToStringConverterFactory());
+        converters.add(new OffsetDateTimeWriteConverterFactory());
+        converters.add(new OffsetDateTimeReadConverterFactory());
         mappingConverter.setCustomConversions(new MongoCustomConversions(converters));
 
         return mappingConverter;

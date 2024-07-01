@@ -18,7 +18,7 @@ import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.repository.CheckoutRepository;
 import uk.gov.companieshouse.orders.api.repository.OrderRepository;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -167,7 +167,7 @@ public class OrderService {
      * @param order the order to be 'timestamped'
      */
     void setCreationDateTimes(final Order order) {
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         order.setCreatedAt(now);
         order.setUpdatedAt(now);
         order.getData().setOrderedAt(now);

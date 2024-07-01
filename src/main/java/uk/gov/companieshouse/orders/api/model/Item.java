@@ -2,7 +2,7 @@ package uk.gov.companieshouse.orders.api.model;
 
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -39,7 +39,7 @@ public class Item {
 
     private String itemUri;
 
-    private LocalDateTime satisfiedAt;
+    private OffsetDateTime satisfiedAt;
 
     private ItemStatus status;
 
@@ -169,11 +169,11 @@ public class Item {
         this.itemUri = itemUri;
     }
 
-    public LocalDateTime getSatisfiedAt() {
+    public OffsetDateTime getSatisfiedAt() {
         return satisfiedAt;
     }
 
-    public void setSatisfiedAt(LocalDateTime satisfiedAt) {
+    public void setSatisfiedAt(OffsetDateTime satisfiedAt) {
         this.satisfiedAt = satisfiedAt;
     }
 

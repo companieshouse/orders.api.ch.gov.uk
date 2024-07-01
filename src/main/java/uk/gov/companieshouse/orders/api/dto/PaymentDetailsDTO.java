@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import uk.gov.companieshouse.orders.api.model.PaymentLinks;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class PaymentDetailsDTO {
 
     @JsonProperty("paid_at")
     @JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
-    private LocalDateTime paidAt;
+    private OffsetDateTime paidAt;
 
     @JsonProperty("payment_reference")
     private String paymentReference;
@@ -74,11 +74,11 @@ public class PaymentDetailsDTO {
         this.links = links;
     }
 
-    public LocalDateTime getPaidAt() {
+    public OffsetDateTime getPaidAt() {
         return paidAt;
     }
 
-    public void setPaidAt(LocalDateTime paidAt) {
+    public void setPaidAt(OffsetDateTime paidAt) {
         this.paidAt = paidAt;
     }
 

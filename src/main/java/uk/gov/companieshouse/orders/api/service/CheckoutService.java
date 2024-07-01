@@ -1,7 +1,7 @@
 package uk.gov.companieshouse.orders.api.service;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +64,7 @@ public class CheckoutService {
 
     public Checkout createCheckout(List<Item> itemsList, String userId, String email,
             DeliveryDetails deliveryDetails) {
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         String checkoutId = autoGenerateId();
 
         Checkout checkout = new Checkout();
@@ -152,7 +152,7 @@ public class CheckoutService {
      * @return the latest checkout state resulting from the save
      */
     public Checkout saveCheckout(final Checkout updatedCheckout) {
-        final LocalDateTime now = LocalDateTime.now();
+        final OffsetDateTime now = OffsetDateTime.now();
         updatedCheckout.setUpdatedAt(now);
         updatedCheckout.getData().setEtag(etagGeneratorService.generateEtag());
         return checkoutRepository.save(updatedCheckout);
