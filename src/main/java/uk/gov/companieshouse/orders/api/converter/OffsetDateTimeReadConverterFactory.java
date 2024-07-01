@@ -24,8 +24,6 @@ public class OffsetDateTimeReadConverterFactory implements ConverterFactory<Date
         }
 
         @Override
-        public T convert(Date date) {
-            return targetType.cast(date.toInstant().atOffset(ZoneOffset.UTC));
-        }
+        public T convert(Date date) { return targetType.cast(date.toInstant().atOffset(ZoneOffset.UTC)); }
     }
 }

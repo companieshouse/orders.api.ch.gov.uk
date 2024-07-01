@@ -5,7 +5,6 @@ import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.data.convert.WritingConverter;
 
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @WritingConverter
