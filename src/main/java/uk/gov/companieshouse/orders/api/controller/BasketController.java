@@ -11,6 +11,8 @@ import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_H
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -566,7 +568,7 @@ public class BasketController {
         final CheckoutData data = checkout.getData();
         data.setStatus(update.getStatus());
         if (update.getStatus() == PaymentStatus.PAID) {
-            data.setPaidAt(update.getPaidAt());
+            data.setPaidAt(update.getPaidAt().atZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime());
             data.setPaymentReference(update.getPaymentReference());
         }
         checkoutService.saveCheckout(checkout);
