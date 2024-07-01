@@ -9,7 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,7 @@ import uk.gov.companieshouse.orders.api.util.TimestampedEntityVerifier;
 @ExtendWith(MockitoExtension.class)
 public class BasketServiceTest {
 
-    private static final LocalDateTime CREATED_AT = LocalDateTime.of(2020, 1, 12, 9, 1);
+    private static final OffsetDateTime CREATED_AT = OffsetDateTime.of(2020, 1, 12, 9, 1, 0, 0, ZoneOffset.UTC);
 
     @InjectMocks
     private BasketService service;

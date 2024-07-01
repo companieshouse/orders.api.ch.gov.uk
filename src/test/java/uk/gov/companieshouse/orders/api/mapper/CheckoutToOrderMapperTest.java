@@ -26,7 +26,7 @@ import uk.gov.companieshouse.orders.api.model.ItemCosts;
 import uk.gov.companieshouse.orders.api.model.Order;
 import uk.gov.companieshouse.orders.api.model.RegisteredOfficeAddressDetails;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
@@ -159,7 +159,7 @@ class CheckoutToOrderMapperTest {
 
     @Test
     void testCheckoutToOrderMapping() {
-        final LocalDateTime time = LocalDateTime.now();
+        final OffsetDateTime time = OffsetDateTime.now();
         final Checkout checkout = new Checkout();
         checkout.setId(ID);
         checkout.setUserId(USER_ID);

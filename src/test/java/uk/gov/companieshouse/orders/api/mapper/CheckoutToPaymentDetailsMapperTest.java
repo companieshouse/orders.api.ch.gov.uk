@@ -7,8 +7,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.CERTIFICATE_KIND;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.Month;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,7 +83,7 @@ class CheckoutToPaymentDetailsMapperTest {
     static final String POSTAGE_COST = "0";
     static final String TOTAL_ITEM_COST = "35";
     static final boolean POSTAL_DELIVERY = true;
-    private static final LocalDateTime PAID_AT_DATE = LocalDateTime.of(2020, Month.JANUARY, 1, 0, 0);
+    private static final OffsetDateTime PAID_AT_DATE = OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
     static {
         final ItemCosts ITEM_COSTS_1 = new ItemCosts(DISCOUNT_APPLIED_1, ITEM_COST_1, CALCULATED_COST_1, PRODUCT_TYPE_1);
         final ItemCosts ITEM_COSTS_2 = new ItemCosts(DISCOUNT_APPLIED_2, ITEM_COST_2, CALCULATED_COST_2, PRODUCT_TYPE_2);

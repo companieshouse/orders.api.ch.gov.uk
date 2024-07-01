@@ -55,8 +55,9 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_CERTIFIE
 import static uk.gov.companieshouse.orders.api.util.TestConstants.VALID_MISSING_IMAGE_DELIVERY_URI;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.Month;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -162,7 +163,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     private static final String KIND = "kind";
     private static final Boolean POSTAL_DELIVERY = true;
     private static final Integer QUANTITY = 1;
-    private static final LocalDateTime SATISFIED_AT = LocalDateTime.of(2020, Month.JANUARY, 1, 0, 0);
+    private static final OffsetDateTime SATISFIED_AT = OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
     private static final String EXPECTED_TOTAL_ORDER_COST = "15";
     private static final String EXPECTED_TOTAL_ORDER_COST_MULTIPLE = "33";
     private static final int EXPECTED_CHECKOUT_ITEMS_SIZE = 3;
@@ -190,7 +191,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     private static final String TOTAL_ITEM_COST_ZERO = "0";
     private static final String PAYMENT_KIND = "payment-details#payment-details";
     private static final String UPDATED_ETAG = "dc3b9657a32453c6f79d5f3981bfa9af0a8b5478";
-    private static final LocalDateTime PAID_AT_DATE = LocalDateTime.of(2020, Month.JANUARY, 1, 0, 0);
+    private static final OffsetDateTime PAID_AT_DATE = OffsetDateTime.of(2020, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
 
     private static final ItemCosts SAME_DAY_COPY_COST = new ItemCosts(
             DISCOUNT_APPLIED_1,
@@ -742,7 +743,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Checkout basket creates checkout with correctly with multiple items")
     void checkoutBasketWithMultipleItems () throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
         Item certificateItem = new Item();
         certificateItem.setItemUri(VALID_CERTIFICATE_URI);
@@ -813,7 +814,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Checkout basket returns bad request error when unable to retrieve MID item")
     void checkoutBasketWithErrorOnMultipleItems () throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
         Item certificateItem = new Item();
         certificateItem.setItemUri(VALID_CERTIFICATE_URI);
@@ -1211,7 +1212,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Get basket successfully returns a basket populated with a certificate")
     void getBasketReturnsBasketPopulatedWithCertificate() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         Basket basket = createBasket(start);
 
         basketRepository.save(basket);
@@ -1283,7 +1284,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Get basket successfully returns a basket populated with a certified copy")
     void getBasketReturnsBasketPopulatedWithCertifiedCopy() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
 
         basketRepository.save(basket);
@@ -1361,7 +1362,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Get basket successfully returns a basket populated with multiple items")
     void getBasketReturnsBasketPopulatedWithMultipleItems() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         final Basket basket = createBasket(start, VALID_CERTIFIED_COPY_URI);
         Item certificateItem = new Item();
         certificateItem.setItemUri(VALID_CERTIFICATE_URI);
@@ -1668,7 +1669,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment-details endpoint success path for paid payments session")
     void patchBasketPaymentDetailsSuccessPaid() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1715,7 +1716,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment details paid populates checkout and order certificate item options correctly")
     void patchBasketCertificatePaymentSuccessfullyPaid() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         final BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1757,7 +1758,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment details paid populates checkout and order certified copy item options correctly")
     void patchBasketCertifiedCopyPaymentSuccessfullyPaid() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         final BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1799,7 +1800,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment details paid populates checkout and order missing image delivery item options correctly")
     void patchBasketMissingImageDeliveryPaymentSuccessfullyPaid() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         final BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1841,7 +1842,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment-details endpoint success path for failed payments session")
     void patchBasketPaymentDetailsSuccessFailed() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.FAILED);
         createBasket(start);
@@ -1865,7 +1866,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment-details endpoint success path for cancelled payments session")
     void patchBasketPaymentDetailsSuccessCancelled() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.CANCELLED);
         createBasket(start);
@@ -1889,7 +1890,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment-details endpoint success path for no-funds payments session")
     void patchBasketPaymentDetailsSuccessNoFunds() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.NO_FUNDS);
         createBasket(start);
@@ -1913,7 +1914,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment-details endpoint fails if it doesn't return payment session")
     void patchBasketPaymentDetailsFailureReturningPaymentSession() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1939,7 +1940,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment details endpoints fails if status on payments service is not paid")
     void patchBasketPaymentDetailsFailureCheckingPaymentStatus() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1966,7 +1967,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment details endpoints fails if payment total on payments service is different")
     void patchBasketPaymentDetailsFailureCheckingPaymentTotal() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -1993,7 +1994,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Patch payment details endpoints fails if checkout resource is different to the one on payments service")
     void patchBasketPaymentDetailsFailureCheckingResourceUpdated() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
 
         BasketPaymentRequestDTO basketPaymentRequest = createBasketPaymentRequest(PaymentStatus.PAID);
         createBasket(start);
@@ -2152,7 +2153,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     @Test
     @DisplayName("Test get basket links returns basket successfully")
     void getBasketLinks() throws Exception {
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         createBasket(start);
 
         final String jsonResponse = mockMvc.perform(get("/basket/links")
@@ -2246,7 +2247,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
 
     private BasketPaymentRequestDTO createBasketPaymentRequest(PaymentStatus paymentStatus) {
         final BasketPaymentRequestDTO basketPaymentRequestDTO = new BasketPaymentRequestDTO();
-        basketPaymentRequestDTO.setPaidAt(LocalDateTime.now());
+        basketPaymentRequestDTO.setPaidAt(OffsetDateTime.now());
         basketPaymentRequestDTO.setPaymentReference(PAYMENT_ID);
         basketPaymentRequestDTO.setStatus(paymentStatus);
 
@@ -2301,12 +2302,12 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
     }
 
     /**
-     * Verifies that the basket is as it was when created by {@link #createBasket(LocalDateTime, String)}.
+     * Verifies that the basket is as it was when created by {@link #createBasket(OffsetDateTime, String)}.
      * @param basketCreationTime the time the basket was created
      * @param deliveryDetailsAdded the delivery details added to the basket
      * @param itemUri the URI of the item stored in the basket
      */
-    private void verifyBasketIsUnchanged(final LocalDateTime basketCreationTime,
+    private void verifyBasketIsUnchanged(final OffsetDateTime basketCreationTime,
                                          final DeliveryDetails deliveryDetailsAdded,
                                          final String itemUri) {
         final Optional<Basket> retrievedBasket = basketRepository.findById(ERIC_IDENTITY_VALUE);
@@ -2330,7 +2331,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
      * @param start the creation/update time of the basket
      * @return the {@link Basket} as persisted in the database
      */
-    private Basket createBasket(final LocalDateTime start) {
+    private Basket createBasket(final OffsetDateTime start) {
         return createBasket(start, VALID_CERTIFICATE_URI);
     }
 
@@ -2344,7 +2345,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
      * @param itemUri the URI of the item stored in the basket
      * @return the {@link Basket} as persisted in the database
      */
-    private Basket createBasket(final LocalDateTime start, final String itemUri) {
+    private Basket createBasket(final OffsetDateTime start, final String itemUri) {
         final Basket basket = new Basket();
         basket.setCreatedAt(start);
         basket.setUpdatedAt(start);
@@ -2472,7 +2473,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
      * @param dateTime the date/time to be rendered
      * @return the date/time as a String
      */
-    private String paymentsApiParsableDateTime(final LocalDateTime dateTime) {
+    private String paymentsApiParsableDateTime(final OffsetDateTime dateTime) {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").format(dateTime);
     }
 }

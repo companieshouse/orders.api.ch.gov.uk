@@ -2,7 +2,7 @@ package uk.gov.companieshouse.orders.api.util;
 
 import uk.gov.companieshouse.orders.api.model.TimestampedEntity;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -17,26 +17,26 @@ public class TimestampedEntityVerifier {
     /**
      * the start of the test, prior to the invocation of the method under test
      */
-    private LocalDateTime intervalStart;
+    private OffsetDateTime intervalStart;
 
     /**
      * the end of the test, after the invocation of the method under test
      */
-    private LocalDateTime intervalEnd;
+    private OffsetDateTime intervalEnd;
 
     /** Use to record the start of the test, rounded down to the closest millisecond, prior to the invocation of the method under test.
      * @return the recorded start timestamp
      */
-    public LocalDateTime start() {
-        intervalStart = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS);
+    public OffsetDateTime start() {
+        intervalStart = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS);
         return intervalStart;
     }
 
     /** Use to record the end of the test, rounded up to the closest millisecond, after the invocation of the method under test.
      * @return the recorded end timestamp
      */
-    public LocalDateTime end() {
-        intervalEnd = LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS).plusNanos(1000000);
+    public OffsetDateTime end() {
+        intervalEnd = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).plusNanos(1000000);
         return intervalEnd;
     }
 

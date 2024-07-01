@@ -3,7 +3,7 @@ package uk.gov.companieshouse.orders.api.util;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -15,7 +15,7 @@ public final class StubHelper {
     private StubHelper() {
     }
 
-    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, LocalDateTime creationDate, PaymentStatus paymentStatus) {
+    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, OffsetDateTime creationDate, PaymentStatus paymentStatus) {
         final Checkout checkout = new Checkout();
         checkout.setId(checkoutId);
         checkout.setUserId(ERIC_IDENTITY_VALUE);
@@ -43,7 +43,7 @@ public final class StubHelper {
         return getCheckout(checkoutId, email, companyNumber, LocalDate.of(2022, 4, 12).atStartOfDay(), null);
     }
 
-    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, LocalDateTime creationDate) {
+    public static Checkout getCheckout(String checkoutId, String email, String companyNumber, OffsetDateTime creationDate) {
         return getCheckout(checkoutId, email, companyNumber, creationDate, null);
     }
 
@@ -52,7 +52,7 @@ public final class StubHelper {
     }
 
     public static Order getOrder(String orderId, List<Item> items, String email,
-            LocalDateTime creationDate) {
+            OffsetDateTime creationDate) {
         final Order order = new Order();
         order.setId(orderId);
         order.setUserId(ERIC_IDENTITY_VALUE);
@@ -73,7 +73,7 @@ public final class StubHelper {
         return order;
     }
 
-    public static Order getOrder(String orderId, String email, String companyNumber, LocalDateTime creationDate) {
+    public static Order getOrder(String orderId, String email, String companyNumber, OffsetDateTime creationDate) {
         return getOrder(orderId, Collections.singletonList(
                 getOrderItem("item-id-123", "item#certificate", companyNumber)),
                 email,
@@ -95,8 +95,8 @@ public final class StubHelper {
     public static Basket getBasket(String id) {
         final Basket basket = new Basket();
         basket.setId(id);
-        basket.setCreatedAt(LocalDateTime.of(2022,07,15, 11, 40));
-        basket.setUpdatedAt(LocalDateTime.of(2022,07,15, 11, 40));
+        basket.setCreatedAt(OffsetDateTime.of(2022,07,15, 11, 40));
+        basket.setUpdatedAt(OffsetDateTime.of(2022,07,15, 11, 40));
 
         BasketData data = new BasketData();
         data.setEnrolled(true);

@@ -3,7 +3,7 @@ package uk.gov.companieshouse.orders.api.util;
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import uk.gov.companieshouse.orders.api.model.ActionedBy;
 import uk.gov.companieshouse.orders.api.model.Item;
@@ -15,7 +15,7 @@ public final class OrderHelper {
     private OrderHelper() {
     }
 
-    public static Order getOrder(String orderId, String email, String companyNumber, LocalDateTime creationDate) {
+    public static Order getOrder(String orderId, String email, String companyNumber, OffsetDateTime creationDate) {
         final Order order = new Order();
         order.setId(orderId);
         order.setUserId(ERIC_IDENTITY_VALUE);

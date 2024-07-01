@@ -16,7 +16,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_AUTHORISE
 import static uk.gov.companieshouse.orders.api.util.TestConstants.ERIC_IDENTITY_VALUE;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -280,7 +280,7 @@ public class CheckoutServiceTest {
 
         // Given
         final Checkout checkout = new Checkout();
-        checkout.setCreatedAt(LocalDateTime.now());
+        checkout.setCreatedAt(OffsetDateTime.now());
         checkout.getData().setStatus(PaymentStatus.PAID);
         when(etagGeneratorService.generateEtag()).thenReturn(ETAG);
 

@@ -20,7 +20,7 @@ import static uk.gov.companieshouse.orders.api.util.TestConstants.REQUEST_ID_HEA
 
 import java.io.IOException;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -673,7 +673,7 @@ class BasketControllerTest {
         final String checkout_id = "123456789";
         final String payment_id = "987654321";
         final String eric_header = "EricHeader";
-        final LocalDateTime paidAt = LocalDateTime.now();
+        final OffsetDateTime paidAt = OffsetDateTime.now();
 
         final MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(ApiSdkManager.getEricPassthroughTokenHeader(), eric_header);
@@ -733,7 +733,7 @@ class BasketControllerTest {
 
     private Basket createBasket() {
         TimestampedEntityVerifier timestamps = new TimestampedEntityVerifier();
-        final LocalDateTime start = timestamps.start();
+        final OffsetDateTime start = timestamps.start();
         final Basket basket = new Basket();
         basket.setCreatedAt(start);
         basket.setUpdatedAt(start);
