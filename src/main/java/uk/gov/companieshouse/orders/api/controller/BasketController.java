@@ -11,7 +11,6 @@ import static uk.gov.companieshouse.orders.api.OrdersApiApplication.REQUEST_ID_H
 import static uk.gov.companieshouse.orders.api.logging.LoggingUtils.APPLICATION_NAME_SPACE;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;

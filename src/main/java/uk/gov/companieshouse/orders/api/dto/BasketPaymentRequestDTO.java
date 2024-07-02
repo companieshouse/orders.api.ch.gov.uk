@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 import uk.gov.companieshouse.orders.api.model.PaymentStatus;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public class BasketPaymentRequestDTO {
