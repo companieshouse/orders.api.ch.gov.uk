@@ -57,6 +57,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2246,7 +2247,7 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
 
     private BasketPaymentRequestDTO createBasketPaymentRequest(PaymentStatus paymentStatus) {
         final BasketPaymentRequestDTO basketPaymentRequestDTO = new BasketPaymentRequestDTO();
-        basketPaymentRequestDTO.setPaidAt(LocalDateTime.now());
+        basketPaymentRequestDTO.setPaidAt(OffsetDateTime.now());
         basketPaymentRequestDTO.setPaymentReference(PAYMENT_ID);
         basketPaymentRequestDTO.setStatus(paymentStatus);
 
