@@ -422,6 +422,10 @@ public class BasketController {
         } else {
             logMap.put(LoggingUtils.STATUS, OK);
             LOGGER.infoRequest(request, "Basket checkout completed no payment required", logMap);
+
+            processOrder(checkout, logMap);
+            LOGGER.infoRequest(request, "Free order processed", logMap);
+
             return new ResponseEntity<>(checkoutData, OK);
         }
     }
@@ -582,7 +586,20 @@ public class BasketController {
      */
     private void processSuccessfulPayment(final String requestId,
                                           final Checkout checkout) {
-        Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        final Map<String, Object> logMap = LoggingUtils.createLogMapWithRequestId(requestId);
+        processOrder(checkout, logMap);
+        LOGGER.info("Process successful payment, order created and basket cleared", logMap);
+    }
+
+    /**
+     * Performs the actions required to process an order. This order must be "good to go" - i.e.,
+     * successfully paid for, or free.
+     *
+     * @param checkout  the checkout required to process the payment
+     * @param logMap log map for logging by client method
+     */
+    private void processOrder(final Checkout checkout,
+                              final Map<String, Object> logMap) {
         LoggingUtils.logIfNotNull(logMap, LoggingUtils.USER_ID, checkout.getId());
         orderService.createOrder(checkout);
         basketService.clearBasket(checkout.getUserId());
