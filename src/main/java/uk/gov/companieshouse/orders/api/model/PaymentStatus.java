@@ -11,6 +11,7 @@ public enum PaymentStatus {
     EXPIRED,
     IN_PROGRESS,
     CANCELLED,
+    FREE,
     NO_FUNDS;
 
     @JsonValue

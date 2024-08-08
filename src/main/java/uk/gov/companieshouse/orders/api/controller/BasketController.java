@@ -422,7 +422,7 @@ public class BasketController {
         } else {
             logMap.put(LoggingUtils.STATUS, OK);
             LOGGER.infoRequest(request, "Basket checkout completed no payment required", logMap);
-
+            checkoutData.setStatus(PaymentStatus.FREE);
             processOrder(checkout, logMap);
             LOGGER.infoRequest(request, "Free order processed", logMap);
 
