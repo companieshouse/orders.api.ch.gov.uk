@@ -88,6 +88,12 @@
             <groupId>org.eclipse.jetty.http3</groupId>
             <artifactId>http3-common</artifactId>
             <version>${http3-common.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mortbay.jetty.quiche</groupId>
+                    <artifactId>jetty-quiche-native</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>
