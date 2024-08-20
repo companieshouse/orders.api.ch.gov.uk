@@ -632,7 +632,6 @@ class BasketControllerTest {
                 httpServletRequest, "123");
 
         verify(checkoutData).setPaymentReference("FREEINTERNALORDER");
-        
         // then
         assertEquals(OK, actual.getStatusCode());
         assertEquals("FREEINTERNALORDER", checkout.getData().getPaymentReference());
@@ -658,7 +657,8 @@ class BasketControllerTest {
         // when
         ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
                 httpServletRequest, "123");
-
+        
+        // then
         assertEquals(ACCEPTED, actual.getStatusCode());
     }
 
