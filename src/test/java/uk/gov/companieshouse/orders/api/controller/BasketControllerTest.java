@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -611,6 +612,33 @@ class BasketControllerTest {
     }
 
     @Test
+    @DisplayName("Payment Reference is set value when free orders ")
+    void controllerSetsPaymentReferenceWhenIsNotFreeOrder() {
+        // given
+        Basket basket = createBasket();
+        basket.getData().setItems(Arrays.asList(certificate));
+        List<String> emptyErrorsList = Collections.EMPTY_LIST;
+
+        Checkout checkout = new Checkout();
+        CheckoutData checkoutData = spy(new CheckoutData());
+        checkoutData.setTotalOrderCost("0");
+        checkout.setData(checkoutData);
+
+        when(basketService.getBasketById(any())).thenReturn(Optional.of(basket));
+        when(checkoutBasketValidator.getValidationErrors(any(), any())).thenReturn(emptyErrorsList);
+        when(checkoutService.createCheckout(any(), any(), any(), any())).thenReturn(checkout);
+
+        ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
+                httpServletRequest, "123");
+
+        verify(checkoutData).setPaymentReference("FREEINTERNALORDER");
+        
+        // then
+        assertEquals(OK, actual.getStatusCode());
+        assertEquals("FREEINTERNALORDER", checkout.getData().getPaymentReference());
+    }
+
+    @Test
     @DisplayName("Accepted status code when checkout created for multiple items")
     void createsCheckoutSuccessfullyForMultipleItems() {
         // given
@@ -631,7 +659,6 @@ class BasketControllerTest {
         ResponseEntity<?> actual = controllerUnderTest.checkoutBasket(any(),
                 httpServletRequest, "123");
 
-        // then
         assertEquals(ACCEPTED, actual.getStatusCode());
     }
 
