@@ -424,7 +424,6 @@ public class BasketController {
             LOGGER.infoRequest(request, "Basket checkout completed no payment required", logMap);
             checkoutData.setPaymentReference("FREEINTERNALORDER");
 
-            checkoutData.setStatus(PaymentStatus.FREE);
             processOrder(checkout, logMap);
             LOGGER.infoRequest(request, "Free order processed", logMap);
             return new ResponseEntity<>(checkoutData, OK);
@@ -504,6 +503,7 @@ public class BasketController {
         } else {
 
             // Update the checkout of non-paid order
+            checkoutData.setStatus(PaymentStatus.FREE);
             updateCheckout(checkout, basketPaymentRequestDTO);
             LOGGER.infoRequest(request, "Checkout updated for order not requiring any payment", logMap);
         }
