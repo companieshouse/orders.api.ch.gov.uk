@@ -506,7 +506,6 @@ public class BasketController {
         } else {
 
             // Update the checkout of non-paid order
-            checkoutData.setStatus(PaymentStatus.FREE);
             updateCheckout(checkout, basketPaymentRequestDTO);
             LOGGER.infoRequest(request, "Checkout updated for order not requiring any payment", logMap);
         }
