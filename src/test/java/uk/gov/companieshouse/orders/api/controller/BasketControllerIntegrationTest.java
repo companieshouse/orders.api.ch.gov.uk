@@ -1058,6 +1058,8 @@ class BasketControllerIntegrationTest extends AbstractMongoConfig {
         assertEquals(1, checkoutRepository.count());
         final Optional<Checkout> retrievedCheckout = checkoutRepository.findById(responseCheckoutData.getReference());
         assertTrue(retrievedCheckout.isPresent());
+        assertThat(retrievedCheckout.get().getData().getStatus().getJsonName(), is("free"));
+        assertThat(retrievedCheckout.get().getData().getPaymentReference(), is("FREEINTERNALORDER"));
         final Item retrievedItem = retrievedCheckout.get().getData().getItems().get(0);
         assertThat(retrievedItem.getItemCosts(), is(ITEM_COSTS_ZERO));
         assertThat(retrievedItem.getPostageCost(), is(POSTAGE_COST));
