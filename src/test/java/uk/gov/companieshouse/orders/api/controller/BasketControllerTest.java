@@ -612,8 +612,8 @@ class BasketControllerTest {
     }
 
     @Test
-    @DisplayName("Payment Reference is set value when free orders ")
-    void controllerSetsPaymentReferenceWhenIsNotFreeOrder() {
+    @DisplayName("Payment Reference/Status is set to expected value when free order")
+    void controllerSetsCheckoutValuesWhenIsFreeOrder() {
         // given
         Basket basket = createBasket();
         basket.getData().setItems(Arrays.asList(certificate));
@@ -635,6 +635,7 @@ class BasketControllerTest {
         // then
         assertEquals(OK, actual.getStatusCode());
         assertEquals("FREEINTERNALORDER", checkout.getData().getPaymentReference());
+        assertEquals("FREE", checkout.getData().getStatus());
     }
 
     @Test
