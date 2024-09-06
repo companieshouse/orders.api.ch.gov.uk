@@ -635,7 +635,7 @@ class BasketControllerTest {
         // then
         assertEquals(OK, actual.getStatusCode());
         assertEquals("FREEINTERNALORDER", checkout.getData().getPaymentReference());
-        assertEquals("FREE", checkout.getData().getStatus());
+        assertEquals(PaymentStatus.FREE, checkout.getData().getStatus());
     }
 
     @Test
