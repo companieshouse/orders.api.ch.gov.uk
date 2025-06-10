@@ -19,7 +19,7 @@
         <ch-kafka.version>3.0.3</ch-kafka.version>
         <kafka-models.version>3.0.8</kafka-models.version>
         <java.version>21</java.version>
-        <structured-logging.version>3.0.9</structured-logging.version>
+        <structured-logging.version>3.0.32</structured-logging.version>
         <commons.lang.version>3.16.0</commons.lang.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <org.mapstruct.version>1.6.0</org.mapstruct.version>
@@ -47,24 +47,26 @@
         <!-- Docker -->
         <jib-maven-plugin.version>3.4.1</jib-maven-plugin.version>
 
+        <opentelemetry-instrumentation-bom.version>2.14.0</opentelemetry-instrumentation-bom.version>
+
         <!-- sonar config -->
-		<sonar-maven-plugin.version>4.0.0.4121</sonar-maven-plugin.version>
-		<sonar.java.binaries>${project.basedir}/target</sonar.java.binaries>
-		<sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
-		<sonar.login></sonar.login>
-		<sonar.password></sonar.password>
-		<sonar.projectKey>uk.gov.companieshouse:orders.api.ch.gov.uk</sonar.projectKey>
-		<sonar.projectName>orders.api.ch.gov.uk</sonar.projectName>
-		<sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml,
-			${project.basedir}/target/site/jacoco-it/jacoco.xml
-		</sonar.coverage.jacoco.xmlReportPaths>
-		<sonar.jacoco.reports>${project.basedir}/target/site</sonar.jacoco.reports>
-		<sonar.dependencyCheck.htmlReportPath>
-			${project.basedir}/target/dependency-check-report.html
-		</sonar.dependencyCheck.htmlReportPath>
-		<sonar.java.binaries>
-			${project.basedir}/target
-		</sonar.java.binaries>
+        <sonar-maven-plugin.version>4.0.0.4121</sonar-maven-plugin.version>
+        <sonar.java.binaries>${project.basedir}/target</sonar.java.binaries>
+        <sonar.token>${CODE_ANALYSIS_TOKEN}</sonar.token>
+        <sonar.login></sonar.login>
+        <sonar.password></sonar.password>
+        <sonar.projectKey>uk.gov.companieshouse:orders.api.ch.gov.uk</sonar.projectKey>
+        <sonar.projectName>orders.api.ch.gov.uk</sonar.projectName>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml,
+          ${project.basedir}/target/site/jacoco-it/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.jacoco.reports>${project.basedir}/target/site</sonar.jacoco.reports>
+        <sonar.dependencyCheck.htmlReportPath>
+          ${project.basedir}/target/dependency-check-report.html
+        </sonar.dependencyCheck.htmlReportPath>
+        <sonar.java.binaries>
+          ${project.basedir}/target
+        </sonar.java.binaries>
 
         <argLine>
             --add-opens=java.base/java.util=ALL-UNNAMED
@@ -73,6 +75,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.opentelemetry.instrumentation</groupId>
+                <artifactId>opentelemetry-instrumentation-bom</artifactId>
+                <version>${opentelemetry-instrumentation-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -94,6 +103,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>io.opentelemetry.instrumentation</groupId>
+          <artifactId>opentelemetry-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
