@@ -1,7 +1,0 @@
-app_name: orders.api.ch.gov.uk
-group: api
-weight: 991
-routes:
-   1: ^/basket/*
-   2: ^/orders/*
-   3: ^/checkouts/*
