@@ -20,7 +20,7 @@
         <kafka-models.version>3.0.18</kafka-models.version>
         <java.version>21</java.version>
         <structured-logging.version>3.0.34</structured-logging.version>
-        <commons.lang.version>3.17.0</commons.lang.version>
+        <commons.lang.version>3.18.0</commons.lang.version>
         <commons.beanutils.version>1.11.0</commons.beanutils.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <gson.version>2.13.1</gson.version>
